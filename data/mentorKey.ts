@@ -1,0 +1,119 @@
+import { LINES } from "@/data/ladder";
+import type { LevelTag, LineId } from "@/data/ladder";
+import { CHURN_TRUTH, FORECAST, PILOT, VALUABLE_TRUTH } from "@/data/forecast";
+import type { Basis } from "@/data/forecast";
+import { AB_MODEL, MEANING_TRUTH, MEASURE_TRUTH, PATTERN_IDS, RECORDS, TRUTH_COUNTS, TRUTH_LEFT, riskOf } from "@/data/patterns";
+import type { PatternId, PatternRow, RecId, UncId } from "@/data/patterns";
+import { MEASURE_BY_ID, MODEL_MEASURES, explainBucket } from "@/data/measures";
+import type { MeasureId, ProblemId } from "@/data/measures";
+import { COMP_BY_ID, MODEL_ARCH, MODEL_COMPS, MODEL_GREATEST, MODEL_START, MODEL_TRIGGER, MODEL_TRIPWIRE, OWNER_ACCEPT, OWNER_ACCEPT_LOGIC, SITUATIONS, SOURCES, actionOf, useOf } from "@/data/route2";
+import type { Criterion, LogicRow, OwnerId, Use } from "@/data/route2";
+import { euro, num, tt } from "@/lib/lang";
+import type { L1State, R2State, Score } from "@/store/useStore";
+
+/**
+ * Every model answer of the day, in one file. "Fill all model answers" in the mentor bar enters these, so that after one fill every
+ * route's missing list is empty and every export downloads at once. Free text follows the site's language. A convenience for
+ * facilitators, not security.
+ */
+export const MENTOR_PASSCODE = "muchson123";
+export const MODEL_ORDER: MeasureId[] = ["chat", "kpi", "personal"];
+
+export function KEY_L1(): Partial<L1State> {
+  return {
+    sort: Object.fromEntries(LINES.map((r) => [r.id, r.truth])) as Record<LineId, LevelTag>,
+    extraInsight: tt(
+      "A customer who reports an outage by e-mail today waits until someone reads the inbox, so a status message within minutes and a named contact would keep them calm and informed.",
+      "Ein Kunde, der heute eine Störung per E-Mail meldet, wartet, bis jemand das Postfach liest, also würden eine Statusmeldung innerhalb von Minuten und eine benannte Ansprechperson ihn ruhig und informiert halten.",
+    ),
+    fig: { F1: String(FORECAST.f1), F2: String(FORECAST.f2), F3: String(FORECAST.f3) },
+    meaning: tt(
+      `Requests answered within one hour closed at ${FORECAST.f1}% against ${FORECAST.controlRate}%, ${FORECAST.f2} times as often. Across ${num(PILOT.yearly)} requests a year that is about ${euro(FORECAST.f3)}, so LiveConnect should answer the quote form and the pricing page first, and test it fairly, because sales may have answered the eager customers first.`,
+      `Innerhalb einer Stunde beantwortete Anfragen schlossen zu ${num(FORECAST.f1)} % gegenüber ${num(FORECAST.controlRate)} % ab, ${num(FORECAST.f2)}-mal so oft. Bei ${num(PILOT.yearly)} Anfragen pro Jahr sind das etwa ${euro(FORECAST.f3)}, also sollte LiveConnect zuerst Angebotsformular und Preisseite schnell beantworten und das fair testen, weil der Vertrieb vielleicht die interessierten Kunden zuerst beantwortete.`,
+    ),
+    valuable: [...VALUABLE_TRUTH],
+    churners: [...CHURN_TRUTH],
+    insights: [
+      { basis: "respond" as Basis, text: tt("A chatbot on the pricing page answers the five common questions at once and hands over to sales within two minutes, so visitors get an answer before they leave.", "Ein Chatbot auf der Preisseite beantwortet die fünf häufigen Fragen sofort und übergibt innerhalb von zwei Minuten an den Vertrieb, sodass Besucher eine Antwort bekommen, bevor sie gehen.") },
+      { basis: "personal" as Basis, text: tt("Visitors from the hospital campaign see hospital case studies and data protection answers first, so they find what they came for without searching.", "Besucher aus der Krankenhaus-Kampagne sehen zuerst Krankenhaus-Fallstudien und Datenschutzantworten, sodass sie finden, weswegen sie kamen, ohne zu suchen.") },
+      { basis: "learn" as Basis, text: tt("Every Friday the team rewrites the three chat answers rated worst, so the chat gets more helpful every week instead of staying as it was built.", "Jeden Freitag schreibt das Team die drei am schlechtesten bewerteten Chat-Antworten neu, sodass der Chat jede Woche hilfreicher wird, statt so zu bleiben, wie er gebaut wurde.") },
+    ],
+    reflect: {
+      interpret: tt("Requests answered within an hour closed three times as often as those answered after a day: interest cools fast. Today customers wait longest after the quote form and on e-mailed questions.", "Innerhalb einer Stunde beantwortete Anfragen schlossen dreimal so oft ab wie nach einem Tag beantwortete: Interesse kühlt schnell ab. Heute warten Kunden am längsten nach dem Angebotsformular und bei per E-Mail gestellten Fragen."),
+      causation: tt("It is value when it uses what the visitor gave us, like the hospital campaign they clicked. It feels intrusive when it shows we watched them, like a pop-up naming the pages they read yesterday.", "Mehrwert ist es, wenn es nutzt, was der Besucher uns gab, etwa die geklickte Krankenhaus-Kampagne. Aufdringlich wirkt es, wenn es zeigt, dass wir ihn beobachtet haben, etwa ein Pop-up, das die gestern gelesenen Seiten nennt."),
+      decider: tt("The chat on the decision pages works this month; personalisation takes longer but lasts. A strategic decision-maker starts the chat and the live view now, adds personalisation next, and tests each before scaling.", "Der Chat auf den Entscheidungsseiten wirkt diesen Monat; Personalisierung dauert länger, hält aber. Eine strategische Entscheiderin startet Chat und Live-Sicht jetzt, ergänzt als Nächstes die Personalisierung und testet jedes vor dem Ausweiten."),
+    },
+    tags: Object.fromEntries(RECORDS.map((r) => [r.id, r.truth])) as Record<RecId, PatternId>,
+    unc: ["sample", "cause", "missing", "shift"] as UncId[],
+    rows: Object.fromEntries(PATTERN_IDS.map((x) => [x, { risk: riskOf(TRUTH_LEFT[x], TRUTH_COUNTS[x]), meaning: MEANING_TRUTH[x], measure: MEASURE_TRUTH[x] }])) as Record<PatternId, PatternRow>,
+    misread: tt(
+      "1) Closing rate of quote requests (outcome), from the CRM, target 9% by month 4 against 6% today. 2) First response time (driver), from chat and CRM timestamps, target under 5 minutes on decision pages. 3) Share of chats rated “not helpful” (guardrail), from chat ratings, must stay below 20%.",
+      "1) Abschlussquote der Angebotsanfragen (Outcome), aus dem CRM, Ziel 9 % bis Monat 4 gegenüber 6 % heute. 2) Erste Antwortzeit (Treiber), aus Chat- und CRM-Zeitstempeln, Ziel unter 5 Minuten auf Entscheidungsseiten. 3) Anteil der als „nicht hilfreich“ bewerteten Chats (Guardrail), aus den Chat-Bewertungen, muss unter 20 % bleiben.",
+    ),
+    ab: {
+      ...AB_MODEL,
+      hyp: tt("If a chat opens after 30 seconds on the pricing page, then more visitors request a quote, because their open questions are answered before they leave.", "Wenn sich nach 30 Sekunden auf der Preisseite ein Chat öffnet, dann fragen mehr Besucher ein Angebot an, weil ihre offenen Fragen beantwortet werden, bevor sie gehen."),
+      rule: tt("Roll out if quote requests per visitor are at least 10% higher than the control group with 100 requests per group and “not helpful” ratings stay below 20%; keep testing if 3 to 10% higher; stop if less than 3% higher.", "Ausrollen, wenn die Angebotsanfragen pro Besucher bei 100 Anfragen pro Gruppe mindestens 10 % über der Kontrollgruppe liegen und „nicht hilfreich“-Bewertungen unter 20 % bleiben; weiter testen bei 3 bis 10 % darüber; stoppen bei weniger als 3 % darüber."),
+    },
+    chosen: [...MODEL_MEASURES],
+    aims: Object.fromEntries(MODEL_MEASURES.map((id) => [id, [...MEASURE_BY_ID[id].targets]])) as Record<string, ProblemId[]>,
+    exp: Object.fromEntries(MODEL_MEASURES.map((id) => [id, explainBucket(MEASURE_BY_ID[id].evidence)])) as Record<string, Score>,
+    fea: Object.fromEntries(MODEL_MEASURES.map((id) => [id, MEASURE_BY_ID[id].model.feasibility])) as Record<string, Score>,
+    eff: Object.fromEntries(MODEL_MEASURES.map((id) => [id, MEASURE_BY_ID[id].model.effect])) as Record<string, Score>,
+    order: [...MODEL_ORDER],
+    why: tt(
+      "The chat goes first: it scores 27, works within four weeks and answers visitors on the pages where they decide, where fast answers closed three times as often. The KPI dashboard and weekly test routine come second and start with it, so the chat is measured from its first week. Real-time personalisation comes third because it needs eight weeks. The three cost €115,000 of the €170,000; the website relaunch and the avatar are too slow for four months.",
+      "Der Chat kommt zuerst: Er erzielt 27, wirkt innerhalb von vier Wochen und beantwortet Besucher auf den Seiten, auf denen sie entscheiden, wo schnelle Antworten dreimal so oft abschlossen. KPI-Dashboard und wöchentliche Test-Routine kommen als Zweites und starten mit ihm, damit der Chat ab seiner ersten Woche gemessen wird. Echtzeit-Personalisierung kommt als Drittes, weil sie acht Wochen braucht. Die drei kosten 115.000 € von 170.000 €; Website-Relaunch und Avatar sind für vier Monate zu langsam.",
+    ),
+  };
+}
+
+export function KEY_R2(): Partial<R2State> {
+  const rate: Record<string, Score> = {};
+  for (const id of MODEL_COMPS) for (const c of ["explain", "timely", "reach", "scale"] as Criterion[]) rate[`${id}.${c}`] = COMP_BY_ID[id].model[c];
+  const logic: Record<string, LogicRow> = {};
+  for (const s of SITUATIONS) logic[s.id] = { action: actionOf(s), owner: OWNER_ACCEPT_LOGIC[s.id][0] };
+  return {
+    principles: ["defs", "rules", "review"],
+    principleText: {
+      defs: tt("Sales, marketing and service see every chat, form, call and social media question of a customer in one timeline, so nobody asks a customer something another team already answered.", "Vertrieb, Marketing und Service sehen jeden Chat, jedes Formular, jeden Anruf und jede Social-Media-Frage eines Kunden in einer Zeitleiste, damit niemand einen Kunden etwas fragt, das ein anderes Team schon beantwortet hat."),
+      rules: tt("The pricing page and the quote form get an answer within five minutes and the chat a person within two, each with a named owner, which answers “responses too slow”.", "Preisseite und Angebotsformular bekommen innerhalb von fünf Minuten eine Antwort und der Chat innerhalb von zwei Minuten einen Menschen, jeweils mit benanntem Owner, was „Antworten zu langsam“ beantwortet."),
+      review: tt("Every Friday the team decides on each running test and rewrites the worst-rated chat answers, so measures are coordinated and measurable instead of running side by side.", "Jeden Freitag entscheidet das Team über jeden laufenden Test und schreibt die am schlechtesten bewerteten Chat-Antworten neu, damit Maßnahmen abgestimmt und messbar sind, statt nebeneinander zu laufen."),
+    },
+    sources: Object.fromEntries(SOURCES.map((s) => [s.id, useOf(s)])) as Record<string, Use>,
+    comps: [...MODEL_COMPS],
+    rate,
+    greatest: MODEL_GREATEST,
+    greatestWhy: tt(
+      "First response time is the driver the brief names as the problem (responses too slow). It is linked to closings, moves live for every request and is counted by the systems, so every measure can be steered by it within days.",
+      "Die erste Antwortzeit ist der Treiber, den der Auftrag als Problem nennt (Antworten zu langsam). Sie ist mit Abschlüssen verbunden, bewegt sich live für jede Anfrage und wird von den Systemen gezählt, sodass sich jede Maßnahme innerhalb von Tagen daran steuern lässt.",
+    ),
+    logic,
+    alloc: Object.fromEntries(MODEL_ARCH.map((id) => [id, true])),
+    start: { ...MODEL_START } as Record<string, number>,
+    owner: Object.fromEntries(MODEL_ARCH.map((id) => [id, OWNER_ACCEPT[id][0]])) as Record<string, OwnerId>,
+    trigger: Object.fromEntries(MODEL_ARCH.map((id) => [id, MODEL_TRIGGER[id as keyof typeof MODEL_TRIGGER]])) as Record<string, string>,
+    postponed: tt(
+      "The all-in-one AI platform (€90,000) is left out: the six funded items cost €180,000 of the €190,000, the platform would push the plan €80,000 over, it takes fourteen weeks and nobody at LiveConnect could explain or measure it. The relaunch (€80,000, sixteen weeks) is too slow for four months.",
+      "Die All-in-one-KI-Plattform (90.000 €) bleibt draußen: Die sechs finanzierten Punkte kosten 180.000 € von 190.000 €, die Plattform brächte den Plan 80.000 € über das Budget, sie braucht vierzehn Wochen, und niemand bei LiveConnect könnte sie erklären oder messen. Der Relaunch (80.000 €, sechzehn Wochen) ist für vier Monate zu langsam.",
+    ),
+    pickup: tt(
+      "If the closing rate reaches 9% by month 4, we plan the relaunch of the three pages with the highest exit rate for the next half-year.",
+      "Erreicht die Abschlussquote bis Monat 4 9 %, planen wir für das nächste Halbjahr den Relaunch der drei Seiten mit der höchsten Ausstiegsrate.",
+    ),
+    decision: "stage",
+    assumptions: [
+      tt("Speed itself raises closings, not only the choice of eager customers. This is wrong if a random-split test shows less than 1.2 times the closing rate for fast answers on 100 requests per group by month 3.", "Tempo selbst erhöht die Abschlüsse, nicht nur die Auswahl interessierter Kunden. Das ist falsch, wenn ein Test mit zufälliger Aufteilung bis Monat 3 bei 100 Anfragen pro Gruppe weniger als das 1,2-Fache der Abschlussquote für schnelle Antworten zeigt."),
+      tt("Visitors accept a chat that opens by itself. This is wrong if more than 20% of chats are rated “not helpful” or complaints about pop-ups rise in any week.", "Besucher akzeptieren einen Chat, der sich selbst öffnet. Das ist falsch, wenn in einer Woche mehr als 20 % der Chats als „nicht hilfreich“ bewertet werden oder Beschwerden über Pop-ups steigen."),
+      tt("The decision pages are tracked well enough to steer by. This is wrong if the live screen shows response times for fewer than 90% of requests by the end of month 1.", "Die Entscheidungsseiten werden gut genug erfasst, um danach zu steuern. Das ist falsch, wenn der Live-Bildschirm bis Ende Monat 1 für weniger als 90 % der Anfragen Antwortzeiten zeigt."),
+    ],
+    tripKpi: MODEL_TRIPWIRE.kpi,
+    tripThreshold: String(MODEL_TRIPWIRE.threshold),
+    tripMonth: MODEL_TRIPWIRE.month,
+    tripAction: "adjust",
+    challenge: tt(
+      "I keep the chat and fix its answers. Speed is solved: from 4 hours to 2 minutes. The problem is quality: 20% of chats are not helpful, which is our guardrail, so this week marketing rewrites the five worst answers and hands those questions to a person at once. 6.0% to 6.3% after two months rests on too few requests to judge; the tripwire of 9% in month 4 decides. Switching the chatbot off brings back the wait, and the platform could not be measured at all.",
+      "Ich behalte den Chat und verbessere seine Antworten. Das Tempo ist gelöst: von 4 Stunden auf 2 Minuten. Das Problem ist die Qualität: 20 % der Chats sind nicht hilfreich, das ist unsere Guardrail, also schreibt das Marketing diese Woche die fünf schlechtesten Antworten neu und übergibt diese Fragen sofort an einen Menschen. 6,0 % zu 6,3 % nach zwei Monaten beruhen auf zu wenigen Anfragen für ein Urteil; der Tripwire von 9 % in Monat 4 entscheidet. Den Chatbot abzuschalten bringt das Warten zurück, und die Plattform ließe sich gar nicht messen.",
+    ),
+  };
+}

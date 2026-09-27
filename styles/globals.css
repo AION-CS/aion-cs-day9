@@ -1,0 +1,183 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --ink: #1f2328;
+  --ash: #59606a;
+  --paper: #fffefa;
+  --canvas: #f3efe4;
+  --line: #d8d1bf;
+  --accent: #8a5a0b;
+  --gold: #d99a2b;
+  --signal: #0f6b6b;
+  --rust: #a4472a;
+  --nav-h: 48px;
+}
+
+@layer base {
+  html {
+    font-family: system-ui, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-canvas text-ink;
+    font-size: 15.5px;
+    line-height: 24px;
+    -webkit-font-smoothing: antialiased;
+    font-variant-numeric: tabular-nums;
+    overflow-x: hidden;
+  }
+  h1 { @apply text-h1; }
+  h2 { @apply text-h2; }
+  h3 { @apply text-h3; }
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  /* Anchors land below the sticky top bar and section rail. */
+  [id] { scroll-margin-top: 112px; }
+}
+
+@layer components {
+  .card { @apply rounded-xl border border-line bg-paper shadow-sm; }
+  .smallcaps { @apply text-micro font-semibold uppercase text-ash; }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-lg px-4 py-2.5 text-body font-semibold transition-colors duration-150;
+  }
+  .btn-primary { @apply btn bg-accent text-paper hover:bg-accentHi; }
+  .btn-ghost { @apply btn border border-line bg-paper text-ink hover:border-ash; }
+  .btn-sm { @apply rounded-md px-3 py-1.5 text-caption; }
+  @media (max-width: 767px) {
+    .btn-sm { min-height: 40px; }
+  }
+
+  /* Small chips keep their look but get a ≥40px tap area on touch screens. */
+  .tap-chip { position: relative; }
+  .tap-chip::after { content: ""; position: absolute; left: 0; right: 0; top: -10px; bottom: -10px; }
+
+  .field {
+    @apply w-full rounded-lg border border-line bg-paper px-3 py-2 text-body text-ink placeholder:text-ash/60;
+  }
+  .field:hover { @apply border-ash/60; }
+
+  .pill {
+    @apply inline-flex items-center rounded-full border px-2 py-0.5 text-micro font-bold uppercase;
+  }
+  .pill-obj { @apply pill border-signal/50 bg-signalSoft text-signal; }
+  .pill-jdg { @apply pill border-accent/50 bg-accentSoft text-accent; }
+
+  /* A "stamp" state, e.g. FILED. */
+  .stamp {
+    @apply inline-block -rotate-3 rounded border-2 border-signal px-2 py-0.5 text-caption font-black uppercase tracking-widest text-signal;
+  }
+
+  /* Amber outline for a cell flagged by a check — never red, never a tick. */
+  .is-flagged { outline: 2.5px solid var(--gold); outline-offset: 2px; border-radius: 8px; }
+}
+
+/* --- Motion vocabulary (CSS only, nothing longer than 600 ms except the flash) --- */
+
+@keyframes drawIn { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+.anim-draw { stroke-dasharray: 1; stroke-dashoffset: 1; animation: drawIn 0.6s ease-out forwards; }
+
+@keyframes growUp { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+.anim-grow-y { transform-box: fill-box; transform-origin: bottom; animation: growUp 0.45s ease-out both; }
+@keyframes growRight { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.anim-grow-x { transform-box: fill-box; transform-origin: left; animation: growRight 0.5s ease-out both; }
+
+@keyframes fadeSlide { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.stagger { opacity: 0; animation: fadeSlide 0.4s ease-out forwards; animation-delay: calc(var(--i, 0) * 60ms); }
+.fade-in { animation: fadeSlide 0.3s ease-out both; }
+
+@keyframes pulseRing { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } }
+.anim-pulse { animation: pulseRing 1.6s ease-in-out infinite; }
+
+@keyframes flashWarn {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(164, 71, 42, 0); background-color: transparent; }
+  20% { box-shadow: 0 0 0 4px rgba(164, 71, 42, 0.45); background-color: rgba(164, 71, 42, 0.07); }
+  70% { box-shadow: 0 0 0 4px rgba(164, 71, 42, 0.3); background-color: rgba(164, 71, 42, 0.05); }
+}
+.anim-flash-warn { animation: flashWarn 1.2s ease-in-out; border-radius: 10px; }
+
+@keyframes flashRef {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(138, 90, 11, 0); }
+  20% { box-shadow: 0 0 0 4px rgba(217, 154, 43, 0.6); }
+  70% { box-shadow: 0 0 0 4px rgba(217, 154, 43, 0.35); }
+}
+.anim-flash-ref { animation: flashRef 1.2s ease-in-out; border-radius: 10px; }
+/* A table row sits inside an overflow container that clips an outer ring, so it flashes inset with a tint. */
+@keyframes flashRefRow {
+  0%, 100% { box-shadow: inset 0 0 0 0 rgba(138, 90, 11, 0); background-color: transparent; }
+  20%, 70% { box-shadow: inset 0 0 0 3px rgba(217, 154, 43, 0.8); background-color: #FBF0D6; }
+}
+tr.anim-flash-ref { animation: flashRefRow 1.2s ease-in-out; border-radius: 0; }
+/* An SVG group cannot take a box-shadow: its transparent .flash-rect child draws the outline instead. */
+@keyframes flashRefSvg {
+  0%, 100% { stroke: rgba(217, 154, 43, 0); fill: rgba(251, 240, 214, 0); }
+  20%, 70% { stroke: #D99A2B; fill: rgba(251, 240, 214, 0.7); }
+}
+g.anim-flash-ref > .flash-rect { animation: flashRefSvg 1.2s ease-in-out; stroke-width: 3; }
+
+.is-dragging { opacity: 0.4; }
+.is-drop-target { outline: 2px dashed var(--accent); outline-offset: 2px; background-color: theme("colors.accentSoft"); }
+
+/* Range slider in the brand tokens. */
+.range-accent { -webkit-appearance: none; appearance: none; height: 36px; background: transparent; cursor: pointer; width: 100%; }
+.range-accent::-webkit-slider-runnable-track { height: 6px; border-radius: 999px; background: theme("colors.mist"); border: 1px solid theme("colors.line"); }
+.range-accent::-moz-range-track { height: 6px; border-radius: 999px; background: theme("colors.mist"); border: 1px solid theme("colors.line"); }
+.range-accent::-webkit-slider-thumb { -webkit-appearance: none; margin-top: -8px; height: 20px; width: 20px; border-radius: 999px; background: var(--accent); border: 2px solid var(--paper); box-shadow: 0 1px 3px rgba(31, 35, 40, 0.3); }
+.range-accent::-moz-range-thumb { height: 18px; width: 18px; border-radius: 999px; background: var(--accent); border: 2px solid var(--paper); }
+
+/* Hover affordances on SVG hit areas always have a focus/tap equivalent; this is the shared state. */
+.hit { cursor: pointer; }
+.hit:hover .hit-shape, .hit:focus-visible .hit-shape { stroke: var(--accent); stroke-width: 2.6; }
+.hit:focus-visible { outline: none; }
+.hit:focus-visible .hit-shape { stroke: var(--accent); stroke-width: 3; }
+
+.tnum { font-variant-numeric: tabular-nums; }
+
+/* A technical term that opens its plain-language explanation. */
+.gloss {
+  display: inline;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-align: inherit;
+  cursor: help;
+  text-decoration: underline dotted var(--accent);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 3px;
+}
+.gloss:hover { color: var(--accent); }
+.gloss[aria-expanded="true"] { background: theme("colors.accentSoft"); color: var(--accent); }
+
+/* Always-visible "what this shows" reading under an interactive control. Same box everywhere so it is instantly recognisable. */
+.insight { border-left: 3px solid var(--accent); }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .stagger { opacity: 1; animation: none; }
+  .anim-draw { stroke-dashoffset: 0; animation: none; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0s !important;
+    transition-duration: 0.01ms !important;
+  }
+  /* The navigation flash is a state, not movement: keep it visible as a static outline until JS removes the class. */
+  .anim-flash-warn { animation: none !important; outline: 3px solid var(--rust); outline-offset: 2px; }
+  .anim-flash-ref { animation: none !important; outline: 3px solid var(--gold); outline-offset: 2px; }
+  tr.anim-flash-ref { outline: none; background-color: #FBF0D6; box-shadow: inset 0 0 0 3px var(--gold); }
+  g.anim-flash-ref { outline: none; }
+  g.anim-flash-ref > .flash-rect { animation: none !important; stroke: #D99A2B; fill: rgba(251, 240, 214, 0.7); }
+}
+
+@media print {
+  body { background: #fff; }
+}
