@@ -10,6 +10,8 @@ import { COMP_BY_ID, MODEL_ARCH, MODEL_COMPS, MODEL_GREATEST, MODEL_START, MODEL
 import type { Criterion, LogicRow, OwnerId, Use } from "@/data/route2";
 import { euro, num, tt } from "@/lib/lang";
 import type { L1State, R2State, Score } from "@/store/useStore";
+import { MODEL_PICKUP } from "@/data/route2Extra";
+import { assumptionSentence, pickupSentence, triggerSentence } from "@/lib/r2Numbers";
 
 /**
  * Every model answer of the day, in one file. "Fill all model answers" in the mentor bar enters these, so that after one fill every
@@ -19,6 +21,25 @@ import type { L1State, R2State, Score } from "@/store/useStore";
 export const MENTOR_PASSCODE = "muchson123";
 export const MODEL_ORDER: MeasureId[] = ["chat", "kpi", "personal"];
 
+/** The model reason for the two judged scores of each model measure (CLAUDE.md #45): effect, scalability, and a printed fact. */
+const MEASURE_REASON: Record<string, () => string> = {
+  chat: () =>
+    tt(
+      "Effect 3: it answers visitors at the moment they are about to leave, on the pages where decisions happen. Scalability 3: once built it serves every visitor, and the card says 4 weeks until it works.",
+      "Wirkung 3: Er antwortet Besuchern in dem Moment, in dem sie gehen wollen, auf den Seiten, wo entschieden wird. Skalierbarkeit 3: Einmal gebaut, dient er jedem Besucher, und die Karte nennt 4 Wochen, bis er wirkt.",
+    ),
+  personal: () =>
+    tt(
+      "Effect 3: it changes what the visitor sees on the pages where LiveConnect knows who they are or why they came. Scalability 3: once the content variants exist the website serves every visitor, although the card says 8 weeks of set-up.",
+      "Wirkung 3: Es ändert, was der Besucher auf den Seiten sieht, auf denen LiveConnect weiß, wer er ist oder warum er kam. Skalierbarkeit 3: Sobald die Inhaltsvarianten existieren, dient die Website jedem Besucher, auch wenn die Karte 8 Wochen Vorlauf nennt.",
+    ),
+  kpi: () =>
+    tt(
+      "Effect 2: it raises no deal by itself, but it coordinates the other measures and feeds back what works. Scalability 3: one screen and one weekly routine serve every future measure, for 4 weeks of work.",
+      "Wirkung 2: Sie steigert selbst keinen Abschluss, stimmt aber die anderen Maßnahmen ab und meldet zurück, was wirkt. Skalierbarkeit 3: Ein Bildschirm und eine wöchentliche Routine dienen jeder künftigen Maßnahme, für 4 Wochen Arbeit.",
+    ),
+};
+
 export function KEY_L1(): Partial<L1State> {
   return {
     sort: Object.fromEntries(LINES.map((r) => [r.id, r.truth])) as Record<LineId, LevelTag>,
@@ -26,10 +47,9 @@ export function KEY_L1(): Partial<L1State> {
       "A customer who reports an outage by e-mail today waits until someone reads the inbox, so a status message within minutes and a named contact would keep them calm and informed.",
       "Ein Kunde, der heute eine Störung per E-Mail meldet, wartet, bis jemand das Postfach liest, also würden eine Statusmeldung innerhalb von Minuten und eine benannte Ansprechperson ihn ruhig und informiert halten.",
     ),
-    fig: { F1: String(FORECAST.f1), F2: String(FORECAST.f2), F3: String(FORECAST.f3) },
     meaning: tt(
-      `Requests answered within one hour closed at ${FORECAST.f1}% against ${FORECAST.controlRate}%, ${FORECAST.f2} times as often. Across ${num(PILOT.yearly)} requests a year that is about ${euro(FORECAST.f3)}, so LiveConnect should answer the quote form and the pricing page first, and test it fairly, because sales may have answered the eager customers first.`,
-      `Innerhalb einer Stunde beantwortete Anfragen schlossen zu ${num(FORECAST.f1)} % gegenüber ${num(FORECAST.controlRate)} % ab, ${num(FORECAST.f2)}-mal so oft. Bei ${num(PILOT.yearly)} Anfragen pro Jahr sind das etwa ${euro(FORECAST.f3)}, also sollte LiveConnect zuerst Angebotsformular und Preisseite schnell beantworten und das fair testen, weil der Vertrieb vielleicht die interessierten Kunden zuerst beantwortete.`,
+      `Requests answered within one hour closed at ${FORECAST.f1}% against ${FORECAST.controlRate}%, ${FORECAST.f2} times as often, so LiveConnect should answer the quote form and the pricing page fast first, and test it fairly, because sales may have answered the eager customers first.`,
+      `Innerhalb einer Stunde beantwortete Anfragen schlossen zu ${num(FORECAST.f1)} % gegenüber ${num(FORECAST.controlRate)} % ab, ${num(FORECAST.f2)}-mal so oft, also sollte LiveConnect zuerst Angebotsformular und Preisseite schnell beantworten und das fair testen, weil der Vertrieb vielleicht die interessierten Kunden zuerst beantwortete.`,
     ),
     valuable: [...VALUABLE_TRUTH],
     churners: [...CHURN_TRUTH],
@@ -47,8 +67,8 @@ export function KEY_L1(): Partial<L1State> {
     unc: ["sample", "cause", "missing", "shift"] as UncId[],
     rows: Object.fromEntries(PATTERN_IDS.map((x) => [x, { risk: riskOf(TRUTH_LEFT[x], TRUTH_COUNTS[x]), meaning: MEANING_TRUTH[x], measure: MEASURE_TRUTH[x] }])) as Record<PatternId, PatternRow>,
     misread: tt(
-      "1) Closing rate of quote requests (outcome), from the CRM, target 9% by month 4 against 6% today. 2) First response time (driver), from chat and CRM timestamps, target under 5 minutes on decision pages. 3) Share of chats rated “not helpful” (guardrail), from chat ratings, must stay below 20%.",
-      "1) Abschlussquote der Angebotsanfragen (Outcome), aus dem CRM, Ziel 9 % bis Monat 4 gegenüber 6 % heute. 2) Erste Antwortzeit (Treiber), aus Chat- und CRM-Zeitstempeln, Ziel unter 5 Minuten auf Entscheidungsseiten. 3) Anteil der als „nicht hilfreich“ bewerteten Chats (Guardrail), aus den Chat-Bewertungen, muss unter 20 % bleiben.",
+      "1) Closing rate of quote requests (outcome), from the CRM, aim: up, above today's rate. 2) First response time (driver), from chat and CRM timestamps, aim: down, fast on the decision pages. 3) Share of chats rated “not helpful” (guardrail), from the chat ratings, aim: stay under a limit.",
+      "1) Abschlussquote der Angebotsanfragen (Outcome), aus dem CRM, Ziel: hoch, über der heutigen Quote. 2) Erste Antwortzeit (Treiber), aus Chat- und CRM-Zeitstempeln, Ziel: runter, schnell auf den Entscheidungsseiten. 3) Anteil der als „nicht hilfreich“ bewerteten Chats (Guardrail), aus den Chat-Bewertungen, Ziel: unter einer Grenze bleiben.",
     ),
     ab: {
       ...AB_MODEL,
@@ -60,6 +80,7 @@ export function KEY_L1(): Partial<L1State> {
     exp: Object.fromEntries(MODEL_MEASURES.map((id) => [id, explainBucket(MEASURE_BY_ID[id].evidence)])) as Record<string, Score>,
     fea: Object.fromEntries(MODEL_MEASURES.map((id) => [id, MEASURE_BY_ID[id].model.feasibility])) as Record<string, Score>,
     eff: Object.fromEntries(MODEL_MEASURES.map((id) => [id, MEASURE_BY_ID[id].model.effect])) as Record<string, Score>,
+    reasons: Object.fromEntries(MODEL_MEASURES.map((id) => [id, MEASURE_REASON[id]()])) as Record<string, string>,
     order: [...MODEL_ORDER],
     why: tt(
       "The chat goes first: it scores 27, works within four weeks and answers visitors on the pages where they decide, where fast answers closed three times as often. The KPI dashboard and weekly test routine come second and start with it, so the chat is measured from its first week. Real-time personalisation comes third because it needs eight weeks. The three cost €115,000 of the €170,000; the website relaunch and the avatar are too slow for four months.",
@@ -92,28 +113,21 @@ export function KEY_R2(): Partial<R2State> {
     alloc: Object.fromEntries(MODEL_ARCH.map((id) => [id, true])),
     start: { ...MODEL_START } as Record<string, number>,
     owner: Object.fromEntries(MODEL_ARCH.map((id) => [id, OWNER_ACCEPT[id][0]])) as Record<string, OwnerId>,
-    trigger: Object.fromEntries(MODEL_ARCH.map((id) => [id, MODEL_TRIGGER[id as keyof typeof MODEL_TRIGGER]])) as Record<string, string>,
+    trigger: Object.fromEntries(MODEL_ARCH.map((id) => [id, triggerSentence(id)])) as Record<string, string>,
     postponed: tt(
       "The all-in-one AI platform (€90,000) is left out: the six funded items cost €180,000 of the €190,000, the platform would push the plan €80,000 over, it takes fourteen weeks and nobody at LiveConnect could explain or measure it. The relaunch (€80,000, sixteen weeks) is too slow for four months.",
       "Die All-in-one-KI-Plattform (90.000 €) bleibt draußen: Die sechs finanzierten Punkte kosten 180.000 € von 190.000 €, die Plattform brächte den Plan 80.000 € über das Budget, sie braucht vierzehn Wochen, und niemand bei LiveConnect könnte sie erklären oder messen. Der Relaunch (80.000 €, sechzehn Wochen) ist für vier Monate zu langsam.",
     ),
-    pickup: tt(
-      "If the closing rate reaches 9% by month 4, we plan the relaunch of the three pages with the highest exit rate for the next half-year.",
-      "Erreicht die Abschlussquote bis Monat 4 9 %, planen wir für das nächste Halbjahr den Relaunch der drei Seiten mit der höchsten Ausstiegsrate.",
-    ),
+    pickup: pickupSentence(MODEL_PICKUP),
     decision: "stage",
-    assumptions: [
-      tt("Speed itself raises closings, not only the choice of eager customers. This is wrong if a random-split test shows less than 1.2 times the closing rate for fast answers on 100 requests per group by month 3.", "Tempo selbst erhöht die Abschlüsse, nicht nur die Auswahl interessierter Kunden. Das ist falsch, wenn ein Test mit zufälliger Aufteilung bis Monat 3 bei 100 Anfragen pro Gruppe weniger als das 1,2-Fache der Abschlussquote für schnelle Antworten zeigt."),
-      tt("Visitors accept a chat that opens by itself. This is wrong if more than 20% of chats are rated “not helpful” or complaints about pop-ups rise in any week.", "Besucher akzeptieren einen Chat, der sich selbst öffnet. Das ist falsch, wenn in einer Woche mehr als 20 % der Chats als „nicht hilfreich“ bewertet werden oder Beschwerden über Pop-ups steigen."),
-      tt("The decision pages are tracked well enough to steer by. This is wrong if the live screen shows response times for fewer than 90% of requests by the end of month 1.", "Die Entscheidungsseiten werden gut genug erfasst, um danach zu steuern. Das ist falsch, wenn der Live-Bildschirm bis Ende Monat 1 für weniger als 90 % der Anfragen Antwortzeiten zeigt."),
-    ],
+    assumptions: [0, 1, 2].map((i) => assumptionSentence(i)),
     tripKpi: MODEL_TRIPWIRE.kpi,
     tripThreshold: String(MODEL_TRIPWIRE.threshold),
     tripMonth: MODEL_TRIPWIRE.month,
     tripAction: "adjust",
     challenge: tt(
-      "I keep the chat and fix its answers. Speed is solved: from 4 hours to 2 minutes. The problem is quality: 20% of chats are not helpful, which is our guardrail, so this week marketing rewrites the five worst answers and hands those questions to a person at once. 6.0% to 6.3% after two months rests on too few requests to judge; the tripwire of 9% in month 4 decides. Switching the chatbot off brings back the wait, and the platform could not be measured at all.",
-      "Ich behalte den Chat und verbessere seine Antworten. Das Tempo ist gelöst: von 4 Stunden auf 2 Minuten. Das Problem ist die Qualität: 20 % der Chats sind nicht hilfreich, das ist unsere Guardrail, also schreibt das Marketing diese Woche die fünf schlechtesten Antworten neu und übergibt diese Fragen sofort an einen Menschen. 6,0 % zu 6,3 % nach zwei Monaten beruhen auf zu wenigen Anfragen für ein Urteil; der Tripwire von 9 % in Monat 4 entscheidet. Den Chatbot abzuschalten bringt das Warten zurück, und die Plattform ließe sich gar nicht messen.",
+      "I keep the chat and fix its answers. Speed is solved: from 4 hours to 2 minutes. The problem is quality: 20% of chats are not helpful, which is our guardrail, so this week marketing rewrites the worst answers and hands those questions to a person at once. 6.0% to 6.3% after two months rests on too few requests to judge; the tripwire of 9% in month 4 decides. Switching the chatbot off brings back the wait, and the platform could not be measured at all.",
+      "Ich behalte den Chat und verbessere seine Antworten. Das Tempo ist gelöst: von 4 Stunden auf 2 Minuten. Das Problem ist die Qualität: 20 % der Chats sind nicht hilfreich, das ist unsere Guardrail, also schreibt das Marketing diese Woche die schlechtesten Antworten neu und übergibt diese Fragen sofort an einen Menschen. 6,0 % zu 6,3 % nach zwei Monaten beruhen auf zu wenigen Anfragen für ein Urteil; der Tripwire von 9 % in Monat 4 entscheidet. Den Chatbot abzuschalten, brächte die Wartezeit zurück, und die Plattform ließe sich gar nicht messen.",
     ),
   };
 }

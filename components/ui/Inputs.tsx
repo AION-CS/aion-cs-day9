@@ -66,7 +66,8 @@ export function TextBox({
   );
 }
 
-export type Opt<T extends string> = { id: T; label: string; sub?: string };
+/** `tag`: a small fact printed right after the label (e.g. the area a measure acts on), never a verdict. */
+export type Opt<T extends string> = { id: T; label: string; sub?: string; tag?: string };
 
 /** A vertical list of options, each a real button with a pressed state. Single or multiple choice; 44 px tall at least. */
 export function OptionList<T extends string>({
@@ -112,8 +113,9 @@ export function OptionList<T extends string>({
                 {multi ? (on(o.id) ? "☑" : "☐") : on(o.id) ? "◉" : "○"}
               </span>
               {o.label}
+              {o.tag && <span className="ml-2 inline-block whitespace-nowrap rounded-full border border-signal/40 bg-signalSoft px-2 py-0.5 align-middle text-micro font-semibold normal-case tracking-normal text-signal">{o.tag}</span>}
             </span>
-            {o.sub && <span className="mt-0.5 pl-5 text-ash">{o.sub}</span>}
+            {o.sub && <span className="mt-0.5 whitespace-pre-line pl-5 text-ash">{o.sub}</span>}
           </button>
         );
       })}
@@ -175,6 +177,14 @@ export function CheckBar({
         {tt("Checks requested:", "Angeforderte Prüfungen:")} <span className="tnum font-semibold text-ink">{checks}</span>
       </span>
       {children}
+      {checks > 0 && (
+        <p className="basis-full text-micro normal-case tracking-normal text-ash">
+          {tt(
+            "A check is a hint, not a verdict. If you decide differently and can give a clear reason, you can still export.",
+            "Eine Prüfung ist ein Hinweis, kein Urteil. Wenn Sie anders entscheiden und einen klaren Grund nennen können, können Sie trotzdem exportieren.",
+          )}
+        </p>
+      )}
     </div>
   );
 }

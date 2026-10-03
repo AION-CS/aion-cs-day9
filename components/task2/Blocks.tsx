@@ -3,12 +3,16 @@
 import clsx from "clsx";
 import { AnswerBlock } from "@/components/ui/AnswerBlock";
 import { AnswerKey } from "@/components/ui/AnswerKey";
+import { BlockMissing } from "@/components/ui/BlockMissing";
+import { ExampleAnswer } from "@/components/ui/ExampleAnswer";
 import { BudgetBar } from "@/components/ui/BudgetBar";
 import { CheckBar, OptionList, Reading, ScorePick, TextBox } from "@/components/ui/Inputs";
 import { MaterialRefs } from "@/components/ui/MaterialRefs";
 import { MentorGuide } from "@/components/ui/MentorGuide";
 import { RevealHint } from "@/components/ui/RevealHint";
 import { WritingHelp } from "@/components/ui/WritingHelp";
+import { ArchFacts, AssumptionKitFor, PickupKitFor, TriggerKitFor, TripNumberHint } from "@/components/task2/Kits";
+import { ARCH_EXTRA, KPI_AIM } from "@/data/route2Extra";
 import {
   ACTION_LABEL,
   ARCH,
@@ -49,7 +53,7 @@ import { scrollToAndFlash } from "@/lib/flash";
 import { Gloss } from "@/lib/glossify";
 import { euro, num, pct, tt } from "@/lib/lang";
 import { IDS } from "@/lib/missing";
-import { assumptionGuide, challengeGuide, greatestGuide, postponedGuide, principleTextGuide, triggerGuide } from "@/lib/mentorGuide";
+import { assumptionGuide, challengeGuide, greatestGuide, postponedGuide, principleTextGuide, pickupGuide, triggerGuide } from "@/lib/mentorGuide";
 import { compKey, decisionKey, logicKey, ownerKey, principleKey, sourceKey, tripKey } from "@/lib/answerKey";
 import { MIN_LINE } from "@/lib/progress";
 import { BLOCK_MINUTES } from "@/lib/routes";
@@ -125,12 +129,26 @@ export function Block31() {
             onChange={(v) => patch((s) => ({ principleText: { ...s.principleText, [c]: v } }))}
             min={MIN_LINE}
             rows={2}
-          />
+          >
+            <WritingHelp
+              id={`principle-kit-${c}`}
+              refs={[
+                { label: tt("The principle as printed", "Das Prinzip, wie gedruckt"), value: PRINCIPLES[c].means, target: IDS.principlePick },
+                { label: tt("The problems the brief names", "Die Probleme, die der Auftrag nennt"), value: tt("interaction not coordinated · responses too slow · automation and personalisation potential unused", "nicht koordinierte Interaktion · zu langsame Reaktionen · ungenutztes Potenzial von Automatisierung und Personalisierung"), target: "task-2" },
+              ]}
+              steps={[
+                tt("Say what changes for a team or a customer once everyone works by this principle.", "Sagen Sie, was sich für ein Team oder einen Kunden ändert, wenn alle nach diesem Prinzip arbeiten."),
+                tt("Name the problem of the brief it answers.", "Nennen Sie das Problem des Auftrags, das es beantwortet."),
+              ]}
+            />
+          </TextBox>
+          <ExampleAnswer id={`principle-example-${c}`} guide={principleTextGuide(c)} />
           {mentor && <MentorGuide guide={principleTextGuide(c)} />}
         </div>
       ))}
       <CheckBar onCheck={check} checkLabel={tt("Check my principles", "Meine Prinzipien prüfen")} checks={r2.checks} />
       <AnswerKey block={principleKey()} />
+      <BlockMissing block="3.1" route={2} />
     </AnswerBlock>
   );
 }
@@ -184,6 +202,7 @@ export function Block32() {
         </Reading>
       )}
       <AnswerKey block={sourceKey()} />
+      <BlockMissing block="3.2" route={2} />
     </AnswerBlock>
   );
 }
@@ -297,9 +316,23 @@ export function Block33() {
           onChange={(v) => patch({ greatestWhy: v })}
           min={40}
           rows={3}
-        />
+        >
+          <WritingHelp
+            id="greatest-kit"
+            refs={[
+              { label: tt("Your three KPIs", "Ihre drei KPIs"), value: r2.comps.map((id) => COMP_BY_ID[id].name).join(" · ") || tt("not chosen yet", "noch nicht gewählt"), target: IDS.compPick },
+              { label: tt("The four tests", "Die vier Tests"), value: CRITERIA.map((c) => c.name).join(" · "), target: IDS.compPick },
+            ]}
+            steps={[
+              tt("Name the one KPI and the tests it passes best (linked to value and early together).", "Nennen Sie den einen KPI und die Tests, die er am besten besteht (mit dem Wert verbunden und früh zugleich)."),
+              tt("Say which problem of the brief it answers.", "Sagen Sie, welches Problem des Auftrags er beantwortet."),
+            ]}
+          />
+        </TextBox>
+        <ExampleAnswer id="greatest-example" guide={greatestGuide()} />
         {mentor && <MentorGuide guide={greatestGuide()} />}
       </div>
+      <BlockMissing block="3.3" route={2} />
     </AnswerBlock>
   );
 }
@@ -369,6 +402,7 @@ export function Block34() {
         </Reading>
       )}
       <AnswerKey block={logicKey()} />
+      <BlockMissing block="3.4" route={2} />
     </AnswerBlock>
   );
 }
@@ -446,6 +480,12 @@ export function Block35() {
           {over > 0 ? tt(`${euro(over)} over: leave out the item with the weakest case, do not trim every item a little.`, `${euro(over)} darüber: Lassen Sie den Punkt mit der schwächsten Begründung weg, kürzen Sie nicht jeden ein bisschen.`) : tt(`${euro(archLeft(r2))} left.`, `${euro(archLeft(r2))} übrig.`)}
         </p>
       </div>
+      <p className="text-caption text-ash">
+        {tt(
+          "How to read an item card. The line under the name says what it does, then a scene from a normal day. “Aims to move” is the one figure it is meant to change, with today's value and the aim (or, for a guardrail, the limit still accepted): your trigger watches that figure. “Needs first” says what must be in use before its effect can be measured. “To pay back, it must keep” is how many customers it has to stop from leaving to earn back its cost, found by dividing the cost by what one customer is worth a year.",
+          "So lesen Sie eine Karte. Die Zeile unter dem Namen sagt, was er tut, dann folgt eine Szene aus einem normalen Tag. „Soll bewegen“ ist die eine Zahl, die er verändern soll, mit dem heutigen Wert und dem Ziel (oder bei einer Guardrail der noch akzeptierten Grenze): Ihr Trigger beobachtet diese Zahl. „Braucht zuerst“ sagt, was im Einsatz sein muss, bevor sich seine Wirkung messen lässt. „Zum Bezahltmachen muss er halten“ ist die Zahl der Kunden, die er vom Gehen abhalten muss, um seine Kosten zurückzuverdienen, gefunden, indem die Kosten durch den Jahreswert eines Kunden geteilt werden.",
+        )}
+      </p>
       {ARCH.map((a) => {
         const on = !!r2.alloc[a.id];
         return (
@@ -459,6 +499,8 @@ export function Block35() {
               </button>
             </div>
             <p className="text-caption text-ash">{a.what}</p>
+            <p className="text-caption text-ink">{ARCH_EXTRA[a.id].scene}</p>
+            <ArchFacts id={a.id} />
             {on && (
               <>
                 <div className="grid gap-3 md:grid-cols-2">
@@ -498,7 +540,10 @@ export function Block35() {
                   onChange={(v) => setItem(a.id, { trigger: v })}
                   min={20}
                   rows={2}
-                />
+                >
+                  <TriggerKitFor id={a.id} r2={r2} value={r2.trigger[a.id] ?? ""} onChange={(v) => setItem(a.id, { trigger: v })} />
+                </TextBox>
+                <ExampleAnswer id={`trigger-example-${a.id}`} guide={triggerGuide(a.id)} />
                 {mentor && <MentorGuide guide={triggerGuide(a.id)} />}
               </>
             )}
@@ -537,6 +582,7 @@ export function Block35() {
               refs={[{ label: tt("Budget", "Budget"), value: euro(R2_BUDGET), target: IDS.archTotal }]}
             />
           </TextBox>
+          <ExampleAnswer id="postponed-example" guide={postponedGuide()} />
           <TextBox
             id={IDS.pickup}
             label={tt("The pickup point", "Der Pickup Point")}
@@ -545,8 +591,12 @@ export function Block35() {
             onChange={(v) => patch({ pickup: v })}
             min={15}
             rows={2}
-          />
+          >
+            <PickupKitFor notFunded={ARCH_IDS.filter((id) => !r2.alloc[id])} value={r2.pickup} onChange={(v) => patch({ pickup: v })} />
+          </TextBox>
+          <ExampleAnswer id="pickup-example" guide={pickupGuide()} />
           {mentor && <MentorGuide guide={postponedGuide()} />}
+          {mentor && <MentorGuide guide={pickupGuide()} />}
         </div>
       )}
 
@@ -558,6 +608,7 @@ export function Block35() {
         </Reading>
       )}
       <AnswerKey block={ownerKey(f)} />
+      <BlockMissing block="3.5" route={2} />
     </AnswerBlock>
   );
 }
@@ -578,9 +629,26 @@ export function Block36() {
       title={tt("Block 3.6 · A decision under time pressure and uncertain data", "Block 3.6 · Eine Entscheidung unter Zeitdruck und unsicherer Datenlage")}
       kind="OBJECTIVE + JUDGED"
       minutes={BLOCK_MINUTES["3.6"]}
-      findIt={tt("Route 2 → Task 2 → your own answers in Blocks 3.1 to 3.5, the baselines below, and the decision rules in Materi B5. Answer in the fields below.", "Route 2 → Task 2 → Ihre eigenen Antworten in den Blöcken 3.1 bis 3.5, die Ausgangswerte unten und die Entscheidungsregeln in Materi B5. Antworten Sie in den Feldern unten.")}
+      findIt={tt("Route 2 → Task 2 → your own plan in Block 3.5 (quoted below), the numbers today in the situation above, and the decision rules in Materi B5. Answer in the fields below.", "Route 2 → Task 2 → Ihr eigener Plan in Block 3.5 (unten zitiert), die Zahlen heute in der Lage oben und die Entscheidungsregeln in Materi B5. Antworten Sie in den Feldern unten.")}
     >
       <MaterialRefs refs={["B5"]} />
+      <div id="plan-quote" className="rounded-lg border border-line bg-mist/50 p-3 text-caption text-ink">
+        <p className="smallcaps">{tt("Your plan from Block 3.5 · what your decision rests on", "Ihr Plan aus Block 3.5 · worauf Ihre Entscheidung beruht")}</p>
+        {funded(r2).length === 0 ? (
+          <p className="mt-1 text-ash">{tt("You have not funded any item yet. That is fine: nothing here is blocked, and this box fills in when you do.", "Sie haben noch keinen Punkt finanziert. Das ist in Ordnung: Hier ist nichts gesperrt, und dieses Feld füllt sich, sobald Sie es tun.")}</p>
+        ) : (
+          <ul className="mt-1 list-disc space-y-0.5 pl-4">
+            {funded(r2).map((id) => (
+              <li key={id}>
+                <button type="button" onClick={() => scrollToAndFlash(IDS.arch(id), "ref")} className="text-left underline decoration-dotted underline-offset-2 hover:text-accentHi">
+                  {ARCH_BY_ID[id].name}
+                </button>{" "}
+                · {r2.start[id] ? tt(`starts in month ${r2.start[id]}`, `startet in Monat ${r2.start[id]}`) : tt("no start month yet", "noch kein Startmonat")} · {tt("aims to move", "soll bewegen")}: {ARCH_EXTRA[id].metric}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
       <div id={IDS.decision} className={clsx("space-y-2 rounded-lg p-1", r2.decisionFlagged && "is-flagged")}>
         <p className="font-semibold text-ink">{tt("Your decision", "Ihre Entscheidung")}</p>
         <p className="text-caption text-ash">{tt("The brief asks you to decide under time pressure and with an uncertain data situation. Choose one.", "Der Auftrag verlangt, dass Sie unter Zeitdruck und mit unsicherer Datenlage entscheiden. Wählen Sie eine.")}</p>
@@ -605,7 +673,10 @@ export function Block36() {
               onChange={(v) => patch((s) => ({ assumptions: s.assumptions.map((x, j) => (j === i ? v : x)) }))}
               min={MIN_LINE}
               rows={2}
-            />
+            >
+              <AssumptionKitFor index={i} value={a} onChange={(v) => patch((s) => ({ assumptions: s.assumptions.map((x, j) => (j === i ? v : x)) }))} />
+            </TextBox>
+            <ExampleAnswer id={`assumption-example-${i}`} guide={assumptionGuide(i)} />
             {mentor && <MentorGuide guide={assumptionGuide(i)} />}
           </div>
         ))}
@@ -627,7 +698,7 @@ export function Block36() {
               {KPIS.map((x) => (
                 <option key={x.id} value={x.id}>
                   {x.label} ({tt("today", "heute")}: {num(x.baseline)}
-                  {unit(x)})
+                  {unit(x)}{KPI_AIM[x.id] !== undefined ? tt(`, aim ${num(KPI_AIM[x.id]!)}`, `, Ziel ${num(KPI_AIM[x.id]!)}`) : ""})
                 </option>
               ))}
             </select>
@@ -644,6 +715,7 @@ export function Block36() {
               {k ? tt(` (${k.unit}; better is ${k.better === "up" ? "higher" : "lower"})`, ` (${k.unit}; besser ist ${k.better === "up" ? "höher" : "niedriger"})`) : ""}
             </label>
             <input id="trip-threshold" className="field tnum mt-1" inputMode="decimal" value={r2.tripThreshold} onChange={(e) => patch({ tripThreshold: e.target.value, tripFlags: [] })} />
+            <TripNumberHint kpi={r2.tripKpi} onUse={(v) => patch({ tripThreshold: v, tripFlags: [] })} />
             {flags.includes("threshold") && r2.tripFlags.includes("threshold") && k && (
               <p className="mt-1 text-micro normal-case tracking-normal text-ink">
                 <span className="font-semibold text-accent">{tt("Clue. ", "Hinweis. ")}</span>
@@ -696,13 +768,18 @@ export function Block36() {
         >
           <WritingHelp
             id="challenge-help"
+            refs={[
+              { label: tt("Your decision in this block", "Ihre Entscheidung in diesem Block"), value: DECISIONS.find((d) => d.id === r2.decision)?.label ?? tt("not chosen yet", "noch nicht gewählt"), target: IDS.decision },
+              { label: tt("Your tripwire", "Ihr Tripwire"), value: k ? `${k.label} · ${r2.tripThreshold || "—"} · ${r2.tripMonth ? tt("month", "Monat") + " " + r2.tripMonth : "—"}` : tt("not chosen yet", "noch nicht gewählt"), target: IDS.trip },
+            ]}
             steps={[
               tt("Look at the numbers first: which chats are rated “not helpful”, and is 6.0% to 6.3% after two months on enough requests to judge?", "Schauen Sie zuerst auf die Zahlen: Welche Chats werden als „nicht hilfreich“ bewertet, und reichen 6,0 % zu 6,3 % nach zwei Monaten bei genug Anfragen für ein Urteil?"),
-              tt("Say what still holds: speed is solved and measured, while the platform could not be measured at all (Materi B2, B5).", "Sagen Sie, was noch gilt: Das Tempo ist gelöst und gemessen, während sich die Plattform gar nicht messen ließe (Materi B2, B5)."),
+              tt("Say what still holds: speed is solved and measured, while the platform could not be measured at all (Materi B5).", "Sagen Sie, was noch gilt: Das Tempo ist gelöst und gemessen, während sich die Plattform gar nicht messen ließe (Materi B5)."),
               tt("Change one thing, not the programme, and say when the tripwire will tell you whether you were right.", "Ändern Sie eine Sache, nicht das Programm, und sagen Sie, wann der Tripwire zeigt, ob Sie recht hatten."),
             ]}
           />
         </TextBox>
+        <ExampleAnswer id="challenge-example" guide={challengeGuide()} />
         {mentor && <MentorGuide guide={challengeGuide()} />}
       </div>
 
@@ -715,6 +792,7 @@ export function Block36() {
       )}
       <AnswerKey block={decisionKey()} />
       <AnswerKey block={tripKey()} />
+      <BlockMissing block="3.6" route={2} />
     </AnswerBlock>
   );
 }

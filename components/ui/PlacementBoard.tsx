@@ -9,11 +9,26 @@ import { tt } from "@/lib/lang";
 export type BoardItem = { id: string; meta?: string; text: string };
 export type BoardBin<B extends string> = { id: B; label: string; hint: string };
 
+function Marked({ text, mark }: { text: string; mark: string }) {
+  const i = text.indexOf(mark);
+  if (i < 0) return <>{text}</>;
+  return (
+    <>
+      {text.slice(0, i)}
+      <mark className="rounded bg-gold/40 px-0.5 font-semibold text-ink">{mark}</mark>
+      {text.slice(i + mark.length)}
+    </>
+  );
+}
+
 /**
  * A sort exercise: items go into named bins by native HTML5 drag and drop, or by click (select an item, then a bin) for touch and
  * keyboard. Every placement is undoable (buttons, Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z, Ctrl+Y). One set-level Check reports only how many
  * placed items hold, never which ones, because with a few bins naming the wrong items would name the answer. "Show clue" prints a test
  * question under every item at once. After two genuine checks a "show the reasoning" button opens and is recorded in the export.
+ * An optional "Highlight the key words" toggle underlines the decisive phrase of every item's own text at once — never only the
+ * wrong ones, and never which bin it points to (CLAUDE.md #4) — so a learner spends effort reasoning about the phrase, not hunting
+ * for it inside a longer quotation.
  */
 export function PlacementBoard<B extends string>({
   items,
@@ -39,6 +54,7 @@ export function PlacementBoard<B extends string>({
   intro,
   binCols = 3,
   checkLabel,
+  keyPhrases,
 }: {
   items: BoardItem[];
   bins: BoardBin<B>[];
@@ -63,10 +79,13 @@ export function PlacementBoard<B extends string>({
   intro: string;
   binCols?: 2 | 3;
   checkLabel?: string;
+  /** The decisive phrase inside each item's own text, keyed by item id. Drives "Highlight the key words". */
+  keyPhrases?: Record<string, string>;
 }) {
   const [selected, setSelected] = useState<string | null>(null);
   const [dragging, setDragging] = useState<string | null>(null);
   const [over, setOver] = useState<string | null>(null);
+  const [highlightOn, setHighlightOn] = useState(false);
   const byId = Object.fromEntries(items.map((i) => [i.id, i]));
   const unplaced = items.filter((i) => value[i.id] === null || value[i.id] === undefined);
 
@@ -109,7 +128,9 @@ export function PlacementBoard<B extends string>({
         )}
       >
         {it.meta && <span className="smallcaps">{it.meta}</span>}
-        <span className="text-caption leading-snug text-ink">{it.text}</span>
+        <span className="text-caption leading-snug text-ink">
+          {highlightOn && keyPhrases?.[it.id] ? <Marked text={it.text} mark={keyPhrases[it.id]} /> : it.text}
+        </span>
       </button>
       {clueShown && clues[it.id] && <p className="fade-in rounded-md border border-gold bg-accentSoft px-2 py-1 text-micro normal-case tracking-normal text-ink">{clues[it.id]}</p>}
     </div>
@@ -178,6 +199,11 @@ export function PlacementBoard<B extends string>({
               {tt("Show clue", "Hinweis zeigen")}
             </button>
           )}
+          {keyPhrases && (
+            <button type="button" onClick={() => setHighlightOn((v) => !v)} className="btn-ghost btn-sm border-gold" aria-pressed={highlightOn}>
+              {highlightOn ? tt("Hide the key words", "Schlüsselwörter ausblenden") : tt("Highlight the key words", "Schlüsselwörter hervorheben")}
+            </button>
+          )}
           <span className="text-caption text-ash">
             {tt("Checks requested:", "Angeforderte Prüfungen:")} <span className="tnum font-semibold text-ink">{checks}</span>
           </span>
@@ -192,6 +218,7 @@ export function PlacementBoard<B extends string>({
           </p>
         )}
         {clueShown && <p className="text-micro normal-case tracking-normal text-ash">{tt(`The clue is a test question under every ${noun}, not only under the ones that are off.`, "Der Hinweis ist eine Testfrage unter jedem Element, nicht nur unter den falsch zugeordneten.")}</p>}
+        {highlightOn && <p className="text-micro normal-case tracking-normal text-ash">{tt(`The highlight marks the decisive phrase in every ${noun}'s own text, not which bin it belongs in.`, "Die Hervorhebung markiert die entscheidende Formulierung im Text jedes Elements, nicht die richtige Kategorie.")}</p>}
         {canReveal && !reasoningOpened && (
           <button type="button" onClick={onOpenReasoning} className="btn-ghost btn-sm">
             {tt("Show the reasoning (recorded in your export)", "Begründung zeigen (wird in Ihrem Export vermerkt)")}

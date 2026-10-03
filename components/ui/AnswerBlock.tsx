@@ -29,6 +29,25 @@ export function Pill({ kind }: { kind: BlockKind }) {
   );
 }
 
+/**
+ * Core/Optional pill (CLAUDE.md #35): shown on a block or card once its route has adopted the split, so the
+ * status is visible on the page itself, not only in the page map (#28). Core is teal (a structural fact, the
+ * same family as OBJECTIVE — never the warning rust or the attention amber, #15); Optional matches the quiet
+ * neutral OptionalSection already uses for its own collapsed pill. Omitted entirely (no prop passed) for a
+ * day, or a block, that has not adopted the Core/Optional split.
+ */
+export function CorePill({ core }: { core: boolean }) {
+  return core ? (
+    <span className="pill border-signal/50 bg-signalSoft text-signal" title={tt("On the shortest path to this route's own objective.", "Auf dem kürzesten Weg zum eigenen Ziel dieser Route.")}>
+      {tt("CORE", "KERN")}
+    </span>
+  ) : (
+    <span className="pill border-line bg-paper text-ash" title={tt("Deepens or repeats a Core part. Collapsed by default, never removed.", "Vertieft oder wiederholt einen Kern-Teil. Standardmäßig eingeklappt, nie entfernt.")}>
+      {tt("OPTIONAL", "OPTIONAL")}
+    </span>
+  );
+}
+
 /** The FIND IT line: exact route + widget name as printed on screen + the exact click. */
 export function FindIt({ path, analyse = true }: { path: string; analyse?: boolean }) {
   return (
@@ -50,6 +69,7 @@ export function AnswerBlock({
   children,
   analyse = true,
   minutes,
+  core,
 }: {
   id?: string;
   title: string;
@@ -59,12 +79,15 @@ export function AnswerBlock({
   children: ReactNode;
   /** A guide for the facilitator, not a timer. */
   minutes?: number;
+  /** Core/Optional (#35): true/false once the route has adopted the split; omit where it has not. */
+  core?: boolean;
 }) {
   return (
     <section id={id} className="card space-y-3 p-4 md:p-5">
       <header className="flex flex-wrap items-center gap-2">
         <h3>{title}</h3>
         <Pill kind={kind} />
+        {core !== undefined && <CorePill core={core} />}
         {minutes ? <span className="smallcaps ml-auto whitespace-nowrap">{tt("about", "ca.")} {minutes} {tt("min", "Min.")}</span> : null}
       </header>
       <FindIt path={findIt} analyse={analyse} />

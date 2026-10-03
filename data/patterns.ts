@@ -162,3 +162,19 @@ export const AB_MODEL = { change: "one", control: "random", kpi: "conv", size: "
 export const hasHypothesis = (s: string) => /\b(if|wenn|falls)\b/i.test(s) && /\b(because|since|as|weil|da|denn)\b/i.test(s);
 /** A decision rule names a number to decide by. */
 export const hasRuleNumber = (s: string) => /\d/.test(s);
+
+/** The decisive phrase inside each metric's own text, for "Highlight the key words" (never which kind it points to). */
+export const REC_KEY: Record<string, string> = bi({
+  p01: t("deals ÷ requests", "Abschlüsse ÷ Anfragen"),
+  p02: t("Revenue from online leads per month", "Umsatz aus Online-Leads pro Monat"),
+  p03: t("Share of new customers who renew after the first year", "Anteil der Neukunden, die nach dem ersten Jahr verlängern"),
+  p04: t("First response time", "Erste Antwortzeit"),
+  p05: t("who start a chat or request a quote", "die einen Chat beginnen oder ein Angebot anfragen"),
+  p06: t("Average time visitors spend", "Durchschnittliche Verweildauer"),
+  p07: t("rates “not helpful”", "als „nicht hilfreich“ bewertet"),
+  p08: t("Complaints about pushy pop-ups", "Beschwerden über aufdringliche Pop-ups"),
+  p09: t("the customer has to repeat the question", "der Kunde die Frage wiederholen muss"),
+  p10: t("Website visitors per month", "Website-Besucher pro Monat"),
+  p11: t("Social media posts published per month", "Veröffentlichte Social-Media-Posts pro Monat"),
+  p12: t("Pop-ups shown per day", "Gezeigte Pop-ups pro Tag"),
+});

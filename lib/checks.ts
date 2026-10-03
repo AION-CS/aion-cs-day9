@@ -42,17 +42,16 @@ export function sortHolds(sort: SortMap): { holds: number; placed: number } {
 
 /* ------------------------------------------------------------------ Block 1.2 */
 
-/** The figures a sentence may quote: F1 (4.8%), F2 (1.6 times), F3 (€388,800) and the standard rate (3%). */
-export const FORECAST_DERIVED = [FORECAST.f1, FORECAST.f2, FORECAST.f3, FORECAST.controlRate];
+/**
+ * Block 1.2 is read-only (CLAUDE.md #44): the app prints both rates and the lift, and the learner writes what they mean. The sentence
+ * has to quote at least one printed figure: a rate, the lift (written as a multiple) or a count behind a rate. A floor, not a judge of
+ * quality; English and German forms.
+ */
 export function citesForecastFigure(text: string): boolean {
   const nums = extractAmounts(text);
-  if (nums.some((n) => [FORECAST.f1, FORECAST.f3].some((d) => Math.abs(n - d) < 0.05 || (d > 1000 && Math.abs(n - d) < 0.5)))) return true;
-  // A lift of 3 or an 8% rate is a small number; accept it only when written as a multiple or a rate.
-  return /\b3([.,]0)?\s*(times|x|×|-?fach|mal)|\b(three|drei)\s*(times|mal)|\b3-?(fold|fach)|\b8([.,]0)?\s?%|\b200\s?%/i.test(text);
-}
-export function figMatches(entered: string, answer: number): boolean {
-  const v = parseAmount(entered);
-  return v !== null && Math.abs(v - answer) < 0.5;
+  if (nums.some((n) => [FORECAST.f1, FORECAST.controlRate].some((d) => Math.abs(n - d) < 0.05) || n === PILOT.control.orders || n === PILOT.variant.orders)) return true;
+  const lift = String(FORECAST.f2).replace(".", "[.,]");
+  return new RegExp(`\\b${lift}\\s*(times|x|×|-?fach|mal)|\\b${lift}-?(fold|fach)`, "i").test(text);
 }
 export { PILOT };
 

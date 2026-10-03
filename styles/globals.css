@@ -157,6 +157,23 @@ g.anim-flash-ref > .flash-rect { animation: flashRefSvg 1.2s ease-in-out; stroke
 .gloss:hover { color: var(--accent); }
 .gloss[aria-expanded="true"] { background: theme("colors.accentSoft"); color: var(--accent); }
 
+/* A number in a worked calculation that explains itself on click (components/ui/CalcTable.tsx). Amber dotted, so it reads as "more here". */
+.numx {
+  display: inline;
+  padding: 0 1px;
+  margin: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  cursor: help;
+  text-decoration: underline dotted theme("colors.gold");
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+.numx:hover { color: var(--accent); }
+.numx[aria-expanded="true"] { background: theme("colors.accentSoft"); color: var(--accent); }
+
 /* Always-visible "what this shows" reading under an interactive control. Same box everywhere so it is instantly recognisable. */
 .insight { border-left: 3px solid var(--accent); }
 

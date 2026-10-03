@@ -7,6 +7,7 @@ import type { NavItem } from "@/data/pageNav";
 import { scrollToAndFlash } from "@/lib/flash";
 import { taskBlocks } from "@/lib/progress";
 import type { RouteNo } from "@/lib/routes";
+import { openOptionalBlock } from "@/store/useOptionalOpen";
 import { useHydrated } from "@/store/useStore";
 import { usePersisted } from "@/store/usePersisted";
 import { tt } from "@/lib/lang";
@@ -30,8 +31,8 @@ export function PageNav({ route }: { route: RouteNo }) {
 
   const isDone = (it: NavItem) =>
     hydrated && !!it.done && ("card" in it.done ? !!p.ui.sectionsRead[it.done.card] : blocks[it.done.block]);
-  const doneCount = items.filter(isDone).length;
-  const trackable = items.filter((i) => i.done).length;
+  const doneCount = items.filter((i) => !i.optional && isDone(i)).length;
+  const trackable = items.filter((i) => i.done && !i.optional).length;
 
   useEffect(() => {
     let raf = 0;
@@ -70,6 +71,8 @@ export function PageNav({ route }: { route: RouteNo }) {
   const go = (id: string) => {
     setOpen(false);
     setActive(id);
+    // An Optional card or block is collapsed until asked for: open it first, then land on it.
+    openOptionalBlock(id);
     window.setTimeout(() => scrollToAndFlash(id, "ref", "start"), 60);
   };
   const activeItem = items.find((i) => i.id === active);
@@ -90,15 +93,22 @@ export function PageNav({ route }: { route: RouteNo }) {
                   const on = it.id === active;
                   const done = isDone(it);
                   return (
-                    <li key={it.id} className="group relative">
+                    <li key={it.id} className="group relative flex items-center justify-end gap-1">
+                      {/* Always visible, beside the pill, not only on hover/focus: a learner must never have to hover
+                          to know Core from Optional, and it must never push the row taller than the pill itself. */}
+                      {it.done && (
+                        <span aria-hidden className={clsx("whitespace-nowrap text-[9px] font-semibold uppercase leading-none tracking-wide", it.optional ? "text-ash" : "text-signal")}>
+                          {it.optional ? tt("optional", "optional") : tt("core", "Kern")}
+                        </span>
+                      )}
                       <button
                         type="button"
                         onClick={() => go(it.id)}
                         aria-current={on ? "location" : undefined}
-                        aria-label={`${it.short} · ${it.title}${done ? tt(" — done", " — erledigt") : ""}`}
+                        aria-label={`${it.short} · ${it.title}${it.done ? (it.optional ? tt(" — optional", " — optional") : tt(" — core", " — Kern")) : ""}${done ? tt(" — done", " — erledigt") : ""}`}
                         className={clsx(
-                          "relative flex h-7 min-w-[3.25rem] items-center justify-center rounded-full border px-2.5 text-micro font-bold transition-colors",
-                          on ? "border-ink bg-ink text-paper" : "border-line bg-paper text-ash hover:border-accent hover:text-ink",
+                          "relative flex h-7 min-w-[3.25rem] shrink-0 items-center justify-center rounded-full border px-2.5 text-micro font-bold transition-colors",
+                          on ? "border-ink bg-ink text-paper" : it.optional ? "border-dashed border-line bg-paper text-ash hover:border-accent hover:text-ink" : "border-line bg-paper text-ash hover:border-accent hover:text-ink",
                         )}
                       >
                         {it.short}
@@ -110,7 +120,7 @@ export function PageNav({ route }: { route: RouteNo }) {
                         aria-hidden
                         className="pointer-events-none absolute right-full top-1/2 mr-2 hidden -translate-y-1/2 whitespace-nowrap rounded-md bg-ink px-2 py-1 text-micro text-paper shadow-sm group-focus-within:block group-hover:block"
                       >
-                        {it.title}
+                        {it.title}{it.done ? (it.optional ? tt(" · Optional", " · Optional") : tt(" · Core", " · Kern")) : ""}
                       </span>
                     </li>
                   );
@@ -149,7 +159,14 @@ export function PageNav({ route }: { route: RouteNo }) {
                           )}
                         >
                           <span className={clsx("w-12 shrink-0 font-bold", on ? "text-paper" : "text-ash")}>{it.short}</span>
-                          <span className="min-w-0 flex-1">{it.title}</span>
+                          <span className="min-w-0 flex-1">
+                            {it.title}
+                            {it.done && (
+                              <span className={clsx("ml-1 text-micro font-normal", on ? "text-paper/80" : it.optional ? "text-ash" : "text-signal")}>
+                                {it.optional ? `(${tt("optional", "optional")})` : `(${tt("core", "Kern")})`}
+                              </span>
+                            )}
+                          </span>
                           {done && (
                             <span className={clsx("text-micro font-semibold", on ? "text-paper" : "text-signal")}>
                               <span aria-hidden>● </span>

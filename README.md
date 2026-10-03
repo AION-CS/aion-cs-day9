@@ -4,7 +4,7 @@
 *Customer retention in real time: personalisation, automation and optimisation.*
 A self-study companion: study material with twelve live instruments, two tasks and two working documents, in **English and German**
 (EN | DE in the top bar, `../CLAUDE.md` #32). It carries the shared standards `../CLAUDE.md` #1 to #28, the two-route form of #30
-and the German version of #32.
+and the German version of #32 and, since the retrofit of 2026-10-03, #33 to #46 (see “Retrofit” below).
 
 The case company is **LiveConnect IT Services GmbH** (the plan's case study): *high bounce rates, low interaction, measures not
 coordinated*, €170,000 and four months. Route 2 puts the learner in the Chief Digital Officer's chair: interaction not coordinated,
@@ -45,7 +45,7 @@ Next.js 14 App Router · TypeScript strict · Tailwind (CS tokens) · Zustand + 
 npm install
 npm run dev          # http://localhost:3000 (the parent launch config uses port 3009)
 npm run typecheck
-npm run verify:calc  # re-derives every figure and rule, and runs the mentor fill in both languages (123 checks)
+npm run verify:calc  # re-derives every figure and rule, and runs the mentor fill in both languages (295 checks)
 npm run build        # writes the static site to out/  (stop `npm run dev` first)
 ```
 
@@ -117,3 +117,67 @@ step tables with pitfalls, every free text with what to look for). Client-side c
 | 3.4 Roll out, keep testing, stop | B4 (uplift and conversions rule, owners) | Show the test questions · Check (count) + clue |
 | 3.5 Architecture | B5 (live view first, budget, no black box; owner and trigger tests) | Show the owner test · budget bar · plan sentences · Check (three rules) |
 | 3.6 Decision under time pressure | B5 (decision rules, tripwire, premortem) | Baselines printed · Check (wait, activity metric, threshold) |
+
+## Retrofit of 2026-10-03 (the user's request: bring Days 8 to 12 up to the current rules, Route 1 first, decide without asking)
+
+Applied from `../CLAUDE.md`: #33 to #46. Route 1 was done first, Route 2 second. Nothing was committed or pushed.
+
+**Core and Optional (#35, #40, #44).** Route 1 has **four Core blocks** (1.1, 1.3, 2.1, 2.4; 40 min of the 64) and four Optional blocks, folded and never removed
+(1.2, 1.4, 2.2, 2.3). Route 2 has **two Core blocks** (3.5, 3.6; 19 min of the 50) and
+four Optional blocks (3.1, 3.2, 3.3, 3.4). Optional cards: A4, A6, B1, B2, B3, B4; every other card is Core because a Core block cites it. The ring, the page map
+and both missing lists count Core only; an unanswered Optional block is marked as such in the exported file.
+
+**What changed in Route 1.** Block 1.2 is read-only (the two close rates are printed, nothing is calculated, #44) and Optional; the three KPIs moved into Block 2.1;
+Block 2.4 names a category for every measure, asks for a reason for each judged score, and shows the budget as a hint (#45, #38). Every measure and every
+contact situation prints a scene and who does what (#46). Every interactive picture opens with “The point” and a three-step story (#36); long text sits behind
+“＋ Show …” (#37); every free-text field has a clue kit and an example answer (#42, #23); two live rust notices (#34); the page map shows Core / Optional (#28).
+
+**What changed in Route 2.** The task has no side column: the live memo sits full width below Block 3.6 with “Hide the memo” (#39). Blocks 3.1 to 3.4 are folded Optional.
+Block 3.5 prints, on every item card, a scene, the one figure the item is meant to move (today and aim), what it needs first and what it must win or keep to pay back.
+**Numbers are shown, not calculated (#44):** the trigger kit, the pickup kit, the assumption kit and the tripwire hint give every number with the reason it is that number
+and a button to each printed input. Three plain methods produce them (Materi B5, with a worked example on another company): *halfway* between today and the aim,
+*month* = start month + weeks in use ÷ 4 rounded up, *cost of waiting* = item cost ÷ the value of one unit, rounded up. They live in `lib/r2Numbers.ts` and are read from
+`data/route2Extra.ts`, so the kits, the model answers and the mentor's worked answers cannot drift apart. “The numbers today” is printed once in the case brief so Core never
+reads an Optional table. Going over the budget is a hint with a stated reason, never a missing item (#38).
+
+**Shared mechanics.** `cs-d9-v1` persists at version 2 with a migration and a deep merge (#9); `npm run verify:calc` runs 295 checks (figures and rules, the mentor fill and a
+Core-only fill in both languages, the shown numbers, #40 scans of the Core blocks, old-shape blob).
+
+### Notes on deviations (retrofit)
+
+R1. **No video was embedded (#33).** None was searched and verified in this pass; a card without a video is not a defect (#33). The video slot stays empty (`data/videos.ts`).
+R2. **No calculators (#44).** The plan names no calculation beyond the printed rates, the budget and the score formula, so the former F1–F3 calculators and “Show the formula” helps
+    of Block 1.2 were removed; wherever older text above mentions them, it is superseded.
+R3. **Route 1 has at most four Core blocks and Route 2 two** (user decision, #35); everything else is folded, not removed.
+R4. **Model answers use only printed numbers.** The mentor's KPI answer uses aims such as “up” or “stay under a limit”; the model triggers, the pickup point and the assumptions are generated by
+    the methods above from the item cards and “the numbers today”, so each number can be found on the screen.
+R5. **The Word documents (#31) were not rebuilt** in this pass and are out of date for Day 9: Core / Optional marks, “The point”, the shown numbers and the new case-brief table are missing. Rebuild them from the reviewed Markdown in `../materi-task-docx/_source/` when wanted.
+R6. **German and English** are written by hand next to each other for every new text (#32); the glossary got “cost of waiting” and “halfway between today and the aim”.
+R7. **Plan mapping (#44).** The plan's numbered task items and the Level 3 requirements are mapped in note 1 above; Core is drawn from them: Route 1's Core blocks answer the Task 1 items (the first tagging and the situations or opportunities) and the case study's KPI and measures items; Route 2's Core blocks are the implementation requirement (3.5) and the additional decision requirement (3.6).
+
+### Dependency checklist (#40)
+
+✓ = reads only Core blocks, Core cards and the case brief. An Optional item may read a Core answer; nothing reads an Optional item back.
+
+| Item | Status | Reads from | Core-safe |
+|---|---|---|---|
+| **Route 1** | | | |
+| 1.1 Respond, personalise or learn? | **Core** | the brief, the block's own printed items, cards A1, A2, A3 | ✓ |
+| 1.2 Read the speed figures: two closing rates side by side | Optional | the brief, the block's own printed items, cards A4 | self-contained |
+| 1.3 Where to respond at once, where to personalise, and three improvements | **Core** | the brief, the block's own printed items, cards A3 | ✓ |
+| 1.4 Coaching reflection: from Level 1 to Level 2 | Optional | the brief, the block's own printed items, cards A1, A2, A3 | self-contained |
+| 2.1 Tag LiveConnect's twelve metrics by kind, and name your three KPIs | **Core** | the brief, the block's own printed items, cards A5 | ✓ |
+| 2.2 What each kind of metric is worth, and the uncertainties in measuring | Optional | the brief, the block's own printed items, cards A5, A6 | self-contained |
+| 2.3 Design a fair A/B test | Optional | the brief, the block's own printed items, cards A6 | self-contained |
+| 2.4 Choose three measures, score them, put them in order | **Core** | the brief, the block's own printed items, cards A7 | ✓ |
+| **Route 2** | | | |
+| Case brief and “Where Route 1 left off” | — | Route 1 Core Block 2.4 (measures chosen), “the numbers today” | ✓ |
+| 3.1 The target vision of a real-time retention system | Optional | its own printed items, cards B1 | self-contained |
+| 3.2 Definition of central interaction points | Optional | its own printed items, cards B2 | self-contained |
+| 3.3 A KPI and optimisation system | Optional | its own printed items, cards B3 | self-contained |
+| 3.4 Automation and personalisation measures, tested: roll out, keep testing or stop | Optional | its own printed items, cards B4 | self-contained |
+| 3.5 Prioritised implementation architecture: fund, sequence, own | **Core** | printed item cards, “the numbers today”, cards B5 | ✓ |
+| 3.6 A decision under time pressure and uncertain data | **Core** | own plan quoted from Block 3.5, “the numbers today”, the board's challenge, cards B5 | ✓ |
+| **Cards** | | | |
+| A1, A2, A3, A5, A7, B5 | Core | each other and the case | ✓ |
+| A4, A6, B1, B2, B3, B4 | Optional | — | no Core block cites them |

@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, useState } from "react";
-import { Insight, Toggles } from "@/components/materi/kit";
+import { Insight, Story, ThePoint, Toggles, useStory } from "@/components/materi/kit";
 import { LEVEL_LABEL } from "@/data/ladder";
 import type { LevelTag } from "@/data/ladder";
 import { MOSEL, MOSEL_RESULT, extraOf } from "@/data/forecast";
@@ -13,8 +13,11 @@ import { bi, euro, num, pct, t, tt } from "@/lib/lang";
 /**
  * The interactive diagrams of Materi A (Route 1). Every one uses the worked-example company Neckar Hosting (a Heilbronn hosting provider,
  * Case assumption), never LiveConnect, so the answer to a task block is never printed. Every control is followed by an always-visible
- * "What this shows" (CLAUDE.md #20).
+ * "What this shows" (CLAUDE.md #20), every picture opens with "The point" and carries a three-step "Walk me through it" story that
+ * drives the real controls (CLAUDE.md #36); a manual button leaves the story.
  */
+/** "In plain words:" leads every reading of a control (CLAUDE.md #36). */
+const plain = () => tt("In plain words: ", "In einfachen Worten: ");
 const C = { ink: "#1F2328", ash: "#59606A", paper: "#FFFEFA", mist: "#ECE6D6", line: "#D8D1BF", amber: "#8A5A0B", gold: "#D99A2B", teal: "#0F6B6B", tealSoft: "#DFEEEB", rust: "#A4472A", rustSoft: "#F6E3DB", data: "#2F5D62", grey: "#8B9098", soft: "#FBF0D6" };
 
 /* ------------------------------------------------------------------ A1 · what a delay costs */
@@ -30,11 +33,43 @@ const BAND = bi({
 
 export function DelayCost() {
   const uid = useId().replace(/:/g, "");
-  const [band, setBand] = useState<Band>("h1");
+  const [band, setBandRaw] = useState<Band>("h1");
+  const story = useStory([
+    {
+      title: tt("Answered at once", "Sofort beantwortet"),
+      say: tt(`Neckar Hosting is an example company, not your case. When it answered a quote request within five minutes, ${BAND.m5.rate}% closed: the customer was still on the page with the question fresh.`, `Neckar Hosting ist ein Beispielunternehmen, nicht Ihr Fall. Wenn es eine Angebotsanfrage innerhalb von fünf Minuten beantwortete, schlossen ${BAND.m5.rate} % ab: Der Kunde war noch auf der Seite, die Frage frisch.`),
+      look: tt("the longest bar", "der längste Balken"),
+      apply: () => {
+        setBandRaw("m5");
+      },
+    },
+    {
+      title: tt("Answered too late", "Zu spät beantwortet"),
+      say: tt(`After more than a day only ${BAND.d3.rate}% closed. It is like a shop assistant who comes back after you have already left: the answer arrives when the decision has been made.`, `Nach mehr als einem Tag schlossen nur ${BAND.d3.rate} % ab. Es ist wie eine Verkäuferin, die zurückkommt, wenn Sie schon gegangen sind: Die Antwort kommt, wenn die Entscheidung gefallen ist.`),
+      look: tt("the shortest bar", "der kürzeste Balken"),
+      apply: () => {
+        setBandRaw("d3");
+      },
+    },
+    {
+      title: tt("The point", "Das Wichtigste"),
+      say: tt(`Speed is a success factor because customers decide while their question is fresh. Every step of waiting costs closings. Try the four buttons.`, `Tempo ist ein Erfolgsfaktor, weil Kunden entscheiden, solange ihre Frage frisch ist. Jede Stufe des Wartens kostet Abschlüsse. Probieren Sie die vier Schaltflächen.`),
+      look: tt("the bars shrink from top to bottom", "die Balken werden von oben nach unten kürzer"),
+      apply: () => {
+        setBandRaw("h1");
+      },
+    },
+  ]);
+  const setBand = (v: Band) => {
+    story.leave();
+    setBandRaw(v);
+  };
   const b = BAND[band];
   const W = (r: number) => (r / 30) * 330;
   return (
     <div className="space-y-3">
+      <ThePoint>{tt("The longer a customer waits for the first answer, the fewer deals close. The loss is steepest in the first minutes and hours, while the customer is still on the page and has not asked anyone else.", "Je länger ein Kunde auf die erste Antwort wartet, desto weniger Abschlüsse kommen zustande. Der Verlust ist in den ersten Minuten und Stunden am steilsten, solange der Kunde noch auf der Seite ist und noch niemand anderen gefragt hat.")}</ThePoint>
+      <Story steps={story.plan} step={story.step} onStep={story.go} />
       <svg viewBox="0 0 560 190" className="mx-auto h-auto w-full max-w-[600px]" role="img" aria-labelledby={`${uid}-t ${uid}-d`}>
         <title id={`${uid}-t`}>{tt("Neckar Hosting: closing rate of quote requests by speed of the first answer", "Neckar Hosting: Abschlussquote der Angebotsanfragen nach Tempo der ersten Antwort")}</title>
         <desc id={`${uid}-d`}>{BANDS.map((k) => `${BAND[k].label}: ${BAND[k].rate}%`).join(", ")}</desc>
@@ -44,6 +79,7 @@ export function DelayCost() {
           const r = BAND[k].rate;
           return (
             <g key={k} className="hit" role="button" tabIndex={0} aria-label={BAND[k].label} onClick={() => setBand(k)} onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && setBand(k)}>
+              {on && story.step !== null && <rect x="-4" y={y - 4} width="556" height="36" rx="7" fill="none" stroke={C.amber} strokeWidth="2" strokeDasharray="5 4" className="anim-pulse" />}
               <text x="0" y={y + 19} fontSize="12" fontWeight={on ? 700 : 400} fill={C.ink}>{BAND[k].label}</text>
               <rect className="hit-shape" x="170" y={y} width={W(r)} height="28" fill={on ? C.gold : C.data} stroke={C.ink} />
               <text x={176 + W(r)} y={y + 19} fontSize="12.5" fontWeight="700" fill={C.ink}>{pct(r)}</text>
@@ -52,7 +88,7 @@ export function DelayCost() {
         })}
       </svg>
       <Toggles<Band> label={tt("Speed of the first answer", "Tempo der ersten Antwort")} value={band} onChange={setBand} options={BANDS.map((k) => ({ id: k, label: BAND[k].label }))} />
-      <Insight>{b.reading}</Insight>
+      <Insight>{plain()}{b.reading}</Insight>
       <p className="text-caption text-ash">{tt("Illustration on Neckar Hosting's quote requests (Case assumption).", "Illustration mit den Angebotsanfragen von Neckar Hosting (Fallannahme).")}</p>
     </div>
   );
@@ -96,14 +132,53 @@ const M_IDEAS = bi([
 ]);
 
 export function MomentProfile() {
-  const [v, setV] = useState<Visitor>("campaign");
-  const [d, setD] = useState<Depth>("fit");
+  const [v, setVRaw] = useState<Visitor>("campaign");
+  const [d, setDRaw] = useState<Depth>("fit");
+  const story = useStory([
+    {
+      title: tt("Personalisation that fits", "Personalisierung, die passt"),
+      say: tt(`Neckar Hosting is an example company, not your case. A visitor who clicked a law-firm ad lands on hosting for law firms: confidentiality first, a case from a firm like theirs. The page uses what the visitor gave.`, `Neckar Hosting ist ein Beispielunternehmen, nicht Ihr Fall. Ein Besucher, der eine Kanzlei-Anzeige anklickte, landet bei Hosting für Kanzleien: zuerst Vertraulichkeit, ein Fall einer Kanzlei wie seiner. Die Seite nutzt, was der Besucher gab.`),
+      look: tt("the highlighted card in the middle", "die hervorgehobene Karte in der Mitte"),
+      apply: () => {
+        setVRaw("campaign");
+        setDRaw("fit");
+      },
+    },
+    {
+      title: tt("Personalisation that goes too far", "Personalisierung, die zu weit geht"),
+      say: tt(`Now a first-time visitor is greeted with “we saw you read about backup”. Neckar used more than the visitor gave, and it feels like being followed by a shop assistant with notes.`, `Jetzt wird ein Erstbesucher mit „wir haben gesehen, dass Sie über Backup gelesen haben“ begrüßt. Neckar nutzte mehr, als der Besucher gab, und es fühlt sich an, als würde eine Verkäuferin mit Notizen folgen.`),
+      look: tt("the dashed frame on the first card", "der gestrichelte Rahmen um die erste Karte"),
+      apply: () => {
+        setVRaw("anon");
+        setDRaw("much");
+      },
+    },
+    {
+      title: tt("The point", "Das Wichtigste"),
+      say: tt(`Personalisation helps when it uses what the visitor gave and fits the moment; it hurts when it shows that the visitor was watched. Try the buttons.`, `Personalisierung hilft, wenn sie nutzt, was der Besucher gab, und zum Moment passt; sie schadet, wenn sie zeigt, dass der Besucher beobachtet wurde. Probieren Sie die Schaltflächen.`),
+      look: tt("the logged-in customer's card", "die Karte des angemeldeten Kunden"),
+      apply: () => {
+        setVRaw("customer");
+        setDRaw("fit");
+      },
+    },
+  ]);
+  const setV = (v: Visitor) => {
+    story.leave();
+    setVRaw(v);
+  };
+  const setD = (v: Depth) => {
+    story.leave();
+    setDRaw(v);
+  };
   const [open, setOpen] = useState<string[]>([]);
   return (
     <div className="space-y-3">
+      <ThePoint>{tt("A page can change what a visitor sees from what the visitor gave: the ad they clicked, the account they logged into. That is felt as help. Using more than they gave, or asking before showing anything, is felt as intrusion.", "Eine Seite kann ändern, was ein Besucher sieht, aus dem, was der Besucher gab: die geklickte Anzeige, das Konto, in das er sich einloggte. Das wird als Hilfe empfunden. Mehr zu nutzen, als er gab, oder zu fragen, bevor etwas gezeigt wird, wird als Aufdringlichkeit empfunden.")}</ThePoint>
+      <Story steps={story.plan} step={story.step} onStep={story.go} />
       <div className="grid gap-2 sm:grid-cols-3" role="img" aria-label={tt("What the page shows each kind of visitor", "Was die Seite jeder Art von Besucher zeigt")}>
         {VISITORS.map((x) => (
-          <div key={x} className={`rounded-md border px-3 py-2 text-caption ${x === v ? "border-accent bg-accentSoft" : "border-line bg-paper"} ${d === "much" && x === v ? "border-dashed" : ""}`}>
+          <div key={x} className={`rounded-md border px-3 py-2 text-caption ${x === v ? "border-accent bg-accentSoft" : "border-line bg-paper"} ${d === "much" && x === v ? "border-dashed" : ""} ${story.step !== null && x === v ? "outline outline-2 -outline-offset-2 outline-dashed outline-[#8A5A0B] anim-pulse" : ""}`}>
             <p className="smallcaps">{V_LABEL[x]}</p>
             <p className="mt-1 text-ink">{SHOWN[x][d]}</p>
           </div>
@@ -113,7 +188,7 @@ export function MomentProfile() {
         <Toggles<Visitor> label={tt("Visitor", "Besucher")} value={v} onChange={setV} options={VISITORS.map((x) => ({ id: x, label: V_LABEL[x] }))} />
         <Toggles<Depth> label={tt("Personalisation", "Personalisierung")} value={d} onChange={setD} options={DEPTHS.map((x) => ({ id: x, label: D_LABEL[x] }))} />
       </div>
-      <Insight>{`${V_LABEL[v]} · ${D_LABEL[d]}: ${READ[d]}`}</Insight>
+      <Insight>{plain()}{`${V_LABEL[v]} · ${D_LABEL[d]}: ${READ[d]}`}</Insight>
       <div className="space-y-1.5">
         <p className="smallcaps">{tt("A worked sort: three ideas at Neckar Hosting", "Eine Beispielsortierung: drei Ideen bei Neckar Hosting")}</p>
         <ul className="space-y-1.5">
@@ -157,12 +232,44 @@ const VERDICT_GLYPH: Record<Verdict, string> = { respond: "●", personal: "◐"
 
 export function AutomationGrid() {
   const uid = useId().replace(/:/g, "");
-  const [sel, setSel] = useState<string>("n1");
+  const [sel, setSelRaw] = useState<string>("n1");
+  const story = useStory([
+    {
+      title: tt("Respond at once", "Sofort reagieren"),
+      say: tt(`Neckar Hosting is an example company, not your case. Its server order page is a decision page and ${N_PAGES[0].leave}% of visitors leave from it. A question left open here loses the order: answer at once.`, `Neckar Hosting ist ein Beispielunternehmen, nicht Ihr Fall. Seine Bestellseite für Server ist eine Entscheidungsseite, und ${N_PAGES[0].leave} % der Besucher gehen von ihr. Eine offene Frage kostet hier die Bestellung: sofort antworten.`),
+      look: tt("square 1, in the hatched area at the bottom right", "Quadrat 1, im schraffierten Bereich unten rechts"),
+      apply: () => {
+        setSelRaw("n1");
+      },
+    },
+    {
+      title: tt("Personalise", "Personalisieren"),
+      say: tt(`In the customer area Neckar knows exactly who logged in. Only ${N_PAGES[3].leave}% leave, so speed is not the issue; showing their servers and renewal is the chance.`, `Im Kundenbereich weiß Neckar genau, wer sich angemeldet hat. Nur ${N_PAGES[3].leave} % gehen, also ist Tempo nicht das Problem; die Chance ist, ihre Server und ihre Verlängerung zu zeigen.`),
+      look: tt("circle 4, in the top row: we know the visitor", "Kreis 4, in der oberen Reihe: Wir kennen den Besucher"),
+      apply: () => {
+        setSelRaw("n4");
+      },
+    },
+    {
+      title: tt("The point", "Das Wichtigste"),
+      say: tt(`The tech blog loses ${N_PAGES[4].leave}% of visitors, which is normal: nobody decides there. Neither lever comes first. Squares are decision pages; try the dots.`, `Der Tech-Blog verliert ${N_PAGES[4].leave} % der Besucher, was normal ist: Dort entscheidet niemand. Keiner der beiden Hebel kommt zuerst. Quadrate sind Entscheidungsseiten; probieren Sie die Punkte.`),
+      look: tt("circle 5, in the grey area", "Kreis 5, im grauen Bereich"),
+      apply: () => {
+        setSelRaw("n5");
+      },
+    },
+  ]);
+  const setSel = (v: string) => {
+    story.leave();
+    setSelRaw(v);
+  };
   const s = N_PAGES.find((x) => x.id === sel)!;
   const X = (l: number) => 60 + (l / 100) * 440;
   const Y = (k: number) => 250 - k * 85;
   return (
     <div className="space-y-3">
+      <ThePoint>{tt("Respond at once where a decision happens and many visitors leave. Personalise where you know who the visitor is or why they came. Where neither is true, fix the page first.", "Reagieren Sie sofort, wo eine Entscheidung fällt und viele Besucher gehen. Personalisieren Sie, wo Sie wissen, wer der Besucher ist oder warum er kam. Wo beides nicht zutrifft, verbessern Sie zuerst die Seite.")}</ThePoint>
+      <Story steps={story.plan} step={story.step} onStep={story.go} />
       <svg viewBox="0 0 560 300" className="mx-auto h-auto w-full max-w-[600px]" role="img" aria-labelledby={`${uid}-t ${uid}-d`}>
         <title id={`${uid}-t`}>{tt("Neckar Hosting's pages by the share who leave and what Neckar knows about the visitor", "Seiten von Neckar Hosting nach dem Anteil, der geht, und dem, was Neckar über den Besucher weiß")}</title>
         <desc id={`${uid}-d`}>{`${s.name}: ${VERDICT_LABEL[s.verdict]}.`}</desc>
@@ -190,6 +297,7 @@ export function AutomationGrid() {
           const cy = Y(x.known) + (x.known === 0 ? 10 : 0);
           return (
             <g key={x.id} className="hit" role="button" tabIndex={0} aria-label={x.name} onClick={() => setSel(x.id)} onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && setSel(x.id)}>
+              {on && story.step !== null && <circle cx={cx} cy={cy} r="21" fill="none" stroke={C.amber} strokeWidth="2" strokeDasharray="5 4" className="anim-pulse" />}
               {x.decision ? <rect className="hit-shape" x={cx - (on ? 14 : 11)} y={cy - (on ? 14 : 11)} width={on ? 28 : 22} height={on ? 28 : 22} rx="3" fill={on ? C.gold : C.data} stroke={C.ink} strokeWidth="1.4" /> : <circle className="hit-shape" cx={cx} cy={cy} r={on ? 14 : 11} fill={on ? C.gold : C.data} stroke={C.ink} strokeWidth="1.4" />}
               <text x={cx} y={cy + 4} textAnchor="middle" fontSize="10.5" fontWeight="700" fill={on ? C.ink : C.paper}>{i + 1}</text>
             </g>
@@ -203,7 +311,7 @@ export function AutomationGrid() {
           </button>
         ))}
       </div>
-      <Insight>{`${s.name} · ${tt(`${s.leave}% leave`, `${s.leave} % gehen`)} · ${s.decision ? tt("decision page", "Entscheidungsseite") : tt("no decision here", "keine Entscheidung hier")} · ${VERDICT_GLYPH[s.verdict]} ${VERDICT_LABEL[s.verdict]}. ${s.why}`}</Insight>
+      <Insight>{plain()}{`${s.name} · ${tt(`${s.leave}% leave`, `${s.leave} % gehen`)} · ${s.decision ? tt("decision page", "Entscheidungsseite") : tt("no decision here", "keine Entscheidung hier")} · ${VERDICT_GLYPH[s.verdict]} ${VERDICT_LABEL[s.verdict]}. ${s.why}`}</Insight>
       <p className="text-caption text-ash">{tt("Illustration on Neckar Hosting (Case assumption). Squares are decision pages, circles are not. Hatched = respond at once; teal = personalise; grey = neither comes first.", "Illustration mit Neckar Hosting (Fallannahme). Quadrate sind Entscheidungsseiten, Kreise nicht. Schraffiert = sofort reagieren; teal = personalisieren; grau = keines kommt zuerst.")}</p>
     </div>
   );
@@ -213,15 +321,48 @@ export function AutomationGrid() {
 
 export function PilotExample() {
   const uid = useId().replace(/:/g, "");
-  const [yearly, setYearly] = useState(MOSEL.yearly);
+  const [yearly, setYearlyRaw] = useState(MOSEL.yearly);
+  const story = useStory([
+    {
+      title: tt("Two groups, two rates", "Zwei Gruppen, zwei Quoten"),
+      say: tt(`Neckar Hosting is an example company, not your case. Requests answered within one hour closed at ${pct(MOSEL_RESULT.rate, 1)}, against ${pct(MOSEL_RESULT.other, 1)} after more than a day: ${num(MOSEL_RESULT.lift)} times as often.`, `Neckar Hosting ist ein Beispielunternehmen, nicht Ihr Fall. Innerhalb einer Stunde beantwortete Anfragen schlossen zu ${pct(MOSEL_RESULT.rate, 1)} ab, gegenüber ${pct(MOSEL_RESULT.other, 1)} nach mehr als einem Tag: ${num(MOSEL_RESULT.lift)}-mal so oft.`),
+      look: tt("the two bars and the amber line under them", "die zwei Balken und die bernsteinfarbene Zeile darunter"),
+      apply: () => {
+        setYearlyRaw(MOSEL.yearly);
+      },
+    },
+    {
+      title: tt("Only the difference is extra", "Nur der Unterschied ist zusätzlich"),
+      say: tt(`Slow answers would have closed ${pct(MOSEL_RESULT.other, 1)} anyway. On ${num(MOSEL.yearly * 2)} requests a year the difference is worth about ${euro(extraOf(MOSEL.yearly * 2, MOSEL_RESULT.rate, MOSEL_RESULT.other, MOSEL.order))}. The app does the arithmetic.`, `Langsame Antworten hätten ohnehin ${pct(MOSEL_RESULT.other, 1)} abgeschlossen. Bei ${num(MOSEL.yearly * 2)} Anfragen pro Jahr ist der Unterschied etwa ${euro(extraOf(MOSEL.yearly * 2, MOSEL_RESULT.rate, MOSEL_RESULT.other, MOSEL.order))} wert. Die Rechnung übernimmt die App.`),
+      look: tt("the slider at double the requests, and the sum in “What this shows”", "der Regler bei doppelt so vielen Anfragen und die Rechnung in „Was das zeigt“"),
+      apply: () => {
+        setYearlyRaw(MOSEL.yearly * 2);
+      },
+    },
+    {
+      title: tt("The point", "Das Wichtigste"),
+      say: tt(`Two closing rates side by side turn “fast answers seem better” into a figure. But if sales picked which requests to answer fast, the gap may overstate speed: promising, not proven.`, `Zwei Abschlussquoten nebeneinander machen aus „schnelle Antworten scheinen besser“ eine Zahl. Hat der Vertrieb aber gewählt, welche Anfragen er schnell beantwortet, kann der Abstand das Tempo überschätzen: vielversprechend, nicht bewiesen.`),
+      look: tt("the orders printed behind each bar", "die Abschlüsse, die hinter jedem Balken stehen"),
+      apply: () => {
+        setYearlyRaw(MOSEL.yearly);
+      },
+    },
+  ]);
+  const setYearly = (v: number) => {
+    story.leave();
+    setYearlyRaw(v);
+  };
   const r = MOSEL_RESULT;
   const extra = extraOf(yearly, r.rate, r.other, MOSEL.order);
   const W = (p: number) => (p / 25) * 300;
   return (
     <div className="space-y-3">
+      <ThePoint>{tt("A comparison gives two closing rates, one per group. Their ratio says how many times better the fast answers did, and the difference, over a year of requests, says what it is worth. A comparison that sales chose is promising, not proof.", "Ein Vergleich gibt zwei Abschlussquoten, eine pro Gruppe. Ihr Verhältnis sagt, wie viel Mal besser die schnellen Antworten abschnitten, und der Unterschied, über ein Jahr Anfragen, sagt, was er wert ist. Ein Vergleich, den der Vertrieb gewählt hat, ist vielversprechend, kein Beweis.")}</ThePoint>
+      <Story steps={story.plan} step={story.step} onStep={story.go} />
       <svg viewBox="0 0 560 150" className="mx-auto h-auto w-full max-w-[600px]" role="img" aria-labelledby={`${uid}-t ${uid}-d`}>
         <title id={`${uid}-t`}>{tt("Neckar Hosting: requests answered within one hour against after more than a day", "Neckar Hosting: innerhalb einer Stunde gegen nach mehr als einem Tag beantwortete Anfragen")}</title>
         <desc id={`${uid}-d`}>{tt(`Fast ${r.rate}%, slow ${r.other}%, lift ${r.lift}.`, `Schnell ${r.rate} %, langsam ${r.other} %, Lift ${r.lift}.`)}</desc>
+        {story.step !== null && <rect x="164" y="14" width="396" height="88" rx="8" fill="none" stroke={C.amber} strokeWidth="2" strokeDasharray="5 4" className="anim-pulse" />}
         <text x="0" y="36" fontSize="12" fill={C.ink}>{tt("Within one hour", "Innerhalb einer Stunde")}</text>
         <rect x="170" y="20" width={W(r.rate)} height="26" fill={C.data} stroke={C.ink} />
         <text x={176 + W(r.rate)} y="38" fontSize="12.5" fontWeight="700" fill={C.ink}>{`${pct(r.rate)} (${MOSEL.variant.orders} ${tt("of", "von")} ${num(MOSEL.variant.sent)})`}</text>
@@ -236,7 +377,7 @@ export function PilotExample() {
         </label>
         <input id={`${uid}-y`} type="range" min={200} max={3000} step={100} value={yearly} onChange={(e) => setYearly(Number(e.target.value))} className="w-full max-w-md accent-[#8A5A0B]" />
       </div>
-      <Insight>
+      <Insight>{plain()}
         {tt(
           `${num(yearly)} requests × (${pct(r.rate)} − ${pct(r.other)}) × ${euro(MOSEL.order)} = ${euro(extra)} extra a year if every request were answered within an hour. Only the difference counts: slow answers would have closed ${pct(r.other)} anyway. ${yearly === MOSEL.yearly ? "At 1,000 requests the example gives €100,000." : `More requests use the same lift more often: ${yearly > MOSEL.yearly ? "more" : "less"} extra revenue.`}`,
           `${num(yearly)} Anfragen × (${pct(r.rate)} − ${pct(r.other)}) × ${euro(MOSEL.order)} = ${euro(extra)} zusätzlich pro Jahr, wenn jede Anfrage innerhalb einer Stunde beantwortet würde. Nur der Unterschied zählt: Langsame Antworten hätten ohnehin ${pct(r.other)} abgeschlossen. ${yearly === MOSEL.yearly ? "Bei 1.000 Anfragen ergibt das Beispiel 100.000 €." : `Mehr Anfragen nutzen denselben Lift öfter: ${yearly > MOSEL.yearly ? "mehr" : "weniger"} zusätzlicher Umsatz.`}`,
@@ -262,8 +403,45 @@ const KIND_DE: Record<PatternId, string> = { outcome: "ein Outcome-KPI", driver:
 
 export function KpiTree() {
   const uid = useId().replace(/:/g, "");
-  const [sel, setSel] = useState("resp");
-  const [past, setPast] = useState(false);
+  const [sel, setSelRaw] = useState("resp");
+  const [past, setPastRaw] = useState(false);
+  const story = useStory([
+    {
+      title: tt("A driver you can steer by", "Ein Treiber, nach dem Sie steuern"),
+      say: tt(`Neckar Hosting is an example company, not your case. First response time comes before the deal, the team can move it this week, and it moved with value last year: a driver.`, `Neckar Hosting ist ein Beispielunternehmen, nicht Ihr Fall. Die erste Antwortzeit kommt vor dem Abschluss, das Team kann sie diese Woche bewegen, und sie bewegte sich letztes Jahr mit dem Wert: ein Treiber.`),
+      look: tt("the box under the top, and “moved with value”", "der Kasten unter der Spitze und „mit dem Wert bewegt“"),
+      apply: () => {
+        setSelRaw("resp");
+        setPastRaw(true);
+      },
+    },
+    {
+      title: tt("A number that flatters", "Eine Zahl, die schmeichelt"),
+      say: tt(`Website visitors counts who passed by, not who acted. It did not move with value. It looks like progress and decides nothing: a vanity metric, a number that only flatters.`, `Website-Besucher zählt, wer vorbeikam, nicht wer handelte. Es bewegte sich nicht mit dem Wert. Es sieht nach Fortschritt aus und entscheidet nichts: eine Vanity Metric, eine Zahl, die nur schmeichelt.`),
+      look: tt("the grey box outside the tree", "der graue Kasten außerhalb des Baums"),
+      apply: () => {
+        setSelRaw("visits");
+        setPastRaw(true);
+      },
+    },
+    {
+      title: tt("The point", "Das Wichtigste"),
+      say: tt(`Steer by the result and the behaviours that lead to it, watch a limit such as chats rated not helpful, and stop reporting numbers that only count reach. Choose any metric.`, `Steuern Sie nach dem Ergebnis und den Verhalten, die dorthin führen, beobachten Sie eine Grenze wie als nicht hilfreich bewertete Chats, und hören Sie auf, Zahlen zu berichten, die nur Reichweite zählen. Wählen Sie eine beliebige Kennzahl.`),
+      look: tt("the dashed amber frame: the guardrail", "der gestrichelte bernsteinfarbene Rahmen: die Guardrail"),
+      apply: () => {
+        setSelRaw("unhelp");
+        setPastRaw(true);
+      },
+    },
+  ]);
+  const setSel = (v: string) => {
+    story.leave();
+    setSelRaw(v);
+  };
+  const setPast = (v: boolean | ((v: boolean) => boolean)) => {
+    story.leave();
+    setPastRaw(v);
+  };
   const m = M_METRICS.find((x) => x.id === sel)!;
   const boxes = M_METRICS.map((x) => {
     const same = M_METRICS.filter((y) => y.kind === x.kind);
@@ -274,6 +452,8 @@ export function KpiTree() {
   });
   return (
     <div className="space-y-3">
+      <ThePoint>{tt("Not every number is a KPI. The result sits at the top, the behaviours that lead to it below, a limit that must not get worse beside it; numbers that only count reach do not belong in the picture.", "Nicht jede Zahl ist ein KPI. Das Ergebnis steht oben, die Verhalten, die dorthin führen, darunter, eine Grenze, die nicht schlechter werden darf, daneben; Zahlen, die nur Reichweite zählen, gehören nicht ins Bild.")}</ThePoint>
+      <Story steps={story.plan} step={story.step} onStep={story.go} />
       <svg viewBox="0 0 560 300" className="mx-auto h-auto w-full max-w-[600px]" role="img" aria-labelledby={`${uid}-t ${uid}-d`}>
         <title id={`${uid}-t`}>{tt("Neckar Hosting's real-time metrics as a KPI tree", "Die Echtzeit-Kennzahlen von Neckar Hosting als KPI-Baum")}</title>
         <desc id={`${uid}-d`}>{`${m.name}: ${PATTERNS[m.kind].label}.`}</desc>
@@ -288,6 +468,7 @@ export function KpiTree() {
           const on = x.id === sel;
           return (
             <g key={x.id} className="hit" role="button" tabIndex={0} aria-label={x.name} onClick={() => setSel(x.id)} onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && setSel(x.id)}>
+              {on && story.step !== null && <rect x={bx - 5} y={by - 5} width={w + 10} height="58" rx="9" fill="none" stroke={C.amber} strokeWidth="2" strokeDasharray="5 4" className="anim-pulse" />}
               <rect className="hit-shape" x={bx} y={by} width={w} height="48" rx="6" fill={on ? C.soft : x.kind === "vanity" ? C.mist : C.paper} stroke={on ? C.amber : C.ink} strokeWidth={on ? 2.4 : 1.2} />
               <foreignObject x={bx + 4} y={by + 4} width={w - 8} height="40">
                 <div style={{ fontSize: 11.5, lineHeight: 1.2, color: C.ink, textAlign: "center", fontFamily: "system-ui,sans-serif" }}>{x.name}</div>
@@ -305,7 +486,7 @@ export function KpiTree() {
         <Toggles<string> label={tt("Metric", "Kennzahl")} value={sel} onChange={setSel} options={M_METRICS.map((x) => ({ id: x.id, label: x.name }))} />
         <Toggles<string> label={tt("Last year", "Letztes Jahr")} value={past ? "on" : null} onChange={() => setPast((v) => !v)} options={[{ id: "on", label: past ? tt("Hide last year", "Letztes Jahr verbergen") : tt("Show whether it moved with value last year", "Zeigen, ob es sich letztes Jahr mit dem Wert bewegte") }]} />
       </div>
-      <Insight>
+      <Insight>{plain()}
         {past
           ? tt(
               `${m.name} → ${PATTERNS[m.kind].label}. ${m.why} Last year it ${m.moved ? "moved" : "did not move"} with customer value. Both outcomes moved, one of two drivers, the guardrail moved, the vanity metric did not: the closer to the top of the tree, the stronger the link.`,
@@ -335,8 +516,45 @@ const rangeOf = (ctl: number, ratio: number) => {
 
 export function FairTest() {
   const uid = useId().replace(/:/g, "");
-  const [flaw, setFlaw] = useState<Flaw>("none");
-  const [conv, setConv] = useState(30);
+  const [flaw, setFlawRaw] = useState<Flaw>("none");
+  const [conv, setConvRaw] = useState(30);
+  const story = useStory([
+    {
+      title: tt("A fair test", "Ein fairer Test"),
+      say: tt(`Neckar Hosting is an example company, not your case. A fair test is like a race: same track, same start, one runner changed. Neckar adds the chat for a random half of visitors, in the same weeks.`, `Neckar Hosting ist ein Beispielunternehmen, nicht Ihr Fall. Ein fairer Test ist wie ein Rennen: dieselbe Bahn, derselbe Start, ein Läufer ausgetauscht. Neckar fügt den Chat für eine zufällige Hälfte der Besucher hinzu, in denselben Wochen.`),
+      look: tt("Group A and Group B: only the chat differs", "Gruppe A und Gruppe B: Nur der Chat unterscheidet sich"),
+      apply: () => {
+        setFlawRaw("none");
+        setConvRaw(30);
+      },
+    },
+    {
+      title: tt("An unfair test", "Ein unfairer Test"),
+      say: tt(`Now the variant gets the chat, new prices and a new layout together. If it wins, nobody knows which of the three did it.`, `Jetzt bekommt die Variante den Chat, neue Preise und ein neues Layout zugleich. Gewinnt sie, weiß niemand, was von den dreien es war.`),
+      look: tt("the dashed amber Group B box", "der gestrichelte bernsteinfarbene Kasten von Gruppe B"),
+      apply: () => {
+        setFlawRaw("two");
+        setConvRaw(30);
+      },
+    },
+    {
+      title: tt("The point", "Das Wichtigste"),
+      say: tt(`Even a fair test says less than it seems on few results: with 30 conversions per group, the same 1.5× could be ${num(rangeOf(30, 1.5).lo)}×, which is no gain. Move the slider to 100.`, `Selbst ein fairer Test sagt bei wenigen Ergebnissen weniger, als es scheint: Mit 30 Conversions pro Gruppe könnte dasselbe 1,5× ${num(rangeOf(30, 1.5).lo)}× sein, also kein Gewinn. Bewegen Sie den Regler auf 100.`),
+      look: tt("the hatched bar crossing the dashed 1× line", "der schraffierte Balken, der die gestrichelte 1×-Linie kreuzt"),
+      apply: () => {
+        setFlawRaw("none");
+        setConvRaw(30);
+      },
+    },
+  ]);
+  const setFlaw = (v: Flaw) => {
+    story.leave();
+    setFlawRaw(v);
+  };
+  const setConv = (v: number) => {
+    story.leave();
+    setConvRaw(v);
+  };
   const f = FLAWS[flaw];
   const ratio = 1.5;
   const { lo, hi } = rangeOf(conv, ratio);
@@ -345,19 +563,21 @@ export function FairTest() {
   const proven = lo > 1;
   return (
     <div className="space-y-4">
+      <ThePoint>{tt("A test is fair when only one thing differs, chance decides who is in which group, both groups run in the same weeks, and the size is fixed in advance. Even then, a small test tells you less than it seems.", "Ein Test ist fair, wenn sich nur eine Sache unterscheidet, der Zufall entscheidet, wer in welcher Gruppe ist, beide Gruppen in denselben Wochen laufen und die Größe vorab feststeht. Selbst dann sagt ein kleiner Test weniger, als es scheint.")}</ThePoint>
+      <Story steps={story.plan} step={story.step} onStep={story.go} />
       <div className="space-y-2">
         <div className="grid gap-2 sm:grid-cols-2">
           <div className="rounded-md border border-line bg-paper px-3 py-2 text-caption">
             <p className="smallcaps">{tt("Group A", "Gruppe A")}</p>
             <p className="text-ink">{f.a}</p>
           </div>
-          <div className={`rounded-md border px-3 py-2 text-caption ${flaw === "none" ? "border-line bg-paper" : "border-dashed border-accent bg-accentSoft"}`}>
+          <div className={`rounded-md border px-3 py-2 text-caption ${flaw === "none" ? "border-line bg-paper" : "border-dashed border-accent bg-accentSoft"} ${story.step === 1 ? "outline outline-2 -outline-offset-2 outline-dashed outline-[#8A5A0B] anim-pulse" : ""}`}>
             <p className="smallcaps">{tt("Group B", "Gruppe B")}</p>
             <p className="text-ink">{f.b}</p>
           </div>
         </div>
         <Toggles<Flaw> label={tt("How Neckar runs the test", "Wie Neckar den Test durchführt")} value={flaw} onChange={setFlaw} options={FLAW_IDS.map((k) => ({ id: k, label: FLAWS[k].label }))} />
-        <Insight>{f.reading}</Insight>
+        <Insight>{plain()}{f.reading}</Insight>
       </div>
       <div className="space-y-2">
         <svg viewBox="0 0 560 120" className="mx-auto h-auto w-full max-w-[600px]" role="img" aria-labelledby={`${uid}-t ${uid}-d`}>
@@ -377,6 +597,7 @@ export function FairTest() {
               <line x1="0" y1="0" x2="0" y2="8" stroke={C.gold} strokeWidth="2" />
             </pattern>
           </defs>
+          {story.step === 2 && <rect x={X(Math.max(lo, 0.5)) - 4} y="42" width={Math.max(2, X(Math.min(hi, 3)) - X(Math.max(lo, 0.5))) + 8} height="36" rx="5" fill="none" stroke={C.amber} strokeWidth="2" strokeDasharray="5 4" className="anim-pulse" />}
           <rect x={X(Math.max(lo, 0.5))} y="48" width={Math.max(2, X(Math.min(hi, 3)) - X(Math.max(lo, 0.5)))} height="24" fill={proven ? C.tealSoft : `url(#${uid}-h)`} stroke={proven ? C.teal : C.amber} />
           <circle cx={X(ratio)} cy="60" r="6" fill={C.data} stroke={C.ink} />
           <text x="40" y="110" fontSize="11.5" fill={C.ink}>{tt(`measured: 1.5× · plausible range ${num(lo)}× to ${num(hi)}×`, `gemessen: 1,5× · plausible Spanne ${num(lo)}× bis ${num(hi)}×`)}</text>
@@ -385,7 +606,7 @@ export function FairTest() {
           {tt(`Requests in the group without chat: ${conv} (the chat group has 1.5 times as many)`, `Anfragen in der Gruppe ohne Chat: ${conv} (die Chat-Gruppe hat 1,5-mal so viele)`)}
         </label>
         <input id={`${uid}-c`} type="range" min={10} max={300} step={10} value={conv} onChange={(e) => setConv(Number(e.target.value))} className="w-full max-w-md accent-[#8A5A0B]" />
-        <Insight>
+        <Insight>{plain()}
           {proven
             ? tt(`With ${conv} requests per group, even the low end of the range (${num(lo)}×) is above “no difference”: the uplift is real, though its size is still uncertain (up to ${num(hi)}×). Around 100 per group is where a 1.5× result becomes solid.`, `Mit ${conv} Anfragen pro Gruppe liegt selbst das untere Ende der Spanne (${num(lo)}×) über „kein Unterschied“: Der Uplift ist echt, auch wenn seine Größe noch unsicher ist (bis ${num(hi)}×). Um 100 pro Gruppe wird ein Ergebnis von 1,5× belastbar.`)
             : tt(`With ${conv} requests per group, the same 1.5× could be anything from ${num(lo)}× to ${num(hi)}×, and the range still includes “no difference” (hatched). Promising, not proven: keep the test running, however good the live screen looks.`, `Mit ${conv} Anfragen pro Gruppe könnte dasselbe 1,5× alles zwischen ${num(lo)}× und ${num(hi)}× sein, und die Spanne schließt „kein Unterschied“ noch ein (schraffiert). Vielversprechend, nicht bewiesen: Lassen Sie den Test weiterlaufen, egal wie gut der Live-Bildschirm aussieht.`)}
@@ -407,12 +628,48 @@ const M_MEASURES: WM[] = bi([
 
 export function ScoreExample() {
   const uid = useId().replace(/:/g, "");
-  const [sel, setSel] = useState("chat");
+  const [sel, setSelRaw] = useState("chat");
+  const sc = (id: string) => {
+    const x = M_MEASURES.find((y) => y.id === id)!;
+    return x.eff * explainBucket(speedBand(x.weeks)) * x.fea;
+  };
+  const story = useStory([
+    {
+      title: tt("Strong on all three", "Stark in allen dreien"),
+      say: tt(`Neckar Hosting is an example company, not your case. Live chat scores ${sc("chat")}: it answers visitors where they decide, works within ${M_MEASURES[0].weeks} weeks and serves every visitor once built.`, `Neckar Hosting ist ein Beispielunternehmen, nicht Ihr Fall. Der Live-Chat erzielt ${sc("chat")}: Er antwortet Besuchern dort, wo sie entscheiden, wirkt innerhalb von ${M_MEASURES[0].weeks} Wochen und dient jedem Besucher, einmal gebaut.`),
+      look: tt("the longest bar", "der längste Balken"),
+      apply: () => {
+        setSelRaw("chat");
+      },
+    },
+    {
+      title: tt("One weak factor", "Ein schwacher Faktor"),
+      say: tt(`The relaunch scores only ${sc("relaunch")}: it may help, but it needs ${M_MEASURES[2].weeks} weeks and the plan has four months. One weak factor, here speed, pulls the whole product down.`, `Der Relaunch erzielt nur ${sc("relaunch")}: Er hilft vielleicht, braucht aber ${M_MEASURES[2].weeks} Wochen, und der Plan hat vier Monate. Ein schwacher Faktor, hier das Tempo, zieht das ganze Produkt herunter.`),
+      look: tt("the short bar, and its three parts in “What this shows”", "der kurze Balken und seine drei Teile in „Was das zeigt“"),
+      apply: () => {
+        setSelRaw("relaunch");
+      },
+    },
+    {
+      title: tt("The point", "Das Wichtigste"),
+      say: tt(`Multiply effect, speed and scalability. Speed is read from the printed weeks, never guessed. Choose a measure to read its three parts.`, `Multiplizieren Sie Wirkung, Tempo und Skalierbarkeit. Das Tempo wird aus den gedruckten Wochen gelesen, nie geschätzt. Wählen Sie eine Maßnahme, um ihre drei Teile zu lesen.`),
+      look: tt("the founder's calls: fast and personal, but they stop when he is busy", "die Anrufe des Gründers: schnell und persönlich, aber sie enden, wenn er beschäftigt ist"),
+      apply: () => {
+        setSelRaw("founder");
+      },
+    },
+  ]);
+  const setSel = (v: string) => {
+    story.leave();
+    setSelRaw(v);
+  };
   const m = M_MEASURES.find((x) => x.id === sel)!;
   const e = explainBucket(speedBand(m.weeks));
   const score = m.eff * e * m.fea;
   return (
     <div className="space-y-3">
+      <ThePoint>{tt("Score a measure on three questions: how much does it move the result, how fast does it work, and does it reach every visitor at no extra cost? The three scores are multiplied, so one weak answer lowers the whole.", "Bewerten Sie eine Maßnahme nach drei Fragen: Wie stark bewegt sie das Ergebnis, wie schnell wirkt sie, und erreicht sie jeden Besucher ohne Zusatzkosten? Die drei Werte werden multipliziert, also senkt eine schwache Antwort das Ganze.")}</ThePoint>
+      <Story steps={story.plan} step={story.step} onStep={story.go} />
       <svg viewBox="0 0 560 130" className="mx-auto h-auto w-full max-w-[600px]" role="img" aria-labelledby={`${uid}-t ${uid}-d`}>
         <title id={`${uid}-t`}>{tt("Neckar's three measures scored: effect × speed × scalability", "Neckars drei Maßnahmen bewertet: Wirkung × Tempo × Skalierbarkeit")}</title>
         <desc id={`${uid}-d`}>{M_MEASURES.map((x) => `${x.name}: ${x.eff * explainBucket(speedBand(x.weeks)) * x.fea}`).join("; ")}</desc>
@@ -422,6 +679,7 @@ export function ScoreExample() {
           const on = x.id === sel;
           return (
             <g key={x.id} className="hit" role="button" tabIndex={0} aria-label={x.name} onClick={() => setSel(x.id)} onKeyDown={(ev) => (ev.key === "Enter" || ev.key === " ") && setSel(x.id)}>
+              {on && story.step !== null && <rect x="-4" y={y - 4} width="556" height="32" rx="7" fill="none" stroke={C.amber} strokeWidth="2" strokeDasharray="5 4" className="anim-pulse" />}
               <text x="0" y={y + 17} fontSize="12" fontWeight={on ? 700 : 400} fill={C.ink}>{x.name}</text>
               <rect className="hit-shape" x="270" y={y} width={(s / 27) * 240} height="24" fill={on ? C.gold : C.data} stroke={C.ink} />
               <text x={276 + (s / 27) * 240} y={y + 17} fontSize="12.5" fontWeight="700" fill={C.ink}>{s}</text>
@@ -430,7 +688,7 @@ export function ScoreExample() {
         })}
       </svg>
       <Toggles<string> label={tt("Measure", "Maßnahme")} value={sel} onChange={setSel} options={M_MEASURES.map((x) => ({ id: x.id, label: x.name }))} />
-      <Insight>
+      <Insight>{plain()}
         {tt(
           `${m.name} (${euro(m.cost)}, ${m.weeks} weeks): effect ${m.eff} × speed ${e} × scalability ${m.fea} = ${score}. It is ${EVIDENCE_LABEL[speedBand(m.weeks)]}, so speed is ${e}. ${m.note}`,
           `${m.name} (${euro(m.cost)}, ${m.weeks} Wochen): Wirkung ${m.eff} × Tempo ${e} × Skalierbarkeit ${m.fea} = ${score}. Sie ist ${EVIDENCE_LABEL[speedBand(m.weeks)]}, also ist das Tempo ${e}. ${m.note}`,

@@ -528,6 +528,38 @@ export const GLOSSARY: GlossEntry[] = [
     plain: "Rebuilding a whole website at once. It takes months, and until it is live nothing is learned about what works.",
     de: { title: "Relaunch", match: ["Relaunch"], plain: "Eine ganze Website auf einmal neu bauen. Das dauert Monate, und bis sie live ist, lernt man nichts darüber, was wirkt." },
   },
+  {
+    id: "cost-of-waiting",
+    title: "Cost of waiting",
+    match: ["cost of waiting", "costs of waiting"],
+    plain: "What it costs to leave something out for now: the item's price divided by what one customer kept is worth in a year, rounded up, is the number of customers who must leave before waiting has cost as much as the item.",
+    example: "An app costs €36,000 and a customer kept is worth €12,000 a year: 36,000 ÷ 12,000 = 3 customers.",
+    de: { title: "Kosten des Wartens", match: ["Kosten des Wartens", "Kosten des Wartens"], plain: "Was es kostet, etwas vorerst wegzulassen: der Preis des Punkts geteilt durch das, was ein gehaltener Kunde im Jahr wert ist, aufgerundet, ist die Zahl der Kunden, die gehen müssen, bevor das Warten so viel gekostet hat wie der Punkt.", example: "Eine App kostet 36.000 € und ein gehaltener Kunde ist 12.000 € im Jahr wert: 36.000 ÷ 12.000 = 3 Kunden." },
+  },
+  {
+    id: "halfway",
+    title: "Halfway between today and the aim",
+    match: ["halfway", "halfway mark", "halfway between today and the aim"],
+    plain: "A number found by taking today's figure and adding half the gap to the aim (or to the limit still accepted). It is the least that shows a real change, so it is a sensible line for a trigger or a tripwire.",
+    example: "Today 70%, aim 80%: 70 + (80 − 70) ÷ 2 = 75%.",
+    de: { title: "Hälfte des Weges zwischen heute und Ziel", match: ["Hälfte des Weges", "Hälfte des Weges zwischen heute und Ziel"], plain: "Eine Zahl, die man findet, indem man zum heutigen Wert die Hälfte des Abstands zum Ziel (oder zur noch akzeptierten Grenze) addiert. Sie ist das Mindeste, das eine echte Veränderung zeigt, also eine sinnvolle Linie für einen Trigger oder Tripwire.", example: "Heute 70 %, Ziel 80 %: 70 + (80 − 70) ÷ 2 = 75 %." },
+  },
+  {
+    id: "dashboard",
+    title: "Dashboard",
+    match: ["dashboard", "dashboards"],
+    plain: "One screen that shows the few numbers a team steers by, updated by the systems, so nobody has to ask for a report.",
+    example: "A sales dashboard shows the conversion rate, the open offers and the complaints on one page.",
+    de: { title: "Dashboard", match: ["Dashboard", "Dashboards"], plain: "Ein Bildschirm, der die wenigen Zahlen zeigt, nach denen ein Team steuert, von den Systemen aktualisiert, sodass niemand einen Bericht anfordern muss.", example: "Ein Vertriebs-Dashboard zeigt Conversion Rate, offene Angebote und Beschwerden auf einer Seite." },
+  },
+  {
+    id: "renewal",
+    title: "Renewal",
+    match: ["renewal", "renewals", "renew", "renews"],
+    plain: "When a customer extends the contract for another period instead of ending it. The renewal rate is the share of contracts that are extended.",
+    example: "Of 100 contracts that end this year, 80 are extended: the renewal rate is 80%.",
+    de: { title: "Renewal (Vertragsverlängerung)", match: ["Renewal", "Renewals", "Verlängerung", "Verlängerungen", "verlängern", "verlängert"], plain: "Wenn ein Kunde den Vertrag für einen weiteren Zeitraum verlängert, statt ihn zu beenden. Die Verlängerungsquote ist der Anteil der Verträge, die verlängert werden.", example: "Von 100 Verträgen, die dieses Jahr enden, werden 80 verlängert: Die Verlängerungsquote ist 80 %." },
+  },
 ];
 
 // --- lookup ---------------------------------------------------------------------

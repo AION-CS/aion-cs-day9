@@ -3,6 +3,7 @@
 import { Bul, Diagram } from "@/components/materi/kit";
 import { ArchExample, CompProfile, DataStages, LiftCases, SourceGrid } from "@/components/materi/diagramsB";
 import { Callout, DataTable, MaterialCard } from "@/components/ui/MaterialCard";
+import { ShowMore } from "@/components/ui/ShowMore";
 import { CASES_MIN, CRITERIA, LIFT_ACT, LIFT_WATCH, QUALITY_BAR } from "@/data/route2";
 import { tt } from "@/lib/lang";
 
@@ -23,12 +24,14 @@ export function CardB1() {
       ]}
       sources={["markey2009", "oldroyd2011"]}
     >
-      <p className={p}>
-        {tt(
-          "Markey, Reichheld and Dullweber (2009) describe firms that close the customer feedback loop: front-line teams see what customers say, act within days, and the loop improves the service week by week. Oldroyd and colleagues (2011) show what is at stake when the loop is slow: leads lose value by the hour.",
-          "Markey, Reichheld und Dullweber (2009) beschreiben Firmen, die die Feedbackschleife schließen: Teams an der Kundenfront sehen, was Kunden sagen, handeln innerhalb von Tagen, und die Schleife verbessert den Service Woche für Woche. Oldroyd und Kollegen (2011) zeigen, was auf dem Spiel steht, wenn die Schleife langsam ist: Leads verlieren stündlich an Wert.",
-        )}
-      </p>
+      <ShowMore id="B1" part="research" label={tt("Show the research behind this card", "Die Forschung hinter dieser Karte zeigen")}>
+        <p className={p}>
+          {tt(
+            "Markey, Reichheld and Dullweber (2009) describe firms that close the customer feedback loop: front-line teams see what customers say, act within days, and the loop improves the service week by week. Oldroyd and colleagues (2011) show what is at stake when the loop is slow: leads lose value by the hour.",
+            "Markey, Reichheld und Dullweber (2009) beschreiben Firmen, die die Feedbackschleife schließen: Teams an der Kundenfront sehen, was Kunden sagen, handeln innerhalb von Tagen, und die Schleife verbessert den Service Woche für Woche. Oldroyd und Kollegen (2011) zeigen, was auf dem Spiel steht, wenn die Schleife langsam ist: Leads verlieren stündlich an Wert.",
+          )}
+        </p>
+      </ShowMore>
       <Diagram label={tt("Four stages towards a real-time system · a worked example on Elster Digital", "Vier Stufen zu einem Echtzeitsystem · ein Beispiel mit Elster Digital")} caption={tt("Click a stage and read what changes for the company at that stage.", "Klicken Sie eine Stufe an und lesen Sie, was sich auf dieser Stufe für das Unternehmen ändert.")}>
         <DataStages />
       </Diagram>
@@ -49,12 +52,14 @@ export function CardB2() {
       ]}
       sources={["hubbard2014", "gdpr2016"]}
     >
-      <p className={p}>
-        {tt(
-          "Hubbard (2014) argues that measuring is worth it only where it could change a decision; the same holds for reacting in real time. Tracking itself has limits: under the GDPR, much website tracking needs consent, so an incomplete data situation is normal, not a failure. Start where the decision is and the data is good enough.",
-          "Hubbard (2014) argumentiert, dass Messen sich nur dort lohnt, wo es eine Entscheidung ändern könnte; dasselbe gilt für Reagieren in Echtzeit. Auch die Erfassung hat Grenzen: Nach der DSGVO braucht viel Website-Tracking eine Einwilligung, also ist eine unvollständige Datenlage normal, kein Versagen. Beginnen Sie dort, wo die Entscheidung fällt und die Daten gut genug sind.",
-        )}
-      </p>
+      <ShowMore id="B2" part="research" label={tt("Show the research behind this card", "Die Forschung hinter dieser Karte zeigen")}>
+        <p className={p}>
+          {tt(
+            "Hubbard (2014) argues that measuring is worth it only where it could change a decision; the same holds for reacting in real time. Tracking itself has limits: under the GDPR, much website tracking needs consent, so an incomplete data situation is normal, not a failure. Start where the decision is and the data is good enough.",
+            "Hubbard (2014) argumentiert, dass Messen sich nur dort lohnt, wo es eine Entscheidung ändern könnte; dasselbe gilt für Reagieren in Echtzeit. Auch die Erfassung hat Grenzen: Nach der DSGVO braucht viel Website-Tracking eine Einwilligung, also ist eine unvollständige Datenlage normal, kein Versagen. Beginnen Sie dort, wo die Entscheidung fällt und die Daten gut genug sind.",
+          )}
+        </p>
+      </ShowMore>
       <Diagram label={tt("Elster Digital's interaction points, sorted by customer decision and tracking", "Interaktionspunkte von Elster Digital, nach Kundenentscheidung und Erfassung sortiert")} caption={tt("Click a point to read where it goes and why.", "Klicken Sie einen Punkt an, um zu lesen, wohin er gehört und warum.")}>
         <SourceGrid />
       </Diagram>
@@ -75,12 +80,14 @@ export function CardB3() {
       ]}
       sources={["kaplan1992", "ries2011"]}
     >
-      <p className={p}>
-        {tt(
-          "Kaplan and Norton (1992) showed that managers steer better by a few linked measures, results and the drivers behind them, than by many unrelated ones. Ries (2011) warned against numbers that rise whatever you do. A live visitor counter is the purest example: it moves every second and tells you nothing about whether anyone will buy.",
-          "Kaplan und Norton (1992) zeigten, dass Führungskräfte besser nach wenigen verbundenen Kennzahlen steuern, Ergebnissen und den Treibern dahinter, als nach vielen unverbundenen. Ries (2011) warnte vor Zahlen, die steigen, egal was man tut. Ein Live-Besucherzähler ist das reinste Beispiel: Er bewegt sich jede Sekunde und sagt nichts darüber, ob jemand kaufen wird.",
-        )}
-      </p>
+      <ShowMore id="B3" part="research" label={tt("Show the research behind this card", "Die Forschung hinter dieser Karte zeigen")}>
+        <p className={p}>
+          {tt(
+            "Kaplan and Norton (1992) showed that managers steer better by a few linked measures, results and the drivers behind them, than by many unrelated ones. Ries (2011) warned against numbers that rise whatever you do. A live visitor counter is the purest example: it moves every second and tells you nothing about whether anyone will buy.",
+            "Kaplan und Norton (1992) zeigten, dass Führungskräfte besser nach wenigen verbundenen Kennzahlen steuern, Ergebnissen und den Treibern dahinter, als nach vielen unverbundenen. Ries (2011) warnte vor Zahlen, die steigen, egal was man tut. Ein Live-Besucherzähler ist das reinste Beispiel: Er bewegt sich jede Sekunde und sagt nichts darüber, ob jemand kaufen wird.",
+          )}
+        </p>
+      </ShowMore>
       <Diagram label={tt("Four KPI candidates of Elster Digital on four tests", "Vier KPI-Kandidaten von Elster Digital nach vier Tests")} caption={tt("Choose a candidate and compare its profile with the printed facts under it.", "Wählen Sie einen Kandidaten und vergleichen Sie sein Profil mit den gedruckten Fakten darunter.")}>
         <CompProfile />
       </Diagram>
@@ -102,24 +109,28 @@ export function CardB4() {
       ]}
       sources={["kohavi2020", "markey2009"]}
     >
-      <p className={p}>
-        {tt(
-          "Kohavi, Tang and Xu (2020) describe how firms that test continuously decide on each result with rules agreed before the test: a minimum effect worth shipping, a minimum sample, and guardrail metrics that veto a rollout. The weekly loop of Markey and colleagues (2009) is where those decisions are taken.",
-          "Kohavi, Tang und Xu (2020) beschreiben, wie Firmen, die laufend testen, über jedes Ergebnis mit Regeln entscheiden, die vor dem Test vereinbart sind: ein Mindesteffekt, der einen Rollout lohnt, eine Mindeststichprobe und Guardrail-Kennzahlen, die einen Rollout verhindern können. Die wöchentliche Schleife von Markey und Kollegen (2009) ist der Ort, an dem diese Entscheidungen fallen.",
-        )}
-      </p>
+      <ShowMore id="B4" part="research" label={tt("Show the research behind this card", "Die Forschung hinter dieser Karte zeigen")}>
+        <p className={p}>
+          {tt(
+            "Kohavi, Tang and Xu (2020) describe how firms that test continuously decide on each result with rules agreed before the test: a minimum effect worth shipping, a minimum sample, and guardrail metrics that veto a rollout. The weekly loop of Markey and colleagues (2009) is where those decisions are taken.",
+            "Kohavi, Tang und Xu (2020) beschreiben, wie Firmen, die laufend testen, über jedes Ergebnis mit Regeln entscheiden, die vor dem Test vereinbart sind: ein Mindesteffekt, der einen Rollout lohnt, eine Mindeststichprobe und Guardrail-Kennzahlen, die einen Rollout verhindern können. Die wöchentliche Schleife von Markey und Kollegen (2009) ist der Ort, an dem diese Entscheidungen fallen.",
+          )}
+        </p>
+      </ShowMore>
       <Diagram label={tt("Roll out, keep testing or stop · move the two sliders", "Ausrollen, weiter testen oder stoppen · die zwei Regler bewegen")} caption={tt("Set an uplift and a number of conversions and read which decision the rule gives.", "Stellen Sie einen Uplift und eine Zahl von Conversions ein und lesen Sie, welche Entscheidung die Regel ergibt.")}>
         <LiftCases />
       </Diagram>
-      <DataTable
-        head={[tt("Elster test", "Test bei Elster"), tt("Uplift", "Uplift"), tt("Conversions", "Conversions"), tt("Rule gives", "Regel ergibt"), tt("Who acts", "Wer handelt")]}
-        rows={[
-          [tt("Chat on the order page", "Chat auf der Bestellseite"), "+38%", "160", tt("Roll out", "Ausrollen"), tt("Marketing", "Marketing")],
-          [tt("Personal greeting for logged-in customers", "Persönliche Begrüßung für angemeldete Kunden"), "+30%", "25", tt("Keep testing", "Weiter testen"), tt("Data team", "Datenteam")],
-          [tt("Countdown timer on offers", "Countdown-Timer bei Angeboten"), "+1%", "600", tt("Stop", "Stoppen"), tt("No one", "Niemand")],
-        ]}
-        caption={tt("A worked decision on other tests (Case assumption)", "Eine Beispielentscheidung mit anderen Tests (Fallannahme)")}
-      />
+      <ShowMore id="B4" part="table" label={tt("Show the table: a worked decision on other tests (Case assumption)", "Tabelle zeigen: Eine Beispielentscheidung mit anderen Tests (Fallannahme)")}>
+        <DataTable
+          head={[tt("Elster test", "Test bei Elster"), tt("Uplift", "Uplift"), tt("Conversions", "Conversions"), tt("Rule gives", "Regel ergibt"), tt("Who acts", "Wer handelt")]}
+          rows={[
+            [tt("Chat on the order page", "Chat auf der Bestellseite"), "+38%", "160", tt("Roll out", "Ausrollen"), tt("Marketing", "Marketing")],
+            [tt("Personal greeting for logged-in customers", "Persönliche Begrüßung für angemeldete Kunden"), "+30%", "25", tt("Keep testing", "Weiter testen"), tt("Data team", "Datenteam")],
+            [tt("Countdown timer on offers", "Countdown-Timer bei Angeboten"), "+1%", "600", tt("Stop", "Stoppen"), tt("No one", "Niemand")],
+          ]}
+          caption={tt("A worked decision on other tests (Case assumption)", "Eine Beispielentscheidung mit anderen Tests (Fallannahme)")}
+        />
+      </ShowMore>
     </MaterialCard>
   );
 }
@@ -130,6 +141,9 @@ export function CardB5() {
       id="B5"
       scan={tt("Under time pressure and with incomplete data, decide now where the data is good enough and a delay costs most, build in stages, and agree on the result that makes you change course. Give every funded item a start, one owner and a trigger.", "Unter Zeitdruck und mit unvollständigen Daten entscheiden Sie jetzt dort, wo die Daten gut genug sind und eine Verzögerung am meisten kostet, bauen in Stufen und vereinbaren das Ergebnis, bei dem Sie den Kurs ändern. Geben Sie jedem finanzierten Punkt einen Start, einen Owner und einen Trigger.")}
       reasoning={[
+        tt("The numbers you write are found from numbers the screen prints, by three plain methods. Halfway: today's figure plus half the gap to the aim (or to the limit still accepted). Month: the start month plus the weeks until the item is in use, in months, rounded up, and never later than the plan's last month. Cost of waiting: the item's cost divided by what one customer kept is worth a year, rounded up.", "Die Zahlen, die Sie schreiben, werden aus Zahlen gefunden, die der Bildschirm druckt, mit drei einfachen Methoden. Die Hälfte des Weges: der heutige Wert plus die Hälfte des Abstands zum Ziel (oder zur noch akzeptierten Grenze). Monat: der Startmonat plus die Wochen bis zum Einsatz des Punkts, in Monaten, aufgerundet, und nie später als der letzte Monat des Plans. Kosten des Wartens: die Kosten des Punkts geteilt durch das, was ein gehaltener Kunde im Jahr wert ist, aufgerundet."),
+        tt("A trigger watches the figure the item is meant to move, not your own activity. It reads: if that figure is worse than the halfway number by the month it can first be read, the owner does one thing alone. A pickup point reads: if this many customers leave for the reason the item would fix by the plan's last month, the item is funded after all.", "Ein Trigger beobachtet die Zahl, die der Punkt bewegen soll, nicht Ihre eigene Aktivität. Er lautet: Ist diese Zahl bis zu dem Monat, in dem sie sich zuerst lesen lässt, schlechter als die Hälfte des Weges, tut der Owner eine Sache allein. Ein Pickup Point lautet: Gehen bis zum letzten Monat des Plans so viele Kunden aus dem Grund, den der Punkt beheben würde, wird der Punkt doch finanziert."),
+        tt("An assumption is two sentences: “I assume …” about one thing your plan bets on and that is still uncertain in the data (tie it to what you funded or deliberately left out), and “I am wrong if …”, a number you can watch yourself within the plan, compared with today's figure, by a month. Never use a market-growth figure: it does not move within your plan and your plan does not move it.", "Eine Annahme sind zwei Sätze: „Ich nehme an …“ über eine Sache, auf die Ihr Plan setzt und die in den Daten noch unsicher ist (verbinden Sie sie mit dem, was Sie finanziert oder bewusst weggelassen haben), und „Ich liege falsch, wenn …“, eine Zahl, die Sie innerhalb des Plans selbst beobachten können, verglichen mit dem heutigen Wert, bis zu einem Monat. Nehmen Sie nie eine Marktwachstumszahl: Sie bewegt sich innerhalb Ihres Plans nicht, und Ihr Plan bewegt sie nicht."),
         tt("Waiting until the data is complete is also a decision: every answer stays slow in the meantime, and the decision points are usually tracked well enough already. The brief asks for a decision under time pressure.", "Zu warten, bis die Daten vollständig sind, ist auch eine Entscheidung: Jede Antwort bleibt in der Zwischenzeit langsam, und die Entscheidungspunkte werden meist schon gut genug erfasst. Der Auftrag verlangt eine Entscheidung unter Zeitdruck."),
         tt("Launching everything at once is fast on paper, but the slow items (a relaunch, a platform) do not work inside a few months, and nothing is measured before the money is spent. Staging acts within weeks where it pays and spends the rest as the evidence arrives.", "Alles auf einmal zu starten ist auf dem Papier schnell, aber die langsamen Punkte (ein Relaunch, eine Plattform) wirken nicht in wenigen Monaten, und nichts wird gemessen, bevor das Geld ausgegeben ist. Stufenweise handelt innerhalb von Wochen, wo es sich lohnt, und gibt den Rest aus, während die Evidenz kommt."),
         tt("Measurement first: the live view starts no later than the first other item, because every other item is measured by it.", "Messung zuerst: Die Live-Sicht startet nicht später als der erste andere Punkt, weil jeder andere Punkt daran gemessen wird."),
@@ -143,16 +157,31 @@ export function CardB5() {
       <Diagram label={tt("Three funded items over the first months · a worked example on Elster Digital", "Drei finanzierte Punkte über die ersten Monate · ein Beispiel mit Elster Digital")} caption={tt("Click a row to read its owner, its trigger and why it starts when it does.", "Klicken Sie eine Zeile an, um Owner, Trigger und den Grund für den Start zu lesen.")}>
         <ArchExample />
       </Diagram>
-      <Bul
-        items={[
-          tt("Stage it: the no-regret items (the live view, the chat on the well-tracked decision pages) first, the rest when the first results are in.", "Stufenweise: die No-regret-Punkte (Live-Sicht, Chat auf den gut erfassten Entscheidungsseiten) zuerst, der Rest, wenn die ersten Ergebnisse da sind."),
-          tt("Premortem: imagine the system failed after four months, and write down why. Those reasons are your assumptions to watch.", "Premortem: Stellen Sie sich vor, das System sei nach vier Monaten gescheitert, und schreiben Sie auf, warum. Diese Gründe sind die Annahmen, die Sie beobachten."),
-          tt("What does not fit gets a pickup point: the number and the date at which you look at it again.", "Was nicht passt, bekommt einen Pickup Point: die Zahl und das Datum, zu dem Sie es wieder ansehen."),
-        ]}
-      />
-      <Callout label={tt("Time pressure is not a reason to guess", "Zeitdruck ist kein Grund zu raten")} tone="signal">
-        <p>{tt("Under time pressure, act where the evidence is good enough and the delay costs most, and measure from the first day. A staged decision with a tripwire is fast and still honest about what you do not know yet.", "Unter Zeitdruck handeln Sie dort, wo die Evidenz gut genug ist und die Verzögerung am meisten kostet, und messen ab dem ersten Tag. Eine gestufte Entscheidung mit Tripwire ist schnell und trotzdem ehrlich darüber, was Sie noch nicht wissen.")}</p>
-      </Callout>
+      <ShowMore id="B5" part="calc" label={tt("Show the worked numbers on another company (Case assumption)", "Die Rechenwege an einem anderen Unternehmen zeigen (Fallannahme)")}>
+        <DataTable
+          head={[tt("Method", "Methode"), tt("Company A's figures", "Zahlen von Unternehmen A"), tt("Result", "Ergebnis")]}
+          rows={[
+            [tt("Halfway: renewal rate today 70%, aim 80%", "Hälfte des Weges: Verlängerungsquote heute 70 %, Ziel 80 %"), "70 + (80 − 70) ÷ 2", "75%"],
+            [tt("Month: starts in month 2, needs 6 weeks", "Monat: startet in Monat 2, braucht 6 Wochen"), "2 + 6 ÷ 4 = 2 + 2", tt("month 4", "Monat 4")],
+            [tt("Cost of waiting: a €36,000 app, a customer kept is worth €12,000 a year", "Kosten des Wartens: eine App für 36.000 €, ein gehaltener Kunde ist 12.000 € im Jahr wert"), "36,000 ÷ 12,000", tt("3 customers", "3 Kunden")],
+          ]}
+          caption={tt("Company A's numbers (Case assumption). Use the same methods on the figures printed on your own item cards.", "Zahlen von Unternehmen A (Fallannahme). Nutzen Sie dieselben Methoden mit den Zahlen auf den Karten Ihrer eigenen Punkte.")}
+        />
+      </ShowMore>
+      <ShowMore id="B5" part="notes" label={tt("Show two short notes", "Zwei kurze Hinweise zeigen")}>
+        <Bul
+          items={[
+            tt("Stage it: the no-regret items (the live view, the chat on the well-tracked decision pages) first, the rest when the first results are in.", "Stufenweise: die No-regret-Punkte (Live-Sicht, Chat auf den gut erfassten Entscheidungsseiten) zuerst, der Rest, wenn die ersten Ergebnisse da sind."),
+            tt("Premortem: imagine the system failed after four months, and write down why. Those reasons are your assumptions to watch.", "Premortem: Stellen Sie sich vor, das System sei nach vier Monaten gescheitert, und schreiben Sie auf, warum. Diese Gründe sind die Annahmen, die Sie beobachten."),
+            tt("What does not fit gets a pickup point: the number and the date at which you look at it again.", "Was nicht passt, bekommt einen Pickup Point: die Zahl und das Datum, zu dem Sie es wieder ansehen."),
+          ]}
+        />
+      </ShowMore>
+      <ShowMore id="B5" part="extra" label={tt("Show: Time pressure is not a reason to guess", "Zeigen: Zeitdruck ist kein Grund zu raten")}>
+        <Callout label={tt("Time pressure is not a reason to guess", "Zeitdruck ist kein Grund zu raten")} tone="signal">
+          <p>{tt("Under time pressure, act where the evidence is good enough and the delay costs most, and measure from the first day. A staged decision with a tripwire is fast and still honest about what you do not know yet.", "Unter Zeitdruck handeln Sie dort, wo die Evidenz gut genug ist und die Verzögerung am meisten kostet, und messen ab dem ersten Tag. Eine gestufte Entscheidung mit Tripwire ist schnell und trotzdem ehrlich darüber, was Sie noch nicht wissen.")}</p>
+        </Callout>
+      </ShowMore>
     </MaterialCard>
   );
 }

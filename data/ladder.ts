@@ -109,3 +109,16 @@ export const LEVEL_TESTS = bi([
   { name: t("Respond or personalise?", "Reagieren oder personalisieren?"), test: t("Ask what changes. If it is how soon the customer hears from you, it is speed; if it is what the customer sees, it is personalisation.", "Fragen Sie, was sich ändert. Ist es, wie bald der Kunde von Ihnen hört, ist es Tempo; ist es, was der Kunde sieht, ist es Personalisierung.") },
   { name: t("Personalise or learn?", "Personalisieren oder lernen?"), test: t("Personalisation shows different visitors different things on purpose. A test shows them different things by chance, to find out which works.", "Personalisierung zeigt verschiedenen Besuchern bewusst Verschiedenes. Ein Test zeigt ihnen per Zufall Verschiedenes, um herauszufinden, was wirkt.") },
 ]);
+
+/** The decisive phrase inside each idea's own text, for "Highlight the key words" (never which lever it points to). */
+export const LINE_KEY: Record<string, string> = bi({
+  l1: t("answers the five most common questions at once", "beantwortet die fünf häufigsten Fragen sofort"),
+  l2: t("called back within 15 minutes", "innerhalb von 15 Minuten zurückgerufen"),
+  l3: t("get a reply from a named person within one hour", "innerhalb einer Stunde eine Antwort"),
+  l4: t("sees the add-on that customers of the same size added next", "sieht auf der Startseite das Add-on, das Kunden gleicher Größe als Nächstes ergänzten"),
+  l5: t("arrive from the hospital campaign see case studies", "die über die Krankenhaus-Kampagne kommen, sehen zuerst Fallstudien"),
+  l6: t("a short comparison that fits the size of their company", "einen kurzen Vergleich an, der zur Größe seines Unternehmens passt"),
+  l7: t("Half of the visitors to the pricing page see the new layout, half the old one", "Die Hälfte der Besucher der Preisseite sieht drei Wochen lang das neue Layout, die andere Hälfte das alte"),
+  l8: t("every Friday the team rewrites the three answers rated worst", "jeden Freitag schreibt das Team die drei am schlechtesten bewerteten Antworten neu"),
+  l9: t("which page lost the most visitors yesterday", "welche Seite gestern die meisten Besucher verlor"),
+});

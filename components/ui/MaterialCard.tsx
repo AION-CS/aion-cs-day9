@@ -6,6 +6,10 @@ import { MATERIAL_BY_ID, materialAnchorId } from "@/data/materialIndex";
 import type { MaterialId } from "@/data/materialIndex";
 import { plainOf } from "@/data/materialPlain";
 
+import { CorePill } from "@/components/ui/AnswerBlock";
+import { Watch } from "@/components/materi/kit";
+import { ShowMore } from "@/components/ui/ShowMore";
+import { VIDEOS } from "@/data/videos";
 import { REFERENCES, refFull } from "@/data/references";
 import type { RefKey } from "@/data/references";
 import { scrollToAndFlash } from "@/lib/flash";
@@ -60,42 +64,63 @@ export function MaterialCard({
   const seen = new Set<string>();
   const scanG = glossify(scan, seen);
   const plain = plainOf(id);
-  const plainRows = [
-    { label: tt("In plain words", "In einfachen Worten"), text: plain.idea },
-    { label: tt("Why it matters", "Warum es zählt"), text: plain.why },
-    ...(plain.picture ? [{ label: tt("How to read the picture below", "So lesen Sie das Bild unten"), text: plain.picture }] : []),
-  ].map((r) => ({ ...r, g: glossify(r.text, seen) }));
+  const ideaG = glossify(plain.idea, seen);
   const bodyG = glossify(children, seen);
+  const moreRows = [
+    { label: tt("Why it matters", "Warum es zählt"), text: plain.why },
+    ...(plain.picture ? [{ label: tt("How to read the picture", "So lesen Sie das Bild"), text: plain.picture }] : []),
+  ].map((r) => ({ ...r, g: glossify(r.text, seen) }));
   const rulesG = reasoning?.map((r) => glossify(r, seen));
+  const video = VIDEOS[id];
 
   return (
     <article id={materialAnchorId(id)} className={clsx("card p-4 md:p-6", isRead && "border-signal/40")}>
       <header className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
         <span className="rounded bg-ink px-2 py-0.5 text-micro font-bold text-paper">{id}</span>
         <h3 className="min-w-0 flex-1">{meta.title}</h3>
+        <CorePill core={!meta.optional} />
         <span className="smallcaps whitespace-nowrap">
           {meta.minutes} {tt("min", "Min.")}
         </span>
       </header>
       <p className="mt-2 font-semibold text-ink">{scanG}</p>
-      <div className="mt-3 space-y-2.5 rounded-lg border border-line bg-mist/50 p-3.5">
-        {plainRows.map((r) => (
-          <div key={r.label}>
-            <p className="smallcaps text-ash">{r.label}</p>
-            <p className="mt-0.5 text-body text-ink">{r.g}</p>
+      <div className="mt-3 rounded-lg border border-line bg-mist/50 p-3.5">
+        <p className="smallcaps text-ash">{tt("In plain words", "In einfachen Worten")}</p>
+        <p className="mt-0.5 text-body text-ink">{ideaG}</p>
+      </div>
+      <div className="mt-3">
+        <ShowMore id={id} part="more" label={tt("Show why it matters and how to read the picture", "Zeigen, warum es zählt und wie man das Bild liest")}>
+          <div className="space-y-2.5 rounded-lg border border-line bg-mist/50 p-3.5">
+            {moreRows.map((r) => (
+              <div key={r.label}>
+                <p className="smallcaps text-ash">{r.label}</p>
+                <p className="mt-0.5 text-body text-ink">{r.g}</p>
+              </div>
+            ))}
           </div>
-        ))}
+        </ShowMore>
       </div>
       <div className="mt-4 space-y-4">{bodyG}</div>
+      {video && (
+        <div className="mt-4">
+          <ShowMore id={id} part="video" label={tt(`Show the video · ${video.minutes} min${video.optional ? " · optional" : ""}`, `Video zeigen · ${video.minutes} Min.${video.optional ? " · optional" : ""}`)}>
+            <Watch video={video} />
+          </ShowMore>
+        </div>
+      )}
 
       {reasoning && reasoning.length > 0 && (
-        <div className="mt-5 rounded-lg border border-accent/30 bg-accentSoft p-3.5">
+        <div className="mt-5">
+          <ShowMore id={id} part="rules" label={tt(`Show the rules this card gives the task (${reasoning.length})`, `Die Regeln zeigen, die diese Karte der Aufgabe gibt (${reasoning.length})`)}>
+        <div className="rounded-lg border border-accent/30 bg-accentSoft p-3.5">
           <p className="smallcaps text-accent">{tt("How to decide when this comes up in the task", "So entscheiden Sie, wenn das in der Aufgabe vorkommt")}</p>
           <ul className="mt-1.5 list-disc space-y-1 pl-5 text-caption text-ink">
             {reasoning.map((r, i) => (
               <li key={r}>{rulesG?.[i] ?? r}</li>
             ))}
           </ul>
+        </div>
+          </ShowMore>
         </div>
       )}
 

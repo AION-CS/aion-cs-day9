@@ -2,16 +2,17 @@
 
 import { Block31, Block32, Block33, Block34, Block35, Block36 } from "@/components/task2/Blocks";
 import { MemoPanel } from "@/components/task2/MemoPanel";
+import { TodayTable } from "@/components/task2/Kits";
 import { ExportBar } from "@/components/ui/ExportBar";
 import { Callout } from "@/components/ui/MaterialCard";
+import { OptionalSection } from "@/components/ui/OptionalSection";
 import { MEASURE_BY_ID } from "@/data/measures";
-import { PATTERNS, PATTERN_IDS, RISK_LABEL } from "@/data/patterns";
 import { R2_BUDGET, R2_MONTHS } from "@/data/route2";
 import { Gloss } from "@/lib/glossify";
 import { euro, tt } from "@/lib/lang";
 import { memoBody } from "@/lib/exportDoc";
 import { r2Missing } from "@/lib/missing";
-import { TASK2_MINUTES } from "@/lib/routes";
+import { BLOCK_MINUTES, TASK2_MINUTES } from "@/lib/routes";
 import { exportName } from "@/lib/slug";
 import { useJumpTo } from "@/lib/useJumpTo";
 import { usePersisted } from "@/store/usePersisted";
@@ -22,9 +23,8 @@ function CaseBrief() {
   const hydrated = useHydrated();
   const p = usePersisted();
   const jump = useJumpTo();
-  const risks = PATTERN_IDS.filter((x) => p.l1.rows[x].risk).map((x) => `${PATTERNS[x].label} (${RISK_LABEL[p.l1.rows[x].risk!]})`);
   const chosen = p.l1.chosen.map((id) => MEASURE_BY_ID[id].name);
-  const has = hydrated && (risks.length > 0 || chosen.length > 0);
+  const has = hydrated && chosen.length > 0;
   return (
     <section id="task-2" aria-labelledby="task2-h" className="card space-y-3 p-4 md:p-6">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
@@ -48,7 +48,7 @@ function CaseBrief() {
               {tt("Time: ", "Zeit: ")}
               <strong>{tt(`${R2_MONTHS} months`, `${R2_MONTHS} Monate`)}</strong>
             </li>
-            <li>{tt("The interaction points are in Block 3.2, the KPI candidates in Block 3.3, the test results in Block 3.4, the items and costs in Block 3.5, the baselines in Block 3.6.", "Die Interaktionspunkte stehen in Block 3.2, die KPI-Kandidaten in Block 3.3, die Testergebnisse in Block 3.4, die Punkte und Kosten in Block 3.5, die Ausgangswerte in Block 3.6.")}</li>
+            <li>{tt("The items and their costs are in Block 3.5; the numbers today are in the table below.", "Die Punkte und ihre Kosten stehen in Block 3.5; die Zahlen heute stehen in der Tabelle darunter.")}</li>
           </ul>
         </div>
         <div className="rounded-lg border border-line bg-canvas p-3 text-caption md:col-span-2">
@@ -63,19 +63,19 @@ function CaseBrief() {
           </ol>
         </div>
       </div>
+      <TodayTable />
       <div role="note" className="rounded-lg border border-gold bg-accentSoft p-3 text-caption text-ink" id="task1-quote">
         <p className="smallcaps text-accent">{tt("Where Route 1 left off · your own answers", "Wo Route 1 aufgehört hat · Ihre eigenen Antworten")}</p>
         {has ? (
           <p className="mt-1">
-            {tt("Link to customer value per kind of metric: ", "Verbindung zum Kundenwert pro Art von Kennzahl: ")}
-            <strong>{risks.join(", ") || tt("none yet", "noch keines")}</strong>. {tt("Measures you chose: ", "Von Ihnen gewählte Maßnahmen: ")}
-            <strong>{chosen.join(", ") || tt("none yet", "noch keine")}</strong>.
+            {tt("Measures you chose in Route 1: ", "Von Ihnen in Route 1 gewählte Maßnahmen: ")}
+            <strong>{chosen.join(", ")}</strong>.
           </p>
         ) : (
           <p className="mt-1">{tt("You have not answered Route 1 yet. That is fine: nothing here is blocked, and this box fills in when you do.", "Sie haben Route 1 noch nicht beantwortet. Das ist in Ordnung: Hier ist nichts gesperrt, und dieses Feld füllt sich, sobald Sie es tun.")}</p>
         )}
-        <button type="button" onClick={() => jump("block-2-2", "/route-1/")} className="btn-ghost btn-sm mt-2">
-          {tt("Go to Block 2.2 in Route 1", "Zu Block 2.2 in Route 1")}
+        <button type="button" onClick={() => jump("block-2-4", "/route-1/")} className="btn-ghost btn-sm mt-2">
+          {tt("Go to Block 2.4 in Route 1", "Zu Block 2.4 in Route 1")}
         </button>
       </div>
       <Callout label={tt("Case assumption", "Fallannahme")} tone="amber">
@@ -94,27 +94,51 @@ export function Task2() {
   return (
     <div className="space-y-6">
       <CaseBrief />
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)]">
-        <div className="min-w-0 space-y-6 pb-14 lg:pb-0">
-          <Block31 />
-          <Block32 />
-          <Block33 />
-          <Block34 />
-          <Block35 />
-          <Block36 />
-          <ExportBar
-            id="export-l3"
-            previewTitle={tt("Preview of your memo", "Vorschau Ihres Memos")}
-            exportLabel={tt("Export the Real-Time Management Memo", "Real-Time Management Memo exportieren")}
-            docTitle="Real-Time Management Memo"
-            filename={filename}
-            missing={missing}
-            buildBody={() => memoBody(p)}
-            showPreview={false}
-          />
-        </div>
-        <MemoPanel />
-      </div>
+      <OptionalSection
+        id="block-3-1"
+        title={tt("Block 3.1 · The target vision of a real-time retention system", "Block 3.1 · Das Zielbild eines Echtzeit-Bindungssystems")}
+        minutes={BLOCK_MINUTES["3.1"]}
+        reason={tt("Names the principles behind a real-time retention system; the plan in Block 3.5 can be set without them.", "Benennt die Prinzipien hinter einem Echtzeit-Bindungssystem; der Plan in Block 3.5 lässt sich auch ohne sie festlegen.")}
+      >
+        <Block31 />
+      </OptionalSection>
+      <OptionalSection
+        id="block-3-2"
+        title={tt("Block 3.2 · Definition of central interaction points", "Block 3.2 · Festlegung zentraler Interaktionspunkte")}
+        minutes={BLOCK_MINUTES["3.2"]}
+        reason={tt("Sorts eight interaction points into select now, data first or not now; Block 3.5 prints the figures it needs itself.", "Sortiert acht Interaktionspunkte in jetzt auswählen, erst die Daten oder jetzt nicht; Block 3.5 druckt die Zahlen, die er braucht, selbst.")}
+      >
+        <Block32 />
+      </OptionalSection>
+      <OptionalSection
+        id="block-3-3"
+        title={tt("Block 3.3 · A KPI and optimisation system", "Block 3.3 · Ein KPI- und Optimierungssystem")}
+        minutes={BLOCK_MINUTES["3.3"]}
+        reason={tt("Rates KPI candidates on four tests; Block 3.6 prints the baselines of its own metrics, so the decision does not need the ratings.", "Bewertet KPI-Kandidaten nach vier Tests; Block 3.6 druckt die Ausgangswerte seiner eigenen Kennzahlen, die Entscheidung braucht die Bewertungen also nicht.")}
+      >
+        <Block33 />
+      </OptionalSection>
+      <OptionalSection
+        id="block-3-4"
+        title={tt("Block 3.4 · Automation and personalisation measures, tested: roll out, keep testing or stop", "Block 3.4 · Automatisierungs- und Personalisierungsmaßnahmen, getestet: ausrollen, weiter testen oder stoppen")}
+        minutes={BLOCK_MINUTES["3.4"]}
+        reason={tt("Decides roll out, keep testing or stop for six test results; Block 3.5 already names one owner per funded item.", "Entscheidet für sechs Testergebnisse über Ausrollen, Weitertesten oder Stoppen; Block 3.5 benennt schon einen Owner pro finanziertem Punkt.")}
+      >
+        <Block34 />
+      </OptionalSection>
+      <Block35 />
+      <Block36 />
+      <MemoPanel />
+      <ExportBar
+        id="export-l3"
+        previewTitle={tt("Preview of your memo", "Vorschau Ihres Memos")}
+        exportLabel={tt("Export the Real-Time Management Memo", "Real-Time Management Memo exportieren")}
+        docTitle="Real-Time Management Memo"
+        filename={filename}
+        missing={missing}
+        buildBody={() => memoBody(p)}
+        showPreview={false}
+      />
     </div>
   );
 }

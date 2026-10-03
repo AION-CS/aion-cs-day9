@@ -30,8 +30,8 @@ export function Route2Page() {
       <SuggestedOrderBanner
         routeKey="r2"
         text={tt(
-          "Route 1 first is recommended, because the situation quotes the kinds of metric and the measures you named there. Every section stays open, so you can work through this route regardless.",
-          "Route 1 zuerst wird empfohlen, weil die Lage die Arten von Kennzahlen und die Maßnahmen zitiert, die Sie dort benannt haben. Jeder Abschnitt bleibt offen, Sie können diese Route trotzdem bearbeiten.",
+          "Route 1 first is recommended, because the situation quotes the measures you chose there. Every section stays open, so you can work through this route regardless.",
+          "Route 1 zuerst wird empfohlen, weil die Lage die Maßnahmen zitiert, die Sie dort gewählt haben. Jeder Abschnitt bleibt offen, Sie können diese Route trotzdem bearbeiten.",
         )}
       />
       <SectionRail route={2} />

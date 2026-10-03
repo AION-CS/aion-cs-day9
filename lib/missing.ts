@@ -2,18 +2,17 @@ import { LINES } from "@/data/ladder";
 import { INSIGHT_MIN, PICK, hasSoWhat } from "@/data/forecast";
 import { AB, AB_PARTS, PATTERNS, PATTERN_IDS, RECORDS } from "@/data/patterns";
 import { CHOOSE, MEASURE_BY_ID } from "@/data/measures";
-import { ARCH_BY_ID, ARCH_IDS, COMP_BY_ID, COMP_CHOOSE, CRIT_IDS, PRINCIPLES, R2_BUDGET, SIT_BY_ID, SIT_IDS, SOURCES } from "@/data/route2";
-import { archOver, citesForecastFigure, funded, hasNumber } from "@/lib/checks";
-import { MIN_LINE, MIN_SENTENCE } from "@/lib/progress";
+import { ARCH_BY_ID, ARCH_IDS, COMP_BY_ID, COMP_CHOOSE, CRIT_IDS, PRINCIPLES, SIT_BY_ID, SIT_IDS, SOURCES } from "@/data/route2";
+import { citesForecastFigure, funded, hasNumber } from "@/lib/checks";
+import { MIN_LINE, MIN_SENTENCE, OPTIONAL_BLOCKS } from "@/lib/progress";
 import { parseAmount } from "@/lib/parseAmount";
-import { euro, tt } from "@/lib/lang";
+import { tt } from "@/lib/lang";
 import type { Persisted } from "@/store/useStore";
 
 /** DOM ids the missing list points at. One place, so the list and the UI cannot drift. */
 export const IDS = {
   participant: "participant-strip",
   line: (id: string) => `line-${id}`,
-  figure: (id: string) => `fig-${id}`,
   extraInsight: "extra-insight",
   meaning: "meaning-field",
   valuable: "valuable-field",
@@ -27,6 +26,7 @@ export const IDS = {
   abPart: (k: string) => `ab-${k}`,
   measurePick: "measure-pick",
   measure: (id: string) => `measure-${id}`,
+  reason: (id: string) => `reason-${id}`,
   order: "order-field",
   why: "why-field",
   principlePick: "principle-pick",
@@ -48,7 +48,17 @@ export const IDS = {
 } as const;
 
 export type MissingEntry = { id: string; label: string };
-const short = (s: string, n = 44) => (s.length > n ? `${s.slice(0, n)}…` : s);
+
+/**
+ * Optional blocks (CLAUDE.md #35) are never required: their entries are dropped here, in one place, so the Export notice, the
+ * per-block notice (#34) and the dossier ring agree. Every label starts "Block X.Y:", in both languages.
+ */
+const OPTIONAL_PREFIXES = OPTIONAL_BLOCKS.map((b) => `Block ${b[1]}.${b[2]}:`);
+const coreOnly = (list: MissingEntry[]) => list.filter((m) => !OPTIONAL_PREFIXES.some((p) => m.label.startsWith(p)));
+const short = (raw: string, n = 44) => {
+  const s = raw.replace(/^[“„"]|[”“"]$/g, "");
+  return s.length > n ? `${s.slice(0, n)}…` : s;
+};
 
 export function participantMissing(p: Persisted): MissingEntry[] {
   return p.participant.name.trim() ? [] : [{ id: IDS.participant, label: tt("Your full name is needed for the file name.", "Ihr vollständiger Name wird für den Dateinamen gebraucht.") }];
@@ -60,7 +70,6 @@ export function l1Missing(p: Persisted): MissingEntry[] {
   const e = (id: string, label: string) => out.push({ id, label });
   for (const r of LINES) if (l1.sort[r.id] === null) e(IDS.line(r.id), tt(`Block 1.1: “${short(r.text)}” is not tagged as respond, personalise or learn.`, `Block 1.1: „${short(r.text)}“ ist nicht als reagieren, personalisieren oder lernen zugeordnet.`));
   if (l1.extraInsight.trim().length < MIN_LINE) e(IDS.extraInsight, tt(`Block 1.1: name one real-time opportunity of your own (at least ${MIN_LINE} characters).`, `Block 1.1: Nennen Sie eine eigene Echtzeit-Chance (mindestens ${MIN_LINE} Zeichen).`));
-  for (const f of ["F1", "F2", "F3"] as const) if (parseAmount(l1.fig[f]) === null) e(IDS.figure(f), tt(`Block 1.2: ${f} has no figure.`, `Block 1.2: ${f} hat keinen Wert.`));
   const w = l1.meaning.trim();
   if (!w) e(IDS.meaning, tt("Block 1.2: the sentence on what speed means is empty.", "Block 1.2: Der Satz dazu, was Tempo bedeutet, ist leer."));
   else if (w.length < MIN_SENTENCE) e(IDS.meaning, tt(`Block 1.2: the sentence needs at least ${MIN_SENTENCE} characters.`, `Block 1.2: Der Satz braucht mindestens ${MIN_SENTENCE} Zeichen.`));
@@ -83,6 +92,7 @@ export function l1Missing(p: Persisted): MissingEntry[] {
   ];
   for (const [k, en, de] of rf) if (l1.reflect[k].trim().length < MIN_LINE) e(IDS.reflect(k), tt(`Block 1.4: say ${en} (at least ${MIN_LINE} characters).`, `Block 1.4: Sagen Sie, ${de} (mindestens ${MIN_LINE} Zeichen).`));
   for (const r of RECORDS) if (l1.tags[r.id] === null) e(IDS.rec(r.id), tt(`Block 2.1: ${r.code} has no kind.`, `Block 2.1: ${r.code} hat keine Art.`));
+  if (l1.misread.trim().length < MIN_SENTENCE) e(IDS.misread, tt(`Block 2.1: name your three KPIs, with source, aim and why each is a KPI (at least ${MIN_SENTENCE} characters).`, `Block 2.1: Nennen Sie Ihre drei KPIs, mit Quelle, Ziel und warum jeder ein KPI ist (mindestens ${MIN_SENTENCE} Zeichen).`));
   if (l1.unc.length < 2) e(IDS.unc, tt("Block 2.2: choose at least two uncertainties in the speed figures.", "Block 2.2: Wählen Sie mindestens zwei Unsicherheiten der Tempo-Werte."));
   for (const x of PATTERN_IDS) {
     const r = l1.rows[x];
@@ -91,7 +101,6 @@ export function l1Missing(p: Persisted): MissingEntry[] {
     if (!r.meaning) e(IDS.row(x), tt(`Block 2.2: say what ${n} tells management.`, `Block 2.2: Sagen Sie, was ${n} dem Management sagt.`));
     if (!r.measure) e(IDS.row(x), tt(`Block 2.2: choose how to use ${n}.`, `Block 2.2: Wählen Sie, wie ${n} genutzt wird.`));
   }
-  if (l1.misread.trim().length < MIN_SENTENCE) e(IDS.misread, tt(`Block 2.2: name your three KPIs, with source and target (at least ${MIN_SENTENCE} characters).`, `Block 2.2: Nennen Sie Ihre drei KPIs, mit Quelle und Ziel (mindestens ${MIN_SENTENCE} Zeichen).`));
   if (l1.ab.hyp.trim().length < MIN_LINE) e(IDS.abPart("hyp"), tt(`Block 2.3: write the hypothesis (at least ${MIN_LINE} characters).`, `Block 2.3: Schreiben Sie die Hypothese (mindestens ${MIN_LINE} Zeichen).`));
   for (const k of AB_PARTS) if (!l1.ab[k]) e(IDS.abPart(k), tt(`Block 2.3: choose “${AB[k].label}”.`, `Block 2.3: Wählen Sie „${AB[k].label}“.`));
   if (l1.ab.rule.trim().length < MIN_LINE) e(IDS.abPart("rule"), tt(`Block 2.3: write the decision rule (at least ${MIN_LINE} characters).`, `Block 2.3: Schreiben Sie die Entscheidungsregel (mindestens ${MIN_LINE} Zeichen).`));
@@ -101,12 +110,13 @@ export function l1Missing(p: Persisted): MissingEntry[] {
     const name = MEASURE_BY_ID[id].name;
     if (l1.aims[id] === undefined) e(IDS.measure(id), tt(`Block 2.4: “${name}” names no problem it answers (or “none”).`, `Block 2.4: „${name}“ nennt kein Problem, das sie beantwortet (oder „keines“).`));
     if (!l1.exp[id] || !l1.fea[id] || !l1.eff[id]) e(IDS.measure(id), tt(`Block 2.4: “${name}” is not fully scored (effect, speed, scalability).`, `Block 2.4: „${name}“ ist nicht vollständig bewertet (Wirkung, Tempo, Skalierbarkeit).`));
+    if ((l1.reasons[id] ?? "").trim().length < MIN_LINE) e(IDS.reason(id), tt(`Block 2.4: say why “${name}” gets its effect and scalability scores (at least ${MIN_LINE} characters).`, `Block 2.4: Begründen Sie, warum „${name}“ seine Werte für Wirkung und Skalierbarkeit bekommt (mindestens ${MIN_LINE} Zeichen).`));
   }
   if (l1.chosen.length === CHOOSE) {
     if (l1.order.length !== CHOOSE || !l1.chosen.every((id) => l1.order.includes(id))) e(IDS.order, tt("Block 2.4: put your three measures in a priority order.", "Block 2.4: Bringen Sie Ihre drei Maßnahmen in eine Reihenfolge."));
     if (l1.why.trim().length < 60) e(IDS.why, tt("Block 2.4: say why your first priority goes first (at least 60 characters).", "Block 2.4: Begründen Sie, warum Ihre erste Priorität zuerst kommt (mindestens 60 Zeichen)."));
   }
-  return out;
+  return coreOnly(out);
 }
 
 export function r2Missing(p: Persisted): MissingEntry[] {
@@ -128,7 +138,6 @@ export function r2Missing(p: Persisted): MissingEntry[] {
   }
   const f = funded(r2);
   if (f.length === 0) e(IDS.archTotal, tt("Block 3.5: fund at least one item.", "Block 3.5: Finanzieren Sie mindestens einen Punkt."));
-  if (archOver(r2) > 0) e(IDS.archTotal, tt(`Block 3.5: the funded items are ${euro(archOver(r2))} over the ${euro(R2_BUDGET)} budget.`, `Block 3.5: Die finanzierten Punkte liegen ${euro(archOver(r2))} über dem Budget von ${euro(R2_BUDGET)}.`));
   for (const id of f) {
     const name = ARCH_BY_ID[id].name;
     if (r2.start[id] == null) e(IDS.arch(id), tt(`Block 3.5: “${name}” has no start month.`, `Block 3.5: „${name}“ hat keinen Startmonat.`));
@@ -150,5 +159,5 @@ export function r2Missing(p: Persisted): MissingEntry[] {
   if (!r2.tripMonth) e(IDS.trip, tt("Block 3.6: give the tripwire a month.", "Block 3.6: Geben Sie dem Tripwire einen Monat."));
   if (!r2.tripAction) e(IDS.trip, tt("Block 3.6: say what you do if the tripwire is missed.", "Block 3.6: Sagen Sie, was Sie tun, wenn der Tripwire verfehlt wird."));
   if (r2.challenge.trim().length < 60) e(IDS.challenge, tt("Block 3.6: answer the board's challenge (at least 60 characters).", "Block 3.6: Beantworten Sie die Frage des Vorstands (mindestens 60 Zeichen)."));
-  return out;
+  return coreOnly(out);
 }

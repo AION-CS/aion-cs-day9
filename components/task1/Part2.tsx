@@ -10,9 +10,11 @@ import { MentorGuide } from "@/components/ui/MentorGuide";
 import { PlacementBoard } from "@/components/ui/PlacementBoard";
 import { RevealHint } from "@/components/ui/RevealHint";
 import { WritingHelp } from "@/components/ui/WritingHelp";
-import { AB, AB_PARTS, MEANINGS, OUTCOME_LABEL, PATTERNS, PATTERN_IDS, PATTERN_PAIR_TESTS, PMEASURES, RECORDS, RISK_GLYPH, RISK_LABEL, RISK_RULE, UNCERTAINTIES } from "@/data/patterns";
+import { ExampleAnswer } from "@/components/ui/ExampleAnswer";
+import { BlockMissing } from "@/components/ui/BlockMissing";
+import { AB, AB_PARTS, MEANINGS, OUTCOME_LABEL, PATTERNS, PATTERN_IDS, PATTERN_PAIR_TESTS, PMEASURES, RECORDS, RISK_GLYPH, RISK_LABEL, RISK_RULE, UNCERTAINTIES, REC_KEY } from "@/data/patterns";
 import type { AbPart, MeaningId, PatternId, PMeasureId, RecId, Risk, UncId } from "@/data/patterns";
-import { BUDGET, CHOOSE, EVIDENCE_LABEL, EXPLAIN_RULE, MEASURES, MEASURE_BY_ID, MONTHS, PROBLEM_IDS, PROBLEM_LABEL } from "@/data/measures";
+import { BUDGET, CHOOSE, EVIDENCE_LABEL, EXPLAIN_RULE, MEASURES, MEASURE_BY_ID, MONTHS, PROBLEM_IDS, PROBLEM_LABEL, AREA_NOTE, MEASURE_AREA_LABEL } from "@/data/measures";
 import type { MeasureId, ProblemId } from "@/data/measures";
 import { abFlagsOf, aimsHold, allTagged, coverage, expHolds, measureScore, measureScored, orderInversions, rowChecks, tagHolds, tallyOf, totalCost, uncHolds } from "@/lib/checks";
 import { scrollToAndFlash } from "@/lib/flash";
@@ -20,7 +22,7 @@ import { Gloss } from "@/lib/glossify";
 import { euro, tt } from "@/lib/lang";
 import { IDS } from "@/lib/missing";
 import { abKey, measureKey, orderKey, rowKey, tagKey, uncKey } from "@/lib/answerKey";
-import { abGuide, misreadGuide, scoreGuide, whyGuide } from "@/lib/mentorGuide";
+import { abGuide, misreadGuide, scoreGuide, whyGuide, reasonGuide } from "@/lib/mentorGuide";
 import { MIN_LINE, MIN_SENTENCE } from "@/lib/progress";
 import { BLOCK_MINUTES } from "@/lib/routes";
 import { useStore } from "@/store/useStore";
@@ -34,13 +36,15 @@ export function Block21() {
   const undo = useStore((s) => s.undoTags);
   const redo = useStore((s) => s.redoTags);
   const patch = useStore((s) => s.patchL1);
+  const mentor = useStore((s) => s.mentorUnlocked);
   return (
     <AnswerBlock
       id="block-2-1"
-      title={tt("Block 2.1 · Tag LiveConnect's twelve metrics by kind", "Block 2.1 · Die zwölf Kennzahlen von LiveConnect nach Art zuordnen")}
-      kind="OBJECTIVE"
+      title={tt("Block 2.1 · Tag LiveConnect's twelve metrics by kind, and name your three KPIs", "Block 2.1 · Die zwölf Kennzahlen von LiveConnect nach Art zuordnen, und Ihre drei KPIs nennen")}
+      kind="OBJECTIVE + JUDGED"
+      core
       minutes={BLOCK_MINUTES["2.1"]}
-      findIt={tt("Route 1 → Task 1 → the twelve metrics on the board below, from LiveConnect's reports, each with whether it moved together with customer value last year. Find the words that decide each one and answer on the board.", "Route 1 → Task 1 → die zwölf Kennzahlen auf der Tafel unten, aus den Berichten von LiveConnect, jede mit der Angabe, ob sie sich letztes Jahr mit dem Kundenwert bewegte. Finden Sie die Worte, die jede entscheiden, und antworten Sie auf der Tafel.")}
+      findIt={tt("Route 1 → Task 1 → the twelve metrics on the board below, from LiveConnect's reports, each with whether it moved together with customer value last year. Find the words that decide each one and answer on the board; then name your three KPIs in the field under it.", "Route 1 → Task 1 → die zwölf Kennzahlen auf der Tafel unten, aus den Berichten von LiveConnect, jede mit der Angabe, ob sie sich letztes Jahr mit dem Kundenwert bewegte. Finden Sie die Worte, die jede entscheiden, und antworten Sie auf der Tafel; nennen Sie dann Ihre drei KPIs im Feld darunter.")}
     >
       <MaterialRefs refs={["A5"]} />
       <PlacementBoard<PatternId>
@@ -54,6 +58,7 @@ export function Block21() {
         undoCount={l1.tagHistory.length}
         redoCount={l1.tagFuture.length}
         domId={IDS.rec}
+        keyPhrases={REC_KEY}
         clues={Object.fromEntries(RECORDS.map((o) => [o.id, o.clue]))}
         reasons={Object.fromEntries(RECORDS.map((o) => [o.id, o.why]))}
         result={l1.tagResult}
@@ -92,6 +97,32 @@ export function Block21() {
         }
       />
       <AnswerKey block={tagKey()} />
+      <TextBox
+        id={IDS.misread}
+        label={tt("Your three KPIs for LiveConnect", "Ihre drei KPIs für LiveConnect")}
+        help={tt(`Name three KPIs from the twelve metrics above: at least one outcome and one driver (a guardrail may be the third). For each, say where the number comes from, what you would aim for and why it is a KPI. At least ${MIN_SENTENCE} characters.`, `Nennen Sie drei KPIs aus den zwölf Kennzahlen oben: mindestens ein Outcome und einen Treiber (eine Guardrail kann der dritte sein). Sagen Sie für jeden, woher die Zahl kommt, was Sie anstreben würden und warum er ein KPI ist. Mindestens ${MIN_SENTENCE} Zeichen.`)}
+        value={l1.misread}
+        onChange={(v) => patch({ misread: v })}
+        min={MIN_SENTENCE}
+        rows={4}
+      >
+        <WritingHelp
+          id="kpi-kit"
+          refs={[
+            { label: tt("The twelve metrics (board above)", "Die zwölf Kennzahlen (Tafel oben)"), value: tt("pick three of them; the kind decides the use", "wählen Sie drei davon; die Art entscheidet über die Nutzung"), target: IDS.rec(RECORDS[0].id) },
+            { label: tt("The four kinds and how each is used (Materi A5)", "Die vier Arten und wie jede genutzt wird (Materi A5)"), value: tt("outcome · driver · guardrail · vanity", "Outcome · Treiber · Guardrail · Vanity"), target: "mat-A5" },
+          ]}
+          steps={[
+            tt("Choose one outcome: the result LiveConnect is paid for.", "Wählen Sie einen Outcome: das Ergebnis, für das LiveConnect bezahlt wird."),
+            tt("Choose one driver: something visitors or customers do before they buy, that a team can move this month.", "Wählen Sie einen Treiber: etwas, das Besucher oder Kunden tun, bevor sie kaufen, und das ein Team in diesem Monat bewegen kann."),
+            tt("Add a guardrail as the third if you can: what must not get worse.", "Ergänzen Sie nach Möglichkeit eine Guardrail als dritten: was nicht schlechter werden darf."),
+            tt("For each, name the system the number comes from and what you would aim for (up, down, or stay under a limit).", "Nennen Sie für jeden das System, aus dem die Zahl kommt, und was Sie anstreben würden (hoch, runter oder unter einer Grenze bleiben)."),
+          ]}
+        />
+      </TextBox>
+      <ExampleAnswer id="kpi-example" guide={misreadGuide()} />
+      {mentor && <MentorGuide guide={misreadGuide()} />}
+      <BlockMissing block="2.1" route={1} />
     </AnswerBlock>
   );
 }
@@ -117,8 +148,9 @@ export function Block22() {
   return (
     <AnswerBlock
       id="block-2-2"
-      title={tt("Block 2.2 · What each kind of metric is worth, and your three KPIs", "Block 2.2 · Was jede Art von Kennzahl wert ist, und Ihre drei KPIs")}
+      title={tt("Block 2.2 · What each kind of metric is worth, and the uncertainties in measuring", "Block 2.2 · Was jede Art von Kennzahl wert ist, und die Unsicherheiten beim Messen")}
       kind="OBJECTIVE + JUDGED"
+      core={false}
       minutes={BLOCK_MINUTES["2.2"]}
       findIt={tt("Route 1 → Task 1 → “Your tally” below (from your own tags in Block 2.1) and the rules in Materi A5 and A6. Answer in the four rows and the fields under them.", "Route 1 → Task 1 → „Ihre Auszählung“ unten (aus Ihren eigenen Zuordnungen in Block 2.1) und die Regeln in Materi A5 und A6. Antworten Sie in den vier Zeilen und den Feldern darunter.")}
     >
@@ -206,7 +238,7 @@ export function Block22() {
 
       <div id={IDS.unc} className="space-y-2 border-t border-line pt-3">
         <p className="font-semibold text-ink">{tt("Which uncertainties sit in the speed figures?", "Welche Unsicherheiten stecken in den Tempo-Werten?")}</p>
-        <p className="text-caption text-ash">{tt("Choose two or more that are real uncertainties of LiveConnect's speed figures (Block 1.2) and web data.", "Wählen Sie zwei oder mehr, die echte Unsicherheiten der Tempo-Werte von LiveConnect (Block 1.2) und seiner Webdaten sind.")}</p>
+        <p className="text-caption text-ash">{tt("LiveConnect has last quarter's speed figures (requests that sales chose to answer fast or slowly) and its web data. Choose two or more that are real uncertainties when it reads figures like these.", "LiveConnect hat die Tempo-Werte des letzten Quartals (Anfragen, die der Vertrieb schnell oder langsam beantworten wollte) und seine Webdaten. Wählen Sie zwei oder mehr, die echte Unsicherheiten sind, wenn es solche Werte liest.")}</p>
         <OptionList<UncId> multi label={tt("Uncertainties", "Unsicherheiten")} options={UNCERTAINTIES.map((w) => ({ id: w.id, label: w.label }))} value={l1.unc} onChange={toggleUnc} />
         <div className="flex flex-wrap items-center gap-3">
           <button type="button" onClick={() => patch((s) => ({ checks: s.checks + 1, uncResult: uncHolds(s.unc) }))} className="btn-ghost btn-sm">
@@ -220,16 +252,7 @@ export function Block22() {
         </div>
         <AnswerKey block={uncKey()} />
       </div>
-      <TextBox
-        id={IDS.misread}
-        label={tt("Your three KPIs for LiveConnect", "Ihre drei KPIs für LiveConnect")}
-        help={tt(`Name three KPIs from the twelve metrics: at least one outcome and one driver (a guardrail may be the third). For each, say where the number comes from and a target. At least ${MIN_SENTENCE} characters.`, `Nennen Sie drei KPIs aus den zwölf Kennzahlen: mindestens ein Outcome und einen Treiber (eine Guardrail kann der dritte sein). Sagen Sie für jeden, woher die Zahl kommt, und ein Ziel. Mindestens ${MIN_SENTENCE} Zeichen.`)}
-        value={l1.misread}
-        onChange={(v) => patch({ misread: v })}
-        min={MIN_SENTENCE}
-        rows={4}
-      />
-      {mentor && <MentorGuide guide={misreadGuide()} />}
+      <BlockMissing block="2.2" route={1} />
     </AnswerBlock>
   );
 }
@@ -256,12 +279,13 @@ export function Block23() {
       id="block-2-3"
       title={tt("Block 2.3 · Design a fair A/B test", "Block 2.3 · Einen fairen A/B-Test entwerfen")}
       kind="OBJECTIVE + JUDGED"
+      core={false}
       minutes={BLOCK_MINUTES["2.3"]}
-      findIt={tt("Route 1 → Task 1 → the test card below, and the pricing page in Block 1.3. Answer on the test card.", "Route 1 → Task 1 → die Testkarte unten und die Preisseite in Block 1.3. Antworten Sie auf der Testkarte.")}
+      findIt={tt("Route 1 → Task 1 → the test card below. Answer on the test card.", "Route 1 → Task 1 → die Testkarte unten. Antworten Sie auf der Testkarte.")}
     >
       <MaterialRefs refs={["A6"]} />
       <p className="text-body text-ink">
-        <Gloss>{tt("The speed figures in Block 1.2 compare requests that sales chose to answer fast or slowly, so they are not a fair test. Design the test that would let LiveConnect decide whether a chat on the pricing page works: what changes, who is compared, which KPI decides, and when the test is read. Write a hypothesis and a decision rule.", "Die Tempo-Werte in Block 1.2 vergleichen Anfragen, die der Vertrieb schnell oder langsam beantworten wollte, sind also kein fairer Test. Entwerfen Sie den Test, mit dem LiveConnect entscheiden kann, ob ein Chat auf der Preisseite wirkt: was sich ändert, wer verglichen wird, welcher KPI entscheidet und wann der Test gelesen wird. Schreiben Sie eine Hypothese und eine Entscheidungsregel.")}</Gloss>
+        <Gloss>{tt("Last quarter's speed figures compare requests that sales chose to answer fast or slowly, so they are not a fair test. Design the test that would let LiveConnect decide whether a chat on the pricing page works: what changes, who is compared, which KPI decides, and when the test is read. Write a hypothesis and a decision rule.", "Die Tempo-Werte des letzten Quartals vergleichen Anfragen, die der Vertrieb schnell oder langsam beantworten wollte, sind also kein fairer Test. Entwerfen Sie den Test, mit dem LiveConnect entscheiden kann, ob ein Chat auf der Preisseite wirkt: Was sich ändert, wer verglichen wird, welcher KPI entscheidet und wann der Test gelesen wird. Schreiben Sie eine Hypothese und eine Entscheidungsregel.")}</Gloss>
       </p>
       <TextBox
         id={IDS.abPart("hyp")}
@@ -275,7 +299,20 @@ export function Block23() {
         clue={AB_CLUE_TEXT.hyp()}
         clueShown={l1.abClue}
         onShowClue={() => patch({ abClue: true })}
-      />
+      >
+        <WritingHelp
+          id="hyp-kit"
+          refs={[
+            { label: tt("The two groups of the test", "Die zwei Gruppen des Tests"), value: tt("visitors with the chat · visitors without it", "Besucher mit dem Chat · Besucher ohne ihn"), target: "mat-A6" },
+            { label: tt("What a hypothesis names (Materi A6)", "Was eine Hypothese nennt (Materi A6)"), value: tt("one change · the KPI expected to move · a reason", "eine Änderung · der KPI, der sich bewegen soll · ein Grund"), target: "mat-A6" },
+          ]}
+          steps={[
+            tt("Say the one thing you change (“If we …”).", "Sagen Sie die eine Sache, die Sie ändern („Wenn wir …“)."),
+            tt("Say which KPI should move (“then … rises”).", "Sagen Sie, welcher KPI sich bewegen soll („dann steigt …“)."),
+            tt("Give the reason in visitor terms (“because …”).", "Geben Sie den Grund in Besucherworten („weil …“)."),
+          ]}
+        />
+      </TextBox>
       <div className="grid gap-3 md:grid-cols-2">
         {AB_PARTS.map((k) => {
           const part = AB[k];
@@ -307,7 +344,20 @@ export function Block23() {
         clue={AB_CLUE_TEXT.rule()}
         clueShown={l1.abClue}
         onShowClue={() => patch({ abClue: true })}
-      />
+      >
+        <WritingHelp
+          id="rule-kit"
+          refs={[
+            { label: tt("What a decision rule names (Materi A6)", "Was eine Entscheidungsregel nennt (Materi A6)"), value: tt("a point to roll out · a band to keep testing · a point to stop", "ein Punkt zum Ausrollen · ein Band zum Weitertesten · ein Punkt zum Stoppen"), target: "mat-A6" },
+            { label: tt("The guardrails to keep (Materi A5)", "Die Guardrails, die bleiben müssen (Materi A5)"), value: tt("complaints about pop-ups · chats rated not helpful", "Beschwerden über Pop-ups · als nicht hilfreich bewertete Chats"), target: "mat-A5" },
+          ]}
+          steps={[
+            tt("Write when you roll out: how far above the control group, and with how many results per group.", "Schreiben Sie, wann Sie ausrollen: wie weit über der Kontrollgruppe, und mit wie vielen Ergebnissen pro Gruppe."),
+            tt("Write when you keep testing, and when you stop.", "Schreiben Sie, wann Sie weiter testen und wann Sie stoppen."),
+            tt("Name one guardrail that must hold.", "Nennen Sie eine Guardrail, die halten muss."),
+          ]}
+        />
+      </TextBox>
       <CheckBar onCheck={check} checkLabel={tt("Check my test card", "Meine Testkarte prüfen")} checks={l1.checks} />
       {l1.abChecked && (
         <Reading>
@@ -320,7 +370,9 @@ export function Block23() {
         </Reading>
       )}
       <AnswerKey block={abKey()} />
+      <ExampleAnswer id="ab-example" guide={abGuide()} />
       {mentor && <MentorGuide guide={abGuide()} />}
+      <BlockMissing block="2.3" route={1} />
     </AnswerBlock>
   );
 }
@@ -367,13 +419,22 @@ export function Block24() {
       id="block-2-4"
       title={tt("Block 2.4 · Choose three measures, score them, put them in order", "Block 2.4 · Drei Maßnahmen wählen, bewerten, in eine Reihenfolge bringen")}
       kind="OBJECTIVE + JUDGED"
+      core
       minutes={BLOCK_MINUTES["2.4"]}
       findIt={tt(`Route 1 → Task 1 → “The limits” in the case above (${euro(BUDGET)}, ${MONTHS} months) and the nine measures below. Answer by choosing three and filling their cards.`, `Route 1 → Task 1 → „Die Grenzen“ im Fall oben (${euro(BUDGET)}, ${MONTHS} Monate) und die neun Maßnahmen unten. Antworten Sie, indem Sie drei wählen und ihre Karten ausfüllen.`)}
     >
       <MaterialRefs refs={["A7"]} />
       <div id={IDS.measurePick} className="space-y-2">
         <p className="text-body text-ink">
-          <Gloss>{tt("Choose exactly three of the nine measures. Each says what it does and after how many weeks it works; it does not say which problem of the brief it answers. That is your job.", "Wählen Sie genau drei der neun Maßnahmen. Jede sagt, was sie tut und nach wie vielen Wochen sie wirkt; sie sagt nicht, welches Problem des Auftrags sie beantwortet. Das ist Ihre Aufgabe.")}</Gloss>
+          <Gloss>{tt("Choose exactly three of the nine measures. Each says what it does, one scene from LiveConnect's day, who does what and after how many weeks it works; it does not say which problem of the brief it answers. That is your job.", "Wählen Sie genau drei der neun Maßnahmen. Jede sagt, was sie tut, eine Szene aus dem Alltag von LiveConnect, wer was tut und nach wie vielen Wochen sie wirkt; sie sagt nicht, welches Problem des Auftrags sie beantwortet. Das ist Ihre Aufgabe.")}</Gloss>
+        </p>
+        <p className="rounded-md border border-line bg-mist/40 px-3 py-2 text-caption text-ink">
+          <Gloss>
+            {tt("How to read a measure card. The title carries its cost and the weeks it needs, taken from the €170,000 and four months of the brief. The small label after the weeks says which lever the measure pulls (respond faster, personalise the moment, learn and adjust) or that it pulls none. Below it: what it does, one scene, who does what, and “In use after … weeks”, which decides the speed score: within 4 weeks is 3, 5 to 10 weeks is 2, more than 10 weeks is 1. Effect and scalability are your judgement.", "So lesen Sie eine Maßnahmenkarte. Der Titel nennt ihre Kosten und die Wochen, die sie braucht, aus den 170.000 € und vier Monaten des Auftrags. Das kleine Etikett hinter den Wochen sagt, an welchem Hebel die Maßnahme zieht (schneller reagieren, den Moment personalisieren, lernen und anpassen) oder dass sie an keinem zieht. Darunter: was sie tut, eine Szene, wer was tut, und „In Betrieb nach … Wochen“, das den Wert für das Tempo entscheidet: innerhalb von 4 Wochen ist 3, 5 bis 10 Wochen ist 2, mehr als 10 Wochen ist 1. Wirkung und Skalierbarkeit sind Ihr Urteil.")}
+          </Gloss>
+        </p>
+        <p className="text-caption text-ash">
+          <Gloss>{AREA_NOTE.v}</Gloss>
         </p>
         <OptionList<MeasureId>
           multi
@@ -382,7 +443,7 @@ export function Block24() {
           onChange={toggle}
           disabledIds={chosen.length >= CHOOSE ? MEASURES.map((m) => m.id) : []}
           onDisabledClick={() => scrollToAndFlash(IDS.measurePick, "warn")}
-          options={MEASURES.map((m) => ({ id: m.id, label: tt(`${m.name} · ${euro(m.cost)} · ${m.weeks === 1 ? "1 week" : `${m.weeks} weeks`}`, `${m.name} · ${euro(m.cost)} · ${m.weeks === 1 ? "1 Woche" : `${m.weeks} Wochen`}`), sub: `${m.what} ${m.basis}` }))}
+          options={MEASURES.map((m) => ({ id: m.id, label: tt(`${m.name} · ${euro(m.cost)} · ${m.weeks === 1 ? "1 week" : `${m.weeks} weeks`}`, `${m.name} · ${euro(m.cost)} · ${m.weeks === 1 ? "1 Woche" : `${m.weeks} Wochen`}`), tag: tt(`Kind: ${MEASURE_AREA_LABEL[m.area]}`, `Art: ${MEASURE_AREA_LABEL[m.area]}`), sub: `${tt("What it does: ", "Was sie tut: ")}${m.what}\n${tt("A scene: ", "Eine Szene: ")}${m.scene}\n${tt("Who does what: ", "Wer was tut: ")}${m.who}\n${m.basis}` }))}
         />
         <p role="status" className="text-caption text-ash">
           {tt(`${chosen.length} of ${CHOOSE} chosen.`, `${chosen.length} von ${CHOOSE} gewählt.`)}
@@ -413,7 +474,7 @@ export function Block24() {
         return (
           <div key={id} id={IDS.measure(id)} className={clsx("space-y-3 rounded-lg border border-line bg-paper p-3.5", (aF || eF) && "is-flagged")}>
             <p className="font-semibold text-ink">
-              {m.name} <span className="font-normal text-ash">· {euro(m.cost)} · {EVIDENCE_LABEL[m.evidence]} ({m.weeks} {tt("weeks", "Wochen")})</span>
+              {m.name} <span className="font-normal text-ash">· {euro(m.cost)} · {MEASURE_AREA_LABEL[m.area]} · {EVIDENCE_LABEL[m.evidence]} ({m.weeks} {tt("weeks", "Wochen")})</span>
             </p>
             <div>
               <p className="smallcaps">{tt("Which problems of the brief does it answer? (choose the ones it really answers, or none)", "Welche Probleme des Auftrags beantwortet sie? (wählen Sie die, die sie wirklich beantwortet, oder keines)")}</p>
@@ -458,6 +519,31 @@ export function Block24() {
               {measureScored(l1, id) ? `${l1.eff[id]} × ${l1.exp[id]} × ${l1.fea[id]} = ` : tt("fill all three scores · ", "alle drei Werte ausfüllen · ")}
               <strong>{measureScore(l1, id) || "—"}</strong>
             </p>
+            <TextBox
+              id={IDS.reason(id)}
+              label={tt(`Why these effect and scalability scores for “${m.name}”?`, `Warum diese Werte für Wirkung und Skalierbarkeit bei „${m.name}“?`)}
+              help={tt(`One or two sentences: what changes for the customer or visitor (effect), and whether it reaches every one of them in the time without more people (scalability). Use a fact from the card. At least ${MIN_LINE} characters.`, `Ein oder zwei Sätze: was sich für den Kunden oder Besucher ändert (Wirkung), und ob es jeden von ihnen in der Zeit ohne mehr Personal erreicht (Skalierbarkeit). Nutzen Sie eine Tatsache von der Karte. Mindestens ${MIN_LINE} Zeichen.`)}
+              value={l1.reasons[id] ?? ""}
+              onChange={(v) => patch((s) => ({ reasons: { ...s.reasons, [id]: v } }))}
+              min={MIN_LINE}
+              rows={2}
+            >
+              <WritingHelp
+                id={`reason-kit-${id}`}
+                refs={[
+                  { label: tt("What it does", "Was sie tut"), value: m.what, target: IDS.measurePick },
+                  { label: tt("A scene and who does what", "Eine Szene und wer was tut"), value: `${m.scene} ${m.who}`, target: IDS.measurePick },
+                  { label: tt("Cost and weeks", "Kosten und Wochen"), value: `${euro(m.cost)} · ${m.weeks} ${tt("weeks", "Wochen")}`, target: IDS.measurePick },
+                  { label: tt("Your effect and scalability scores", "Ihre Werte für Wirkung und Skalierbarkeit"), value: `${l1.eff[id] || "—"} · ${l1.fea[id] || "—"}`, target: IDS.measure(id) },
+                ]}
+                steps={[
+                  tt("Effect: say what the customer or visitor sees or does differently because of this measure (use the scene).", "Wirkung: Sagen Sie, was der Kunde oder Besucher wegen dieser Maßnahme anders sieht oder tut (nutzen Sie die Szene)."),
+                  tt("Scalability: say whether it works for everyone without more people, and how long it takes (the weeks on the card).", "Skalierbarkeit: Sagen Sie, ob es für alle ohne mehr Personal funktioniert, und wie lange es dauert (die Wochen auf der Karte)."),
+                ]}
+              />
+            </TextBox>
+            <ExampleAnswer id={`reason-example-${id}`} guide={reasonGuide(id)} />
+            {mentor && <MentorGuide guide={reasonGuide(id)} />}
             {mentor && <MentorGuide guide={scoreGuide(id)} />}
           </div>
         );
@@ -519,7 +605,7 @@ export function Block24() {
           <TextBox
             id={IDS.why}
             label={tt("Why does your first priority go first?", "Warum kommt Ihre erste Priorität zuerst?")}
-            help={tt("Give the order, name the score or the speed figure that decides it, say what the plan costs against the budget, and what you left out. At least 60 characters.", "Nennen Sie die Reihenfolge, den Wert oder die Tempozahl, die sie entscheidet, was der Plan gegen das Budget kostet und was Sie weggelassen haben. Mindestens 60 Zeichen.")}
+            help={tt("Give the order, name the score or the problem of the brief that decides it, say what the plan costs against the budget, and what you left out. At least 60 characters.", "Nennen Sie die Reihenfolge, den Wert oder das Problem des Auftrags, das sie entscheidet, was der Plan gegen das Budget kostet und was Sie weggelassen haben. Mindestens 60 Zeichen.")}
             value={l1.why}
             onChange={(v) => patch({ why: v })}
             min={60}
@@ -528,7 +614,7 @@ export function Block24() {
             <WritingHelp
               id="why-help"
               steps={[
-                tt("Say which measure goes first and why: its score, or the extra revenue from Block 1.2.", "Sagen Sie, welche Maßnahme zuerst kommt und warum: ihr Wert, oder der zusätzliche Umsatz aus Block 1.2."),
+                tt("Say which measure goes first and why: its score, or the problem of the brief it answers.", "Sagen Sie, welche Maßnahme zuerst kommt und warum: ihr Wert, oder das Problem des Auftrags, das sie beantwortet."),
                 tt("Say what the three cost against the €170,000.", "Sagen Sie, was die drei gegen die 170.000 € kosten."),
                 tt("Say what you left out and why.", "Sagen Sie, was Sie weggelassen haben und warum."),
               ]}
@@ -538,6 +624,7 @@ export function Block24() {
           {mentor && <MentorGuide guide={whyGuide()} />}
         </div>
       )}
+      <BlockMissing block="2.4" route={1} />
     </AnswerBlock>
   );
 }

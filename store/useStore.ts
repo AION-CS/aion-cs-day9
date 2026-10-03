@@ -6,7 +6,7 @@ import { persist, createJSONStorage } from "zustand/middleware";
 import { LINE_IDS } from "@/data/ladder";
 import type { LevelTag, LineId } from "@/data/ladder";
 import { INSIGHT_COUNT } from "@/data/forecast";
-import type { Basis, CustId, FigureId } from "@/data/forecast";
+import type { Basis, CustId } from "@/data/forecast";
 import { PATTERN_IDS, REC_IDS } from "@/data/patterns";
 import { emptyAb } from "@/data/patterns";
 import type { AbState, PatternId, PatternRow, RecId, UncId } from "@/data/patterns";
@@ -14,7 +14,6 @@ import type { MeasureId, ProblemId } from "@/data/measures";
 import { SIT_IDS } from "@/data/route2";
 import type { ArchId, CompId, DecisionId, KpiId, LogicRow, OwnerId, PrincipleId, Use } from "@/data/route2";
 import { KEY_L1, KEY_R2 } from "@/data/mentorKey";
-import { FIGURE_BUILDERS, modelParts } from "@/lib/calcBuilder";
 import type { RouteNo } from "@/lib/routes";
 
 export const STORAGE_KEY = "cs-d9-v1";
@@ -37,11 +36,6 @@ export type L1State = {
   sortClue: boolean;
   sortReasoning: boolean;
   extraInsight: string;
-  fig: Record<FigureId, string>;
-  figFlagged: FigureId[];
-  figClue: Record<string, boolean>;
-  parts: Record<string, string>;
-  partFlags: string[];
   meaning: string;
   meaningFlagged: boolean;
   meaningClue: boolean;
@@ -77,6 +71,8 @@ export type L1State = {
   exp: Record<string, Score>;
   fea: Record<string, Score>;
   eff: Record<string, Score>;
+  /** One sentence per chosen measure on why its two judged scores (effect, scalability) are what they are (CLAUDE.md #45). */
+  reasons: Record<string, string>;
   measureFlags: string[];
   order: MeasureId[];
   why: string;
@@ -161,11 +157,6 @@ export const emptyL1 = (): L1State => ({
   sortClue: false,
   sortReasoning: false,
   extraInsight: "",
-  fig: { F1: "", F2: "", F3: "" },
-  figFlagged: [],
-  figClue: {},
-  parts: {},
-  partFlags: [],
   meaning: "",
   meaningFlagged: false,
   meaningClue: false,
@@ -201,6 +192,7 @@ export const emptyL1 = (): L1State => ({
   exp: {},
   fea: {},
   eff: {},
+  reasons: {},
   measureFlags: [],
   order: [],
   why: "",
@@ -335,7 +327,7 @@ export const useStore = create<Persisted & Session & Actions>()(
       // Mentor autofill: every model answer in Routes 1 and 2, plus the participant name if it is empty, so each document can be exported straight away.
       mentorFill: () =>
         set((s) => {
-          const l1: L1State = { ...emptyL1(), ...KEY_L1(), parts: modelParts(FIGURE_BUILDERS) };
+          const l1: L1State = { ...emptyL1(), ...KEY_L1() };
           const r2: R2State = { ...emptyR2(), ...KEY_R2() };
           const participant = { name: s.participant.name.trim() ? s.participant.name : "Mentor Check" };
           return { participant, l1, r2, resetCount: s.resetCount + 1 };
@@ -359,12 +351,21 @@ export const useStore = create<Persisted & Session & Actions>()(
     }),
     {
       name: STORAGE_KEY,
-      version: 1,
+      version: 2,
       skipHydration: true,
       storage: createJSONStorage(() => localStorage),
       partialize: (s) => ({ participant: s.participant, ui: s.ui, l1: s.l1, r2: s.r2 }),
-      // Version 1 is the first shape of Day 9 (its own storage key, so nothing older to migrate); `merge` fills every missing field.
-      migrate: (persisted) => (persisted ?? {}) as Persisted,
+      // Version 2 (the retrofit of 2026-10-02): the pilot block no longer asks for figures (CLAUDE.md #44), so `fig`, `figFlagged`,
+      // `figClue`, `parts` and `partFlags` are dropped from Route 1; each chosen measure gets a `reasons` entry (#45). `merge` then
+      // fills every field a version-1 blob lacks from the defaults.
+      migrate: (persisted, from) => {
+        const p = (persisted ?? {}) as Persisted;
+        if (from < 2 && p.l1) {
+          const l1 = p.l1 as unknown as Record<string, unknown>;
+          for (const k of ["fig", "figFlagged", "figClue", "parts", "partFlags"]) delete l1[k];
+        }
+        return p;
+      },
       merge: (persisted, current) => {
         const merged = mergeDefaults(emptyPersisted(), (persisted ?? {}) as Partial<Persisted>);
         merged.ui.lang = merged.ui.lang === "de" ? "de" : "en";

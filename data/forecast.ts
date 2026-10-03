@@ -1,7 +1,7 @@
 import { bi, t } from "@/lib/lang";
 
 /**
- * Task 1 · Block 1.2, and the worked example of Materi A4: what speed is worth. LiveConnect's quote requests last quarter, split by how
+ * Task 1 · Block 1.2 (Optional, read-only: the rates are PRINTED, no figure is asked for, CLAUDE.md #44) and the worked example of Materi A4: what speed is worth. LiveConnect's quote requests last quarter, split by how
  * fast they were answered (Case assumption). The method is
  *
  *   closing rate                 = closings ÷ requests × 100
@@ -33,60 +33,6 @@ export const FORECAST = {
     return extraOf(PILOT.yearly, this.f1, this.controlRate, PILOT.order);
   },
 };
-
-export type FigureId = "F1" | "F2" | "F3";
-export const FIGURE_IDS: FigureId[] = ["F1", "F2", "F3"];
-
-export const FIGURES = bi({
-  F1: {
-    id: "F1" as FigureId,
-    label: t("F1 · Closing rate of requests answered within one hour, %", "F1 · Abschlussquote der innerhalb einer Stunde beantworteten Anfragen, %"),
-    question: t("Of the quote requests answered within one hour, what share became a closed deal?", "Welcher Anteil der innerhalb einer Stunde beantworteten Angebotsanfragen wurde zu einem Abschluss?"),
-    unit: "%",
-    example: "12.5",
-    answer: FORECAST.f1,
-    formula: t("Closing rate = closings ÷ requests × 100. Use the two rows of the requests answered within one hour.", "Abschlussquote = Abschlüsse ÷ Anfragen × 100. Nutzen Sie die zwei Zeilen der innerhalb einer Stunde beantworteten Anfragen."),
-    taughtIn: "A4" as const,
-    clue: t("Did you divide the closings by the requests of the same speed band, and multiply by 100?", "Haben Sie die Abschlüsse durch die Anfragen desselben Tempo-Bands geteilt und mit 100 multipliziert?"),
-    sources: [
-      { label: t("Last quarter · answered within one hour · requests", "Letztes Quartal · innerhalb einer Stunde beantwortet · Anfragen"), value: "300", target: "fc-var-sent" },
-      { label: t("Last quarter · answered within one hour · closings", "Letztes Quartal · innerhalb einer Stunde beantwortet · Abschlüsse"), value: "72", target: "fc-var-orders" },
-    ],
-  },
-  F2: {
-    id: "F2" as FigureId,
-    label: t("F2 · Lift: how many times the slow closing rate", "F2 · Lift: wie viel Mal die langsame Abschlussquote"),
-    question: t("How many times higher is the closing rate of requests answered within one hour than that of requests answered after more than a day?", "Wie viel Mal höher ist die Abschlussquote der innerhalb einer Stunde beantworteten Anfragen als die der nach mehr als einem Tag beantworteten?"),
-    unit: "×",
-    example: "1.5",
-    answer: FORECAST.f2,
-    formula: t("Lift = closing rate of fast answers ÷ closing rate of slow answers. Work out the slow rate from its rows first.", "Lift = Abschlussquote der schnellen Antworten ÷ Abschlussquote der langsamen Antworten. Berechnen Sie die langsame Quote zuerst aus ihren Zeilen."),
-    taughtIn: "A4" as const,
-    clue: t("You need two rates from two pairs of rows. Is the second one worked out from the slow rows, the same way as F1?", "Sie brauchen zwei Quoten aus zwei Zeilenpaaren. Ist die zweite aus den langsamen Zeilen berechnet, genauso wie F1?"),
-    sources: [
-      { label: t("Your F1 (closing rate, answered within one hour)", "Ihr F1 (Abschlussquote, innerhalb einer Stunde beantwortet)"), value: "F1", target: "fig-F1" },
-      { label: t("Last quarter · answered after more than a day · requests", "Letztes Quartal · nach mehr als einem Tag beantwortet · Anfragen"), value: "900", target: "fc-ctl-sent" },
-      { label: t("Last quarter · answered after more than a day · closings", "Letztes Quartal · nach mehr als einem Tag beantwortet · Abschlüsse"), value: "72", target: "fc-ctl-orders" },
-    ],
-  },
-  F3: {
-    id: "F3" as FigureId,
-    label: t("F3 · Extra revenue a year, €", "F3 · Zusätzlicher Umsatz pro Jahr, €"),
-    question: t("If every quote request next year were answered within one hour and customers behaved as last quarter, how much extra revenue would it bring in a year?", "Wenn jede Angebotsanfrage im nächsten Jahr innerhalb einer Stunde beantwortet würde und Kunden sich wie im letzten Quartal verhielten: Wie viel zusätzlichen Umsatz brächte das in einem Jahr?"),
-    unit: "€",
-    example: "12500",
-    answer: FORECAST.f3,
-    formula: t("Extra revenue = quote requests a year × (closing rate of fast answers − closing rate of slow answers, as a share of one) × average deal value.", "Zusätzlicher Umsatz = Angebotsanfragen pro Jahr × (Abschlussquote schneller Antworten − Abschlussquote langsamer Antworten, als Anteil von eins) × durchschnittlicher Auftragswert."),
-    taughtIn: "A4" as const,
-    clue: t("Only the difference between the two rates is extra, and it has to be a share of one (1 point = 0.01) before you multiply.", "Nur der Unterschied zwischen den beiden Quoten ist zusätzlich, und er muss ein Anteil von eins sein (1 Punkt = 0,01), bevor Sie multiplizieren."),
-    sources: [
-      { label: t("Next year · quote requests a year", "Nächstes Jahr · Angebotsanfragen pro Jahr"), value: "1,600", target: "fc-yearly" },
-      { label: t("Your F1 (closing rate, answered within one hour)", "Ihr F1 (Abschlussquote, innerhalb einer Stunde beantwortet)"), value: "F1", target: "fig-F1" },
-      { label: t("Last quarter · answered after more than a day · requests and closings (its rate)", "Letztes Quartal · nach mehr als einem Tag beantwortet · Anfragen und Abschlüsse (ihre Quote)"), value: "72 ÷ 900", target: "fc-ctl-orders" },
-      { label: t("All deals · average deal value", "Alle Aufträge · durchschnittlicher Auftragswert"), value: t("€1,500", "1.500 €"), target: "fc-order" },
-    ],
-  },
-});
 
 /** The worked example of Materi A4: a different provider (Neckar Hosting), the same method on other numbers. Case assumption. */
 export const MOSEL = { control: { sent: 400, orders: 40 }, variant: { sent: 200, orders: 40 }, yearly: 1000, order: 1000 };

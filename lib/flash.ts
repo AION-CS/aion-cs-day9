@@ -1,3 +1,5 @@
+import { openOptionalBlock } from "@/store/useOptionalOpen";
+
 /**
  * Flash: a 1.2 s outline on an element, cleaned up on `animationend`.
  * "warn" (rust) points at something missing; "ref" (amber) confirms arrival
@@ -33,6 +35,12 @@ export function focusFirstIn(el: HTMLElement) {
 export function scrollToAndFlash(id: string, variant: FlashVariant = "warn", block: ScrollLogicalPosition = "center") {
   const el = document.getElementById(id);
   if (!el) return;
+  // A collapsed Optional item (CLAUDE.md #35) opens first, then the jump lands on it: never onto a closed container (#12).
+  if (el.dataset.optionalClosed) {
+    openOptionalBlock(id);
+    window.requestAnimationFrame(() => window.requestAnimationFrame(() => scrollToAndFlash(id, variant, block)));
+    return;
+  }
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   el.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block });
   flash(el, variant);

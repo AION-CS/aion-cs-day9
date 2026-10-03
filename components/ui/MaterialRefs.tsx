@@ -1,6 +1,7 @@
 "use client";
 
 import { scrollToAndFlash } from "@/lib/flash";
+import { showCardPart } from "@/store/useCardMore";
 import { MATERIAL_BY_ID, materialAnchorId } from "@/data/materialIndex";
 import type { MaterialId } from "@/data/materialIndex";
 import { tt } from "@/lib/lang";
@@ -21,7 +22,12 @@ export function MaterialRefs({ refs: raw, lead }: { refs: MaterialId[]; lead?: s
         <button
           key={id}
           type="button"
-          onClick={() => scrollToAndFlash(materialAnchorId(id), "ref")}
+          onClick={() => {
+            showCardPart(id, "rules");
+            showCardPart(id, "calc");
+            showCardPart(id, "table"); // a jump from a task lands on the rules it needs, never on a closed part
+            scrollToAndFlash(materialAnchorId(id), "ref");
+          }}
           title={MATERIAL_BY_ID[id].title}
           className="tap-chip rounded-full border border-accent/40 bg-accentSoft px-2.5 py-0.5 text-micro font-semibold text-accent transition-colors hover:border-accent hover:text-accentHi"
         >
