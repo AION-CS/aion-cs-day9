@@ -253,7 +253,7 @@ ok("the why guide carries a worked example on another company", mg.whyGuide().ex
       const plan = rpl.planOf(T(tier), 1);
       const rd = rpl.readingOf(T(tier), 1);
       const fix = rpl.changesFor(T(tier), 1);
-      const learnerText = [rpl.standingOf(T(tier), 1), ...rd.gives, ...rd.costs, ...fix.changes.map((c) => c.text), ...plan.tests.flatMap((x) => [x.name, x.rule, ...x.open.flatMap((o) => [o.fact, o.rule, ...o.ways])]), ...Object.values(plan.items).flatMap((v) => v.notes)].join(" | ");
+      const learnerText = [rpl.standingOf(T(tier), 1), ...rd.gives, ...rd.costs, ...fix.changes.map((c) => c.text), ...plan.tests.flatMap((x) => [x.name, x.rule, ...x.open.flatMap((o) => [o.fact, o.plain, o.rule, ...o.ways.map((w) => w.text)])]), ...Object.values(plan.items).flatMap((v) => v.notes)].join(" | ");
       ok(`[${l}] the reading, the changes and the tests are written`, rd.gives.length > 0 && rpl.standingOf(T(tier), 1).length > 40 && plan.tests.every((x) => x.name.length > 8 && x.rule.length > 30));
       ok(`[${l}] the learner text never names a category`, !/categor|Kategorie|clearly wrong|eindeutig falsch/i.test(learnerText));
     }

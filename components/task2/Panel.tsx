@@ -4,7 +4,8 @@ import clsx from "clsx";
 import { Insight } from "@/components/materi/kit";
 import { ARCH_BY_ID, R2_BUDGET, R2_MONTHS } from "@/data/route2";
 import type { ArchId } from "@/data/route2";
-import { PANEL, READY_BAR, WEAK_POINTS } from "@/data/route2Panel";
+import { PANEL, READY_BAR, WEAK_POINTS, CLEAN_ID, TIER_LABEL } from "@/data/route2Panel";
+import type { Tier } from "@/data/route2Panel";
 import { euro, tt } from "@/lib/lang";
 import { scrollToAndFlash } from "@/lib/flash";
 import { IDS } from "@/lib/missing";
@@ -19,12 +20,19 @@ import { useStore } from "@/store/useStore";
  * text or pattern channel besides colour, and a position outside a limit is a fact, not a missing item.
  */
 
-/** One box of the diagram: solid teal = Now, dashed amber = After data is ready, faded = Not now; a black box is drawn dark and marked “?”. */
+/**
+ * One box of the diagram: solid teal = Now, dashed amber = the "after" tier, faded = Not now; a black box is drawn dark and marked “?”.
+ * The small switch inside the box sets the same tier as the buttons on the item's card in Step A (one state, two places to change it).
+ */
 function Box({ id, v }: { id: ArchId; v: ItemView }) {
   const p = PANEL[id];
   const a = ARCH_BY_ID[id];
+  const patch = useStore((s) => s.patchR2);
+  const setTier = (t: Tier) => patch((s) => ({ tier: { ...s.tier, [id]: t } }));
+  const opts: Tier[] = id === CLEAN_ID ? ["now", "not"] : ["now", "later", "not"];
+  const short: Record<Tier, string> = { now: tt("Now", "Jetzt"), later: tt("Later", "Später"), not: tt("Not now", "Jetzt nicht") };
   const cls =
-    v.tier === "now" ? (p.blackBox ? "border-ink bg-mist" : "border-signal bg-signalSoft") : v.tier === "later" ? "border-2 border-dashed border-gold bg-paper" : "border-line opacity-60";
+    v.tier === "now" ? (p.blackBox ? "border-ink bg-mist" : "border-signal bg-signalSoft") : v.tier === "later" ? "border-2 border-dashed border-gold bg-paper" : "border-line bg-paper";
   const status =
     v.tier === "now"
       ? tt(`Now · in use month ${v.inUse}`, `Jetzt · im Einsatz ab Monat ${v.inUse}`)
@@ -34,25 +42,45 @@ function Box({ id, v }: { id: ArchId; v: ItemView }) {
           : tt(`After data is ready · starts month ${v.start}, in use month ${v.inUse}`, `Wenn die Daten bereit sind · Start Monat ${v.start}, im Einsatz ab Monat ${v.inUse}`)
         : tt("Not now", "Jetzt nicht");
   return (
-    <button
-      type="button"
-      id={`arch-box-${id}`}
-      onClick={() => scrollToAndFlash(IDS.arch(id), "ref", "start")}
-      aria-label={tt(`${p.short}: go to its card in Step A to change when it happens`, `${p.short}: zur Karte in Schritt A, um zu ändern, wann es stattfindet`)}
-      className={clsx("block min-h-[3.5rem] w-full rounded-lg border p-2 text-left text-caption leading-snug hover:border-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent", cls)}
-    >
-      <span className="block font-semibold text-ink">
-        {p.blackBox && v.tier !== "not" ? "? " : ""}
-        {p.short} <span className="font-normal text-ash">· {euro(a.cost)}</span>
-      </span>
-      <span className="block text-ash">{status}</span>
-      {v.notes.map((n) => (
-        <span key={n} className="block text-accent">
-          {n}
+    <div id={`arch-box-${id}`} role="group" aria-label={tt(`${p.short}: ${TIER_LABEL[v.tier]}`, `${p.short}: ${TIER_LABEL[v.tier]}`)} className={clsx("min-h-[3.5rem] w-full rounded-lg border p-2 text-left text-caption leading-snug", cls)}>
+      <div className={clsx(v.tier === "not" && "opacity-60")}>
+        <span className="block font-semibold text-ink">
+          {p.blackBox && v.tier !== "not" ? "? " : ""}
+          {p.short} <span className="font-normal text-ash">· {euro(a.cost)}</span>
         </span>
-      ))}
-      <span className="mt-0.5 block text-micro normal-case tracking-normal text-ash underline decoration-dotted underline-offset-2">{tt("Change when it happens ↓", "Ändern, wann es stattfindet ↓")}</span>
-    </button>
+        <span className="block text-ash">{status}</span>
+        {v.notes.map((n) => (
+          <span key={n} className="block text-accent">
+            {n}
+          </span>
+        ))}
+      </div>
+      <div className="mt-1.5 flex flex-wrap gap-1" role="group" aria-label={tt(`When does ${p.short} happen?`, `Wann findet ${p.short} statt?`)}>
+        {opts.map((t) => (
+          <button
+            key={t}
+            type="button"
+            aria-pressed={v.tier === t}
+            title={TIER_LABEL[t]}
+            onClick={() => setTier(t)}
+            className={clsx(
+              "min-h-[32px] rounded border px-2 text-micro normal-case tracking-normal focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent",
+              v.tier === t ? "border-accent bg-accentSoft font-semibold text-ink" : "border-line bg-paper text-ash hover:border-ash",
+            )}
+          >
+            {short[t]}
+          </button>
+        ))}
+      </div>
+      <button
+        type="button"
+        onClick={() => scrollToAndFlash(IDS.arch(id), "ref", "start")}
+        aria-label={tt(`${p.short}: go to its card in Step A`, `${p.short}: zur Karte in Schritt A`)}
+        className="mt-1 block text-micro normal-case tracking-normal text-ash underline decoration-dotted underline-offset-2 hover:text-accentHi"
+      >
+        {tt("Details on its card ↓", "Details auf der Karte ↓")}
+      </button>
+    </div>
   );
 }
 
@@ -168,7 +196,7 @@ export function Panel({ scn, setScn }: { scn: Scn; setScn: (s: Scn) => void }) {
         <Lk state="ok" text={tt("raw interactions flow up", "Rohe Interaktionen fließen nach oben")} />
         <div className="rounded-lg border border-dashed border-line bg-canvas px-3 py-1.5 text-center text-caption text-ash">{tt("Where the data lives today: website · chat · CRM · social media", "Wo die Daten heute liegen: Website · Chat · CRM · Social Media")}</div>
         <p className="mt-2 text-micro normal-case tracking-normal text-ash">
-          {tt("Solid teal box: Now. Dashed amber box: After data is ready (it starts in the month the tracking clean-up is in use). Faded box: Not now. A solid teal link works; a dashed amber link says in words why it does not.", "Durchgezogener teal Kasten: Jetzt. Gestrichelter amberfarbener Kasten: Wenn die Daten bereit sind (er startet in dem Monat, in dem die Bereinigung der Erfassung im Einsatz ist). Blasser Kasten: Jetzt nicht. Eine durchgezogene teal Verbindung funktioniert; eine gestrichelte amberfarbene sagt in Worten, warum nicht.")}
+          {tt("Solid teal box: Now. Dashed amber box: After data is ready (it starts in the month the tracking clean-up is in use). Faded box: Not now. Change the timing with the small switch in each box (“Later” is the after-tier) or on the item's card. A solid teal link works; a dashed amber link says in words why it does not.", "Durchgezogener teal Kasten: Jetzt. Gestrichelter amberfarbener Kasten: Wenn die Daten bereit sind (er startet in dem Monat, in dem die Bereinigung der Erfassung im Einsatz ist). Blasser Kasten: Jetzt nicht. Ändern Sie den Zeitpunkt mit dem kleinen Schalter in jedem Kasten („Später“ ist die Wenn-Stufe) oder auf der Karte des Punkts. Eine durchgezogene teal Verbindung funktioniert; eine gestrichelte amberfarbene sagt in Worten, warum nicht.")}
         </p>
       </div>
 
@@ -221,20 +249,54 @@ export function Panel({ scn, setScn }: { scn: Scn; setScn: (s: Scn) => void }) {
                     </div>
                     {!x.holds &&
                       x.open.map((o, i) => (
-                        <div key={i} className="space-y-1 rounded-md border border-gold bg-accentSoft p-2.5 text-caption text-ink">
-                          <p>{o.fact}</p>
+                        <div key={i} className="space-y-2 rounded-md border border-gold bg-accentSoft p-3 text-caption text-ink">
+                          <div>
+                            <p className="smallcaps text-accent">{tt("What is off", "Was nicht passt")}</p>
+                            <p className="font-semibold">{o.fact}</p>
+                          </div>
+                          <p>
+                            <span className="smallcaps mr-1 text-ash">{tt("In plain words", "In einfachen Worten")}</span>
+                            {o.plain}
+                          </p>
+                          {o.where.length > 0 && (
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              <span className="smallcaps text-ash">{tt("Where in the diagram", "Wo im Diagramm")}</span>
+                              {o.where.map((id) => (
+                                <button key={id} type="button" onClick={() => scrollToAndFlash(`arch-box-${id}`, "ref", "center")} className="min-h-[32px] rounded border border-line bg-paper px-2 text-caption text-ink underline decoration-dotted underline-offset-2 hover:border-accent">
+                                  {PANEL[id].short} ↑
+                                </button>
+                              ))}
+                            </div>
+                          )}
                           <p className="text-ash">
-                            <span className="smallcaps mr-1">{tt("Rule", "Regel")}</span>
+                            <span className="smallcaps mr-1">{tt("Why it matters", "Warum es zählt")}</span>
                             {o.rule}
                           </p>
-                          <p>
-                            <span className="smallcaps mr-1 text-accent">{tt("You can", "Sie können")}</span>
-                          </p>
-                          <ul className="list-disc space-y-0.5 pl-5">
-                            {o.ways.map((w) => (
-                              <li key={w}>{w}</li>
-                            ))}
-                          </ul>
+                          <div>
+                            <p className="smallcaps text-accent">{tt("What you can do (you decide)", "Was Sie tun können (Sie entscheiden)")}</p>
+                            <ol className="mt-1 list-decimal space-y-1.5 pl-5">
+                              {o.ways.map((w) => (
+                                <li key={w.text}>
+                                  <span>{w.text}</span>
+                                  {w.go.length > 0 && (
+                                    <span className="mt-1 flex flex-wrap gap-1.5">
+                                      {w.go.map((id) => (
+                                        <button
+                                          key={id}
+                                          type="button"
+                                          onClick={() => scrollToAndFlash(IDS.arch(id), "ref", "start")}
+                                          aria-label={tt(`Go to the card ${ARCH_BY_ID[id].name} in Step A`, `Zur Karte ${ARCH_BY_ID[id].name} in Schritt A`)}
+                                          className="min-h-[36px] rounded-md border border-accent bg-paper px-2.5 text-caption font-semibold text-accentHi hover:bg-accentSoft focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+                                        >
+                                          {tt("Go to card", "Zur Karte")}: {ARCH_BY_ID[id].name} · {euro(ARCH_BY_ID[id].cost)} ↓
+                                        </button>
+                                      ))}
+                                    </span>
+                                  )}
+                                </li>
+                              ))}
+                            </ol>
+                          </div>
                         </div>
                       ))}
                   </li>
