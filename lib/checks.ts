@@ -5,15 +5,10 @@ import type { AbState, PatternId, Risk, UncId } from "@/data/patterns";
 import { MEASURE_BY_ID, PROBLEM_IDS, explainBucket } from "@/data/measures";
 import type { MeasureId, ProblemId } from "@/data/measures";
 import {
-  ARCH_BY_ID,
-  ARCH_IDS,
-  BASELINE_ITEM,
   COMP_CHOOSE,
   CRIT_IDS,
-  KPI_BY_ID,
   OWNER_ACCEPT_LOGIC,
   PRINCIPLE_MUST,
-  R2_BUDGET,
   SIT_BY_ID,
   SIT_IDS,
   SOURCES,
@@ -22,8 +17,8 @@ import {
   maxRating,
   useOf,
 } from "@/data/route2";
-import type { ArchId, CompId } from "@/data/route2";
-import { extractAmounts, parseAmount } from "@/lib/parseAmount";
+import type { CompId } from "@/data/route2";
+import { extractAmounts } from "@/lib/parseAmount";
 import type { L1State, R2State, SortMap, TagMap } from "@/store/useStore";
 
 /* ------------------------------------------------------------------ Block 1.1 */
@@ -166,7 +161,6 @@ export function orderInversions(l1: L1State): { high: MeasureId; low: MeasureId 
 
 /* ------------------------------------------------------------------ Route 2 */
 
-export const hasNumber = (t: string) => /\d/.test(t);
 export const principlesHold = (r2: R2State) => ({ defs: r2.principles.includes(PRINCIPLE_MUST[0]), rules: r2.principles.includes(PRINCIPLE_MUST[1]) });
 
 export function sourceHolds(r2: R2State): { holds: number; total: number } {
@@ -193,31 +187,4 @@ export function logicHolds(r2: R2State): { holds: number; total: number } {
     if (r.owner && OWNER_ACCEPT_LOGIC[s].includes(r.owner)) holds++;
   }
   return { holds, total: SIT_IDS.length * 2 };
-}
-
-export const funded = (r2: R2State): ArchId[] => ARCH_IDS.filter((id) => r2.alloc[id]);
-export const archCost = (r2: R2State) => funded(r2).reduce((s, id) => s + ARCH_BY_ID[id].cost, 0);
-export const archOver = (r2: R2State) => Math.max(0, archCost(r2) - R2_BUDGET);
-export const archLeft = (r2: R2State) => R2_BUDGET - archCost(r2);
-export const blackBoxFunded = (r2: R2State): ArchId[] => funded(r2).filter((id) => ARCH_BY_ID[id].blackBox);
-/** Three rules of Materi B5: the data foundation starts no later than the first other item; the budget holds; nothing funded is a black box. */
-export function seqRules(r2: R2State): { baseline: boolean; budget: boolean; explainable: boolean; hasBaseline: boolean } {
-  const f = funded(r2);
-  const hasBaseline = f.includes(BASELINE_ITEM);
-  const others = f.filter((id) => id !== BASELINE_ITEM);
-  const base = r2.start[BASELINE_ITEM];
-  const first = Math.min(...others.map((id) => r2.start[id] ?? 99));
-  const baseline = hasBaseline && base != null && (others.length === 0 || base <= first);
-  return { baseline, budget: archOver(r2) === 0 && f.length > 0, explainable: blackBoxFunded(r2).length === 0, hasBaseline };
-}
-
-export function tripFlagsOf(r2: R2State): string[] {
-  const out: string[] = [];
-  if (r2.tripKpi && !KPI_BY_ID[r2.tripKpi].behaviour) out.push("kpi");
-  if (r2.tripKpi && r2.tripThreshold.trim()) {
-    const v = parseAmount(r2.tripThreshold);
-    const k = KPI_BY_ID[r2.tripKpi];
-    if (v !== null && (k.better === "up" ? v <= k.baseline : v >= k.baseline)) out.push("threshold");
-  }
-  return out;
 }

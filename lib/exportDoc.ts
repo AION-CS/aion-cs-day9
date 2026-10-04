@@ -2,10 +2,12 @@ import { LEVEL_LABEL, LINES } from "@/data/ladder";
 import { BASIS_LABEL, CUST_BY_ID, PILOT, FORECAST } from "@/data/forecast";
 import { AB, AB_PARTS, MEANINGS, OUTCOME_LABEL, PATTERNS, PATTERN_IDS, PMEASURES, RECORDS, RISK_LABEL, UNC_BY_ID } from "@/data/patterns";
 import { BUDGET, MEASURE_BY_ID, MONTHS, PROBLEM_LABEL, MEASURE_AREA_LABEL } from "@/data/measures";
-import { ACTION_LABEL, ARCH, ARCH_BY_ID, ARCH_IDS, COMP_BY_ID, CRITERIA, CRIT_IDS, DECISIONS, KPI_BY_ID, LOGIC_OWNER_LABEL, OWNERS, PRINCIPLES, R2_BUDGET, R2_MONTHS, SITUATIONS, SOURCES, USE_LABEL } from "@/data/route2";
-import { archOver, archCost, archLeft, coverage, funded, measureScore, tallyOf, totalCost } from "@/lib/checks";
+import { ACTION_LABEL, ARCH, ARCH_BY_ID, COMP_BY_ID, CRITERIA, CRIT_IDS, DECISIONS, LOGIC_OWNER_LABEL, PRINCIPLES, R2_BUDGET, R2_MONTHS, SITUATIONS, SOURCES, USE_LABEL } from "@/data/route2";
+import { coverage, measureScore, tallyOf, totalCost } from "@/lib/checks";
 import { euro, getLang, num, pct, tt } from "@/lib/lang";
 import { parseAmount } from "@/lib/parseAmount";
+import { PANEL, TIER_LABEL, WEAK_POINTS } from "@/data/route2Panel";
+import { planOf, rangeOf } from "@/lib/r2Panel";
 import { COURSE } from "@/lib/routes";
 import { esc } from "@/lib/svg";
 import type { Persisted } from "@/store/useStore";
@@ -232,27 +234,39 @@ export function memoBody(p: Persisted): string {
     l1.chosen.length
       ? `<blockquote><strong>${esc(tt("Where Route 1 left off.", "Wo Route 1 aufgehört hat."))}</strong> ${esc(tt("Measures chosen:", "Gewählte Maßnahmen:"))} ${esc(l1.chosen.map((id) => MEASURE_BY_ID[id].name).join(", "))}.</blockquote>`
       : `<p class="muted">${esc(tt("Route 1 is not finished, so there is nothing to quote yet. Nothing is blocked.", "Route 1 ist nicht fertig, daher gibt es noch nichts zu zitieren. Nichts ist gesperrt."))}</p>`;
-  const r2Opt = (answered: boolean) => (answered ? "" : `<p class="muted">${esc(tt("Optional block, not answered.", "Optionaler Block, nicht beantwortet."))}</p>`);
   const principleRows = r2.principles.map((c) => `<tr><td class="id">${esc(PRINCIPLES[c].name)}</td><td>${cell(r2.principleText[c] ?? "")}</td></tr>`).join("");
-  const sourceRows = SOURCES.map((s) => `<tr><td class="id">${esc(s.name)}</td><td>${esc(s.decision ?? "—")}</td><td class="num">${pct(s.complete)}</td><td>${r2.sources[s.id] ? esc(USE_LABEL[r2.sources[s.id]]) : "—"}</td></tr>`).join("");
+  const sourceRows = SOURCES.map((s) => `<tr><td class="id">${esc(s.name)}</td><td>${esc(s.decision ?? "—")}</td><td class="num">${s.complete}%</td><td>${r2.sources[s.id] ? esc(USE_LABEL[r2.sources[s.id]]) : "—"}</td></tr>`).join("");
   const B = ["—", tt("Low", "Niedrig"), tt("Mid", "Mittel"), tt("High", "Hoch")];
   const compRows = r2.comps
     .map((id) => `<tr><td class="id">${esc(COMP_BY_ID[id].name)}${r2.greatest === id ? ` <span class="muted">(${esc(tt("greatest leverage", "größte Hebelwirkung"))})</span>` : ""}</td>${CRIT_IDS.map((c) => `<td>${esc(B[r2.rate[`${id}.${c}`] || 0])}</td>`).join("")}</tr>`)
     .join("");
   const logicRows = SITUATIONS.map((s) => {
     const r = r2.logic[s.id];
-    return `<tr><td class="id">${esc(s.signal)}</td><td class="num">${s.lift > 0 ? "+" : s.lift < 0 ? "−" : ""}${esc(pct(Math.abs(s.lift)))} · ${s.cases}</td><td>${r?.action ? esc(ACTION_LABEL[r.action]) : "—"}</td><td>${r?.owner ? esc(LOGIC_OWNER_LABEL[r.owner]) : "—"}</td></tr>`;
+    return `<tr><td class="id">${esc(s.signal)}</td><td class="num">${s.lift > 0 ? "+" : s.lift < 0 ? "−" : ""}${esc(num(Math.abs(s.lift)))}% · ${s.cases}</td><td>${r?.action ? esc(ACTION_LABEL[r.action]) : "—"}</td><td>${r?.owner ? esc(LOGIC_OWNER_LABEL[r.owner]) : "—"}</td></tr>`;
   }).join("");
-  const fundedIds = funded(r2);
+
+  // The architecture (Step A) as facts, in both data scenarios; never a grade (CLAUDE.md #47).
+  const brief = planOf(r2, 0);
+  const weak = planOf(r2, 1);
+  const rng = rangeOf(r2);
+  const pc = (n: number | null) => (n === null ? "—" : `${n}${tt("%", " %")}`);
   const archRows = ARCH.map((a) => {
-    const on = !!r2.alloc[a.id];
-    return `<tr><td class="id">${esc(a.name)}</td><td>${esc(on ? tt("funded", "finanziert") : tt("not funded", "nicht finanziert"))}</td><td class="num">${on ? esc(euro(a.cost)) : "—"}</td><td class="num">${on && r2.start[a.id] != null ? esc(tt(`month ${r2.start[a.id]}`, `Monat ${r2.start[a.id]}`)) : "—"}</td><td>${on && r2.owner[a.id] ? esc(OWNERS[r2.owner[a.id]!].name) : "—"}</td><td>${on ? cell(r2.trigger[a.id] ?? "") : "—"}</td></tr>`;
+    const v = brief.items[a.id];
+    const funded = v.tier !== "not";
+    return `<tr><td class="id">${esc(PANEL[a.id].short)}</td><td>${esc(TIER_LABEL[v.tier])}</td><td class="num">${funded ? esc(euro(a.cost)) : "—"}</td><td class="num">${funded && !v.never ? esc(tt(`month ${v.start} to ${v.inUse}`, `Monat ${v.start} bis ${v.inUse}`)) : "—"}</td><td>${funded && v.notes.length ? esc(v.notes.join("; ")) : "—"}</td></tr>`;
   }).join("");
+  const testRows = brief.tests
+    .map((x, i) => (x.applies ? `<tr><td class="id">${esc(x.name)}</td><td>${esc(x.holds ? tt("holds", "stimmt") : tt("open", "offen"))}</td><td>${esc(weak.tests[i].holds ? tt("holds", "stimmt") : tt("open", "offen"))}</td></tr>` : ""))
+    .join("");
+  const b = brief.bars;
+  const barFacts = `<ul>
+<li><strong>${esc(tt("Budget:", "Budget:"))}</strong> ${esc(tt(`${euro(b.spent)} of ${euro(R2_BUDGET)}`, `${euro(b.spent)} von ${euro(R2_BUDGET)}`))}${b.over > 0 ? esc(tt(`, ${euro(b.over)} over the budget (a decision the reasons in this memo defend)`, `, ${euro(b.over)} über dem Budget (eine Entscheidung, die die Begründungen in diesem Memo stützen)`)) : esc(tt(`, ${euro(b.left)} left`, `, ${euro(b.left)} übrig`))}.</li>
+<li><strong>${esc(tt("Measurable:", "Messbar:"))}</strong> ${esc(tt(`${pc(rng.meas[0])} of the money sits on items that are measured, whose data is ready and that are in use within the ${R2_MONTHS} months; ${pc(rng.meas[1])} if the data is ${WEAK_POINTS} points weaker.`, `${pc(rng.meas[0])} des Geldes liegen auf Punkten, die gemessen werden, deren Daten bereit sind und die innerhalb der ${R2_MONTHS} Monate im Einsatz sind; ${pc(rng.meas[1])}, wenn die Daten ${WEAK_POINTS} Punkte schwächer sind.`))}</li>
+<li><strong>${esc(tt("Risk:", "Risiko:"))}</strong> ${esc(tt(`${pc(rng.risk[0])} of the money rests on a black box, on data below 80% when the item starts or on an item in use only after the ${R2_MONTHS} months; ${pc(rng.risk[1])} if the data is ${WEAK_POINTS} points weaker.`, `${pc(rng.risk[0])} des Geldes beruhen auf einer Black Box, auf Daten unter 80 %, wenn der Punkt startet, oder auf einem Punkt, der erst nach den ${R2_MONTHS} Monaten im Einsatz ist; ${pc(rng.risk[1])}, wenn die Daten ${WEAK_POINTS} Punkte schwächer sind.`))}</li>
+</ul>`;
   const d = DECISIONS.find((x) => x.id === r2.decision);
-  const k = r2.tripKpi ? KPI_BY_ID[r2.tripKpi] : null;
-  const thr = parseAmount(r2.tripThreshold);
-  const u = (x: typeof k) => (x ? (x.unit === "%" ? tt("%", " %") : ` ${x.unit}`) : "");
-  const action = { "": "—", scale: tt("scale up anyway", "trotzdem ausweiten"), adjust: tt("adjust one rule and continue", "eine Regel anpassen und weitermachen"), stop: tt("stop the rollout and reconsider the architecture", "den Rollout stoppen und die Architektur überdenken") }[r2.tripAction];
+  const optNone = `<p class="muted">${esc(tt("Optional block, not answered.", "Optionaler Block, nicht beantwortet."))}</p>`;
+  const answered = (list: unknown[]) => list.length > 0;
 
   return `${header("Real-Time Management Memo", tt("Level 3 · Management decision", "Level 3 · Managemententscheidung"), p)}
 <p class="muted">${esc(tt(`To: the board · From: ${name || "Chief Digital Officer"}, LiveConnect IT Services GmbH · Budget ${euro(R2_BUDGET)} over ${R2_MONTHS} months.`, `An: den Vorstand · Von: ${name || "Chief Digital Officer"}, LiveConnect IT Services GmbH · Budget ${euro(R2_BUDGET)} über ${R2_MONTHS} Monate.`))}</p>
@@ -260,30 +274,25 @@ export function memoBody(p: Persisted): string {
 <p>${esc(tt("Customer interaction not coordinated, responses too slow, measures not measurable, a limited budget, an incomplete data situation and high time pressure. The board asks for a real-time customer management system and a decision now.", "Nicht abgestimmte Kundeninteraktion, zu langsame Antworten, nicht messbare Maßnahmen, begrenztes Budget, unvollständige Datenlage und hoher Zeitdruck. Der Vorstand verlangt ein Echtzeit-Kundenmanagementsystem und eine Entscheidung jetzt."))}</p>
 ${situation}
 <h2>${esc(tt("2 · Target vision of the real-time retention system", "2 · Zielbild des Echtzeit-Bindungssystems"))}</h2>
-${r2Opt(r2.principles.length > 0)}
-<table><thead><tr><th>${esc(tt("Principle", "Prinzip"))}</th><th>${esc(tt("What it means at LiveConnect", "Was es bei LiveConnect bedeutet"))}</th></tr></thead><tbody>${principleRows || `<tr><td colspan="2">—</td></tr>`}</tbody></table>
-<h2>${esc(tt("3 · Central interaction points", "3 · Zentrale Interaktionspunkte"))}</h2>
-${r2Opt(Object.keys(r2.sources).length > 0)}
-<table><thead><tr><th>${esc(tt("Interaction point", "Interaktionspunkt"))}</th><th>${esc(tt("Customer decision", "Entscheidung des Kunden"))}</th><th class="num">${esc(tt("Tracked", "Erfasst"))}</th><th>${esc(tt("Decision", "Entscheidung"))}</th></tr></thead><tbody>${sourceRows}</tbody></table>
-<h2>${esc(tt("4 · The KPI and optimisation system", "4 · Das KPI- und Optimierungssystem"))}</h2>
-${r2Opt(r2.comps.length > 0)}
-<table><thead><tr><th>${esc(tt("KPI", "KPI"))}</th>${CRITERIA.map((c) => `<th>${esc(c.name)}</th>`).join("")}</tr></thead><tbody>${compRows || `<tr><td colspan="5">—</td></tr>`}</tbody></table>
-<h3>${esc(tt("Why the greatest lever is the greatest", "Warum der größte Hebel der größte ist"))}</h3>${para(r2.greatestWhy)}
-<h2>${esc(tt("5 · Tested measures: roll out, keep testing or stop", "5 · Getestete Maßnahmen: ausrollen, weiter testen oder stoppen"))}</h2>
-${r2Opt(Object.values(r2.logic).some((r) => !!r?.action))}
-<table><thead><tr><th>${esc(tt("Test", "Test"))}</th><th class="num">${esc(tt("Uplift · conversions", "Uplift · Conversions"))}</th><th>${esc(tt("What happens", "Was passiert"))}</th><th>${esc(tt("Who acts", "Wer handelt"))}</th></tr></thead><tbody>${logicRows}</tbody></table>
-<h2>${esc(tt("6 · Prioritised implementation architecture", "6 · Priorisierte Umsetzungsarchitektur"))}</h2>
-<table><thead><tr><th>${esc(tt("Item", "Punkt"))}</th><th>${esc(tt("Status", "Status"))}</th><th class="num">${esc(tt("Cost", "Kosten"))}</th><th class="num">${esc(tt("Start", "Start"))}</th><th>${esc(tt("Owner", "Owner"))}</th><th>${esc(tt("Trigger", "Trigger"))}</th></tr></thead><tbody>${archRows}</tbody></table>
-<p class="legend">${esc(tt(`Funded ${euro(archCost(r2))} of ${euro(R2_BUDGET)} (${euro(archLeft(r2))} left) across ${fundedIds.length} item${fundedIds.length === 1 ? "" : "s"}.`, `Finanziert ${euro(archCost(r2))} von ${euro(R2_BUDGET)} (${euro(archLeft(r2))} übrig) über ${fundedIds.length} ${fundedIds.length === 1 ? "Punkt" : "Punkte"}.`))}</p>
-${archOver(r2) > 0 ? `<p class="legend">${esc(tt(`The funded items are ${euro(archOver(r2))} over the budget, a decision the reasons above defend.`, `Die finanzierten Punkte liegen ${euro(archOver(r2))} über dem Budget, eine Entscheidung, die die Begründungen oben stützen.`))}</p>` : ""}
-${ARCH_IDS.every((id) => r2.alloc[id]) ? "" : `<h3>${esc(tt("Left out, and when we look again", "Weggelassen, und wann wir es wieder ansehen"))}</h3>${para(r2.postponed)}<p><strong>${esc(tt("Pickup point:", "Pickup Point:"))}</strong> ${cell(r2.pickup)}</p>`}
-<h2>${esc(tt("7 · The decision under time pressure", "7 · Die Entscheidung unter Zeitdruck"))}</h2>
+${para(r2.vision)}
+<h2>${esc(tt("3 · The prioritised implementation architecture", "3 · Die priorisierte Umsetzungsarchitektur"))}</h2>
+<table><thead><tr><th>${esc(tt("Item", "Punkt"))}</th><th>${esc(tt("When", "Wann"))}</th><th class="num">${esc(tt("Cost", "Kosten"))}</th><th class="num">${esc(tt("Start to in use", "Start bis Einsatz"))}</th><th>${esc(tt("What the panel noted (data as the brief says)", "Was das Panel vermerkte (Daten wie im Auftrag)"))}</th></tr></thead><tbody>${archRows}</tbody></table>
+${barFacts}
+${testRows ? `<table><thead><tr><th>${esc(tt("Test", "Test"))}</th><th>${esc(tt("Data as the brief says", "Daten wie im Auftrag"))}</th><th>${esc(tt(`Data ${WEAK_POINTS} points weaker`, `Daten ${WEAK_POINTS} Punkte schwächer`))}</th></tr></thead><tbody>${testRows}</tbody></table>` : ""}
+<h3>${esc(tt("What my plan gives me, and what I give up", "Was mein Plan mir gibt, und worauf ich verzichte"))}</h3>${para(r2.giveUp)}
+<h2>${esc(tt("4 · The decision under time pressure", "4 · Die Entscheidung unter Zeitdruck"))}</h2>
 <p><strong>${d ? esc(d.label) : "—"}</strong>${d ? ` — ${esc(d.detail)}` : ""}</p>
-<h3>${esc(tt("What this decision rests on", "Worauf diese Entscheidung beruht"))}</h3>
-<ol>${r2.assumptions.map((a) => `<li>${cell(a)}</li>`).join("")}</ol>
-<h3>Tripwire</h3>
-<p>${esc(tt(`${k ? k.label : "—"} reaches ${thr !== null && k ? `${num(thr)}${u(k)}` : "—"} by month ${r2.tripMonth ?? "—"} (today: ${k ? `${num(k.baseline)}${u(k)}` : "—"}). If it is missed: ${action}.`, `${k ? k.label : "—"} erreicht ${thr !== null && k ? `${num(thr)}${u(k)}` : "—"} bis Monat ${r2.tripMonth ?? "—"} (heute: ${k ? `${num(k.baseline)}${u(k)}` : "—"}). Wenn er verfehlt wird: ${action}.`))}</p>
-<h3>${esc(tt("If the chat is fast but not good enough in month 2", "Wenn der Chat in Monat 2 schnell, aber nicht gut genug ist"))}</h3>${para(r2.challenge)}
+<h3>${esc(tt("Why", "Warum"))}</h3>${para(r2.decisionWhy)}
+<h3>${esc(tt("What I will watch, and when I would stop", "Was ich beobachte, und wann ich aufhören würde"))}</h3>${para(r2.watch)}
+<h2>${esc(tt("5 · Go deeper (optional blocks)", "5 · Vertiefen (optionale Blöcke)"))}</h2>
+<h3>${esc(tt("Principles of the target vision", "Prinzipien des Zielbilds"))}</h3>
+${answered(r2.principles) ? `<table><thead><tr><th>${esc(tt("Principle", "Prinzip"))}</th><th>${esc(tt("What it means at LiveConnect", "Was es bei LiveConnect bedeutet"))}</th></tr></thead><tbody>${principleRows}</tbody></table>` : optNone}
+<h3>${esc(tt("Central interaction points", "Zentrale Interaktionspunkte"))}</h3>
+${answered(Object.keys(r2.sources)) ? `<table><thead><tr><th>${esc(tt("Interaction point", "Interaktionspunkt"))}</th><th>${esc(tt("Customer decision", "Entscheidung des Kunden"))}</th><th class="num">${esc(tt("Tracked", "Erfasst"))}</th><th>${esc(tt("Decision", "Entscheidung"))}</th></tr></thead><tbody>${sourceRows}</tbody></table>` : optNone}
+<h3>${esc(tt("The KPI and optimisation system", "Das KPI- und Optimierungssystem"))}</h3>
+${answered(r2.comps) ? `<table><thead><tr><th>${esc(tt("KPI", "KPI"))}</th>${CRITERIA.map((c) => `<th>${esc(c.name)}</th>`).join("")}</tr></thead><tbody>${compRows}</tbody></table>${para(r2.greatestWhy)}` : optNone}
+<h3>${esc(tt("Tested measures: roll out, keep testing or stop", "Getestete Maßnahmen: ausrollen, weiter testen oder stoppen"))}</h3>
+${answered(Object.values(r2.logic).filter((r) => !!r?.action)) ? `<table><thead><tr><th>${esc(tt("Test", "Test"))}</th><th class="num">${esc(tt("Uplift · conversions", "Uplift · Conversions"))}</th><th>${esc(tt("What happens", "Was passiert"))}</th><th>${esc(tt("Who acts", "Wer handelt"))}</th></tr></thead><tbody>${logicRows}</tbody></table>` : optNone}
 
 <div class="foot">${esc(tt(`Checks requested: ${r2.checks}`, `Angeforderte Prüfungen: ${r2.checks}`))}<br/>${esc(tt(`Generated ${dateLabel()}.`, `Erstellt am ${dateLabel()}.`))}</div>`;
 }

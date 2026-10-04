@@ -16,7 +16,7 @@ export type NavItem = {
 export type NavGroup = { label: string; items: NavItem[] };
 
 const cards = (block: "A" | "B"): NavItem[] => MATERIALS.filter((m) => m.block === block).map((m) => ({ id: materialAnchorId(m.id), short: m.id, title: m.title, done: { card: m.id }, optional: m.optional }));
-const blk = (n: string, title: string, block: TaskBlockId): NavItem => ({ id: `block-${n.replace(".", "-")}`, short: n, title, done: { block }, optional: isOptionalBlock(block) });
+const blk = (n: string, title: string, block: TaskBlockId, short?: string): NavItem => ({ id: `block-${n.replace(".", "-")}`, short: short ?? n, title, done: { block }, optional: isOptionalBlock(block) });
 
 export function pageNav(route: RouteNo): NavGroup[] {
   if (route === 1)
@@ -43,13 +43,14 @@ export function pageNav(route: RouteNo): NavGroup[] {
     {
       label: "Task 2",
       items: [
-        { id: "task-2", short: tt("Case", "Fall"), title: tt("The situation and the budget", "Die Lage und das Budget") },
-        blk("3.1", tt("The target vision", "Das Zielbild"), "b31"),
-        blk("3.2", tt("Central interaction points", "Zentrale Interaktionspunkte"), "b32"),
-        blk("3.3", tt("The KPI and optimisation system", "Das KPI- und Optimierungssystem"), "b33"),
-        blk("3.4", tt("Measures, tested", "Maßnahmen, getestet"), "b34"),
-        blk("3.5", tt("The implementation architecture", "Die Umsetzungsarchitektur"), "b35"),
-        blk("3.6", tt("The decision under time pressure", "Die Entscheidung unter Zeitdruck"), "b36"),
+        { id: "task-2", short: tt("Case", "Fall"), title: tt("The situation and the numbers today", "Die Lage und die Zahlen heute") },
+        { id: "r2-panel", short: tt("Panel", "Panel"), title: tt("The live architecture panel", "Das Live-Architektur-Panel") },
+        blk("3.5", tt("Step A · Build the system", "Schritt A · Das System bauen"), "b35", "A"),
+        blk("3.6", tt("Step B · Decide", "Schritt B · Entscheiden"), "b36", "B"),
+        blk("3.1", tt("Go deeper · the target vision", "Vertiefen · das Zielbild"), "b31"),
+        blk("3.2", tt("Go deeper · central interaction points", "Vertiefen · zentrale Interaktionspunkte"), "b32"),
+        blk("3.3", tt("Go deeper · the KPI and optimisation system", "Vertiefen · das KPI- und Optimierungssystem"), "b33"),
+        blk("3.4", tt("Go deeper · measures, tested", "Vertiefen · Maßnahmen, getestet"), "b34"),
         { id: "export-l3", short: "Export", title: tt("Export the Real-Time Management Memo", "Real-Time Management Memo exportieren") },
       ],
     },

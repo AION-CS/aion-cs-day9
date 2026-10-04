@@ -1,7 +1,11 @@
 "use client";
 
-import { Block31, Block32, Block33, Block34, Block35, Block36 } from "@/components/task2/Blocks";
+import { useState } from "react";
+import { Block31, Block32, Block33, Block34 } from "@/components/task2/Blocks";
 import { MemoPanel } from "@/components/task2/MemoPanel";
+import { Panel } from "@/components/task2/Panel";
+import { StepA } from "@/components/task2/StepA";
+import { StepB } from "@/components/task2/StepB";
 import { TodayTable } from "@/components/task2/Kits";
 import { ExportBar } from "@/components/ui/ExportBar";
 import { Callout } from "@/components/ui/MaterialCard";
@@ -14,6 +18,7 @@ import { memoBody } from "@/lib/exportDoc";
 import { r2Missing } from "@/lib/missing";
 import { BLOCK_MINUTES, TASK2_MINUTES } from "@/lib/routes";
 import { exportName } from "@/lib/slug";
+import type { Scn } from "@/lib/r2Panel";
 import { useJumpTo } from "@/lib/useJumpTo";
 import { usePersisted } from "@/store/usePersisted";
 import { useHydrated } from "@/store/useStore";
@@ -48,7 +53,7 @@ function CaseBrief() {
               {tt("Time: ", "Zeit: ")}
               <strong>{tt(`${R2_MONTHS} months`, `${R2_MONTHS} Monate`)}</strong>
             </li>
-            <li>{tt("The items and their costs are in Block 3.5; the numbers today are in the table below.", "Die Punkte und ihre Kosten stehen in Block 3.5; die Zahlen heute stehen in der Tabelle darunter.")}</li>
+            <li>{tt("The items and their costs are in Step A; the numbers today are in the table below.", "Die Punkte und ihre Kosten stehen in Schritt A; die Zahlen heute stehen in der Tabelle darunter.")}</li>
           </ul>
         </div>
         <div className="rounded-lg border border-line bg-canvas p-3 text-caption md:col-span-2">
@@ -89,45 +94,60 @@ function CaseBrief() {
 
 export function Task2() {
   const p = usePersisted();
+  const [scn, setScn] = useState<Scn>(0);
   const missing = r2Missing(p);
   const filename = exportName(p.participant.name, "l3-real-time-memo");
   return (
     <div className="space-y-6">
       <CaseBrief />
-      <OptionalSection
-        id="block-3-1"
-        title={tt("Block 3.1 · The target vision of a real-time retention system", "Block 3.1 · Das Zielbild eines Echtzeit-Bindungssystems")}
-        minutes={BLOCK_MINUTES["3.1"]}
-        reason={tt("Names the principles behind a real-time retention system; the plan in Block 3.5 can be set without them.", "Benennt die Prinzipien hinter einem Echtzeit-Bindungssystem; der Plan in Block 3.5 lässt sich auch ohne sie festlegen.")}
-      >
-        <Block31 />
-      </OptionalSection>
-      <OptionalSection
-        id="block-3-2"
-        title={tt("Block 3.2 · Definition of central interaction points", "Block 3.2 · Festlegung zentraler Interaktionspunkte")}
-        minutes={BLOCK_MINUTES["3.2"]}
-        reason={tt("Sorts eight interaction points into select now, data first or not now; Block 3.5 prints the figures it needs itself.", "Sortiert acht Interaktionspunkte in jetzt auswählen, erst die Daten oder jetzt nicht; Block 3.5 druckt die Zahlen, die er braucht, selbst.")}
-      >
-        <Block32 />
-      </OptionalSection>
-      <OptionalSection
-        id="block-3-3"
-        title={tt("Block 3.3 · A KPI and optimisation system", "Block 3.3 · Ein KPI- und Optimierungssystem")}
-        minutes={BLOCK_MINUTES["3.3"]}
-        reason={tt("Rates KPI candidates on four tests; Block 3.6 prints the baselines of its own metrics, so the decision does not need the ratings.", "Bewertet KPI-Kandidaten nach vier Tests; Block 3.6 druckt die Ausgangswerte seiner eigenen Kennzahlen, die Entscheidung braucht die Bewertungen also nicht.")}
-      >
-        <Block33 />
-      </OptionalSection>
-      <OptionalSection
-        id="block-3-4"
-        title={tt("Block 3.4 · Automation and personalisation measures, tested: roll out, keep testing or stop", "Block 3.4 · Automatisierungs- und Personalisierungsmaßnahmen, getestet: ausrollen, weiter testen oder stoppen")}
-        minutes={BLOCK_MINUTES["3.4"]}
-        reason={tt("Decides roll out, keep testing or stop for six test results; Block 3.5 already names one owner per funded item.", "Entscheidet für sechs Testergebnisse über Ausrollen, Weitertesten oder Stoppen; Block 3.5 benennt schon einen Owner pro finanziertem Punkt.")}
-      >
-        <Block34 />
-      </OptionalSection>
-      <Block35 />
-      <Block36 />
+      <div id="r2-frame" className="space-y-4">
+        <Panel scn={scn} setScn={setScn} />
+        <StepA scn={scn} />
+        <StepB scn={scn} />
+      </div>
+      <section id="go-deeper" aria-labelledby="go-deeper-h" className="space-y-3">
+        <div className="space-y-1">
+          <h2 id="go-deeper-h">{tt("Go deeper · optional", "Vertiefen · optional")}</h2>
+          <p className="max-w-prose text-caption text-ash">
+            {tt(
+              "Four blocks that each practise one part of the plan: the principles of the vision, the definition of central interaction points, the KPI system, and roll out, keep testing or stop. They are folded: nothing in Step A or Step B needs them, and they are not counted in the progress ring or the missing list. Open one any time.",
+              "Vier Blöcke, die je einen Teil des Plans üben: die Prinzipien des Zielbilds, die Festlegung zentraler Interaktionspunkte, das KPI-System, und ausrollen, weiter testen oder stoppen. Sie sind eingeklappt: Nichts in Schritt A oder Schritt B braucht sie, und sie zählen nicht im Fortschrittsring oder in der Liste des Offenen. Öffnen Sie einen jederzeit.",
+            )}
+          </p>
+        </div>
+        <OptionalSection
+          id="block-3-1"
+          title={tt("Block 3.1 · The target vision of a real-time retention system", "Block 3.1 · Das Zielbild eines Echtzeit-Bindungssystems")}
+          minutes={BLOCK_MINUTES["3.1"]}
+          reason={tt("Names the principles behind a real-time retention system; Step A asks for your vision without them.", "Benennt die Prinzipien hinter einem Echtzeit-Bindungssystem; Schritt A fragt Ihr Zielbild auch ohne sie ab.")}
+        >
+          <Block31 />
+        </OptionalSection>
+        <OptionalSection
+          id="block-3-2"
+          title={tt("Block 3.2 · Definition of central interaction points", "Block 3.2 · Festlegung zentraler Interaktionspunkte")}
+          minutes={BLOCK_MINUTES["3.2"]}
+          reason={tt("Sorts eight interaction points into select now, data first or not now; Step A prints the figures it needs itself.", "Sortiert acht Interaktionspunkte in jetzt auswählen, erst die Daten oder jetzt nicht; Schritt A druckt die Zahlen, die er braucht, selbst.")}
+        >
+          <Block32 />
+        </OptionalSection>
+        <OptionalSection
+          id="block-3-3"
+          title={tt("Block 3.3 · A KPI and optimisation system", "Block 3.3 · Ein KPI- und Optimierungssystem")}
+          minutes={BLOCK_MINUTES["3.3"]}
+          reason={tt("Rates KPI candidates on four tests; Step B prints the customer figures it uses, so the decision does not need the ratings.", "Bewertet KPI-Kandidaten nach vier Tests; Schritt B druckt die Kundenzahlen, die er nutzt, die Entscheidung braucht die Bewertungen also nicht.")}
+        >
+          <Block33 />
+        </OptionalSection>
+        <OptionalSection
+          id="block-3-4"
+          title={tt("Block 3.4 · Automation and personalisation measures, tested: roll out, keep testing or stop", "Block 3.4 · Automatisierungs- und Personalisierungsmaßnahmen, getestet: ausrollen, weiter testen oder stoppen")}
+          minutes={BLOCK_MINUTES["3.4"]}
+          reason={tt("Decides roll out, keep testing or stop for six test results; Step B asks only when you would stop.", "Entscheidet für sechs Testergebnisse über Ausrollen, Weitertesten oder Stoppen; Schritt B fragt nur, wann Sie aufhören würden.")}
+        >
+          <Block34 />
+        </OptionalSection>
+      </section>
       <MemoPanel />
       <ExportBar
         id="export-l3"

@@ -6,12 +6,11 @@ import { AB_MODEL, MEANING_TRUTH, MEASURE_TRUTH, PATTERN_IDS, RECORDS, TRUTH_COU
 import type { PatternId, PatternRow, RecId, UncId } from "@/data/patterns";
 import { MEASURE_BY_ID, MODEL_MEASURES, explainBucket } from "@/data/measures";
 import type { MeasureId, ProblemId } from "@/data/measures";
-import { COMP_BY_ID, MODEL_ARCH, MODEL_COMPS, MODEL_GREATEST, MODEL_START, MODEL_TRIGGER, MODEL_TRIPWIRE, OWNER_ACCEPT, OWNER_ACCEPT_LOGIC, SITUATIONS, SOURCES, actionOf, useOf } from "@/data/route2";
-import type { Criterion, LogicRow, OwnerId, Use } from "@/data/route2";
+import { ARCH_BY_ID, COMP_BY_ID, MODEL_COMPS, MODEL_GREATEST, OWNER_ACCEPT_LOGIC, R2_BUDGET, SITUATIONS, SOURCES, actionOf, useOf } from "@/data/route2";
+import { MODEL_ARCH, MODEL_TIER } from "@/data/route2Panel";
+import type { Criterion, LogicRow, Use } from "@/data/route2";
 import { euro, num, tt } from "@/lib/lang";
 import type { L1State, R2State, Score } from "@/store/useStore";
-import { MODEL_PICKUP } from "@/data/route2Extra";
-import { assumptionSentence, pickupSentence, triggerSentence } from "@/lib/r2Numbers";
 
 /**
  * Every model answer of the day, in one file. "Fill all model answers" in the mentor bar enters these, so that after one fill every
@@ -110,24 +109,23 @@ export function KEY_R2(): Partial<R2State> {
       "Die erste Antwortzeit ist der Treiber, den der Auftrag als Problem nennt (Antworten zu langsam). Sie ist mit Abschlüssen verbunden, bewegt sich live für jede Anfrage und wird von den Systemen gezählt, sodass sich jede Maßnahme innerhalb von Tagen daran steuern lässt.",
     ),
     logic,
-    alloc: Object.fromEntries(MODEL_ARCH.map((id) => [id, true])),
-    start: { ...MODEL_START } as Record<string, number>,
-    owner: Object.fromEntries(MODEL_ARCH.map((id) => [id, OWNER_ACCEPT[id][0]])) as Record<string, OwnerId>,
-    trigger: Object.fromEntries(MODEL_ARCH.map((id) => [id, triggerSentence(id)])) as Record<string, string>,
-    postponed: tt(
-      "The all-in-one AI platform (€90,000) is left out: the six funded items cost €180,000 of the €190,000, the platform would push the plan €80,000 over, it takes fourteen weeks and nobody at LiveConnect could explain or measure it. The relaunch (€80,000, sixteen weeks) is too slow for four months.",
-      "Die All-in-one-KI-Plattform (90.000 €) bleibt draußen: Die sechs finanzierten Punkte kosten 180.000 € von 190.000 €, die Plattform brächte den Plan 80.000 € über das Budget, sie braucht vierzehn Wochen, und niemand bei LiveConnect könnte sie erklären oder messen. Der Relaunch (80.000 €, sechzehn Wochen) ist für vier Monate zu langsam.",
+    tier: { ...MODEL_TIER },
+    vision: tt(
+      "LiveConnect answers every customer interaction within an agreed time, from one live view that every team reads, and steers by three KPIs. Every new tool has to move one of them before it grows, so speed and quality grow together.",
+      "LiveConnect beantwortet jede Kundeninteraktion innerhalb einer vereinbarten Zeit, aus einer Live-Sicht, die jedes Team liest, und steuert über drei KPIs. Jedes neue Werkzeug muss einen davon bewegen, bevor es wächst, sodass Tempo und Qualität gemeinsam wachsen.",
     ),
-    pickup: pickupSentence(MODEL_PICKUP),
+    giveUp: tt(
+      `The plan gives me one live view with the KPIs, response standards with a named owner, a sales team that can take over a chat, and the chat on the pages that are tracked well enough. Personalisation starts when the tracking is clean. It costs me the all-in-one platform and the relaunch, which are in use only in month 5 and name no KPI. ${euro(R2_BUDGET - MODEL_ARCH.reduce((x, id) => x + ARCH_BY_ID[id].cost, 0))} stay unspent. If the data turns out weaker, the chat rests on data below 80%, so I watch it first.`,
+      `Der Plan gibt mir eine Live-Sicht mit den KPIs, Antwortstandards mit benanntem Owner, ein Vertriebsteam, das einen Chat übernehmen kann, und den Chat auf den Seiten, die gut genug erfasst sind. Die Personalisierung startet, wenn die Erfassung sauber ist. Er kostet mich die All-in-one-Plattform und den Relaunch, die erst in Monat 5 im Einsatz sind und keinen KPI nennen. ${euro(R2_BUDGET - MODEL_ARCH.reduce((x, id) => x + ARCH_BY_ID[id].cost, 0))} bleiben ungenutzt. Fallen die Daten schwächer aus, beruht der Chat auf Daten unter 80 %, also beobachte ich ihn zuerst.`,
+    ),
     decision: "stage",
-    assumptions: [0, 1, 2].map((i) => assumptionSentence(i)),
-    tripKpi: MODEL_TRIPWIRE.kpi,
-    tripThreshold: String(MODEL_TRIPWIRE.threshold),
-    tripMonth: MODEL_TRIPWIRE.month,
-    tripAction: "adjust",
-    challenge: tt(
-      "I keep the chat and fix its answers. Speed is solved: from 4 hours to 2 minutes. The problem is quality: 20% of chats are not helpful, which is our guardrail, so this week marketing rewrites the worst answers and hands those questions to a person at once. 6.0% to 6.3% after two months rests on too few requests to judge; the tripwire of 9% in month 4 decides. Switching the chatbot off brings back the wait, and the platform could not be measured at all.",
-      "Ich behalte den Chat und verbessere seine Antworten. Das Tempo ist gelöst: von 4 Stunden auf 2 Minuten. Das Problem ist die Qualität: 20 % der Chats sind nicht hilfreich, das ist unsere Guardrail, also schreibt das Marketing diese Woche die schlechtesten Antworten neu und übergibt diese Fragen sofort an einen Menschen. 6,0 % zu 6,3 % nach zwei Monaten beruhen auf zu wenigen Anfragen für ein Urteil; der Tripwire von 9 % in Monat 4 entscheidet. Den Chatbot abzuschalten, brächte die Wartezeit zurück, und die Plattform ließe sich gar nicht messen.",
+    decisionWhy: tt(
+      "It makes the decision the brief asks for under time pressure: act within weeks where the data is good enough, with the chat on the decision pages, and measure from the first week through the live view. Personalisation waits for clean tracking, and the platform and the relaunch stay out because neither names a KPI and both arrive after the four months.",
+      "Es trifft die Entscheidung, die der Auftrag unter Zeitdruck verlangt: innerhalb von Wochen dort handeln, wo die Daten gut genug sind, mit dem Chat auf den Entscheidungsseiten, und ab der ersten Woche über die Live-Sicht messen. Die Personalisierung wartet auf saubere Erfassung, und Plattform und Relaunch bleiben draußen, weil keiner einen KPI nennt und beide nach den vier Monaten ankommen.",
+    ),
+    watch: tt(
+      "I watch the closing rate of quote requests: today it is 6%, and if it is not clearly above that by month 3 on enough requests, I stop widening the chat and keep the live view and the response standards. I also watch the data behind the chat: if it stays below 80%, I pause it until the tracking is better.",
+      "Ich beobachte die Abschlussquote der Angebotsanfragen: Heute liegt sie bei 6 %, und liegt sie bis Monat 3 bei genug Anfragen nicht deutlich darüber, höre ich auf, den Chat auszuweiten, und behalte Live-Sicht und Antwortstandards. Ich beobachte auch die Daten hinter dem Chat: Bleiben sie unter 80 %, pausiere ich ihn, bis die Erfassung besser ist.",
     ),
   };
 }

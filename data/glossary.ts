@@ -560,6 +560,37 @@ export const GLOSSARY: GlossEntry[] = [
     example: "Of 100 contracts that end this year, 80 are extended: the renewal rate is 80%.",
     de: { title: "Renewal (Vertragsverlängerung)", match: ["Renewal", "Renewals", "Verlängerung", "Verlängerungen", "verlängern", "verlängert"], plain: "Wenn ein Kunde den Vertrag für einen weiteren Zeitraum verlängert, statt ihn zu beenden. Die Verlängerungsquote ist der Anteil der Verträge, die verlängert werden.", example: "Von 100 Verträgen, die dieses Jahr enden, werden 80 verlängert: Die Verlängerungsquote ist 80 %." },
   },
+  {
+    id: "architecture",
+    title: "Architecture (of a system)",
+    match: ["architecture", "implementation architecture", "architectures"],
+    plain: "Not a list of tools but how they fit together: what is built first, what depends on what, who can see what. A good one is built in order, so every tool above can be trusted because the base below it is there.",
+    example: "A live view and KPI system first, then the chat, then personalisation on data that is tracked.",
+    de: { title: "Architektur (eines Systems)", match: ["Architektur", "Umsetzungsarchitektur", "Architekturen"], plain: "Keine Liste von Werkzeugen, sondern wie sie zusammenpassen: was zuerst gebaut wird, was wovon abhängt, wer was sehen kann. Eine gute wird der Reihe nach gebaut, sodass man jedem Werkzeug oben trauen kann, weil die Basis darunter steht.", example: "Zuerst eine Live-Sicht und ein KPI-System, dann der Chat, dann die Personalisierung auf erfassten Daten." },
+  },
+  {
+    id: "engine",
+    title: "Engine",
+    match: ["engine", "engines"],
+    plain: "A tool that does something to customers: it answers in the chat, picks the content or sets the price. The chat and the personalisation are engines. Because they act on customers, each one needs a base that measures what it did.",
+    de: { title: "Engine", match: ["Engine", "Engines"], plain: "Ein Werkzeug, das etwas mit Kunden tut: Es antwortet im Chat, wählt den Inhalt oder setzt den Preis. Der Chat und die Personalisierung sind Engines. Weil sie auf Kunden wirken, braucht jede eine Basis, die misst, was sie bewirkt hat." },
+  },
+  {
+    id: "kpi-system",
+    title: "KPI system",
+    match: ["KPI system", "KPI-System", "live view and KPI system"],
+    plain: "The base of the architecture: a few KPIs, each defined once and counted the same way from joined data, so every team reads the same numbers. Everything else is measured by it, so it starts first.",
+    example: "One screen that shows the closing rate, the interaction rate on decision pages and the response time for every team.",
+    de: { title: "KPI-System", match: ["KPI-System", "Live-Sicht und KPI-System"], plain: "Die Basis der Architektur: wenige KPIs, jeder einmal definiert und gleich aus verbundenen Daten gezählt, sodass jedes Team dieselben Zahlen liest. Alles andere wird daran gemessen, also startet es zuerst.", example: "Ein Bildschirm, der Abschlussquote, Interaktionsrate auf Entscheidungsseiten und Antwortzeit für jedes Team zeigt." },
+  },
+  {
+    id: "tracking-cleanup",
+    title: "Tracking clean-up",
+    match: ["tracking clean-up", "clean-up"],
+    plain: "Closing the gaps in what is recorded, within what customers have consented to, so a tool that learns from the data does not learn the gaps. It comes before the tool that needs the data.",
+    example: "Onboarding and renewal contacts logged before personalisation reads them.",
+    de: { title: "Bereinigung der Erfassung", match: ["Bereinigung der Erfassung", "Bereinigung"], plain: "Die Lücken in dem schließen, was erfasst wird, im Rahmen dessen, wozu Kunden eingewilligt haben, damit ein Werkzeug, das aus den Daten lernt, die Lücken nicht lernt. Sie kommt vor dem Werkzeug, das die Daten braucht.", example: "Onboarding- und Verlängerungskontakte erfasst, bevor die Personalisierung sie liest." },
+  },
 ];
 
 // --- lookup ---------------------------------------------------------------------

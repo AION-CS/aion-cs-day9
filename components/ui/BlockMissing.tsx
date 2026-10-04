@@ -15,14 +15,15 @@ import { tt } from "@/lib/lang";
  * block's fields are already excluded from the missing computation (they are not required), so this renders
  * nothing there.
  */
-export function BlockMissing({ block, route }: { block: string; route: 1 | 2 }) {
+export function BlockMissing({ block, route, prefix }: { block: string; route: 1 | 2; /** For a part that is not "Block X.Y" (Route 2's Step A and Step B): the word its labels start with, in the active language. */ prefix?: string }) {
   const p = usePersisted();
   const all = route === 1 ? l1Missing(p) : r2Missing(p);
-  const items = all.filter((m) => m.label.startsWith(`Block ${block}:`));
+  const lead = prefix ?? `Block ${block}`;
+  const items = all.filter((m) => m.label.startsWith(`${lead}:`));
   if (items.length === 0) return null;
   return (
     <div className="fade-in rounded-md border border-rust/40 bg-rustSoft p-3" role="status">
-      <p className="smallcaps text-rust">{tt(`Still missing in Block ${block}`, `Noch offen in Block ${block}`)}</p>
+      <p className="smallcaps text-rust">{tt(`Still missing in ${lead}`, `Noch offen in ${lead}`)}</p>
       <ul className="mt-1.5 space-y-1">
         {items.map((m, i) => (
           <li key={`${m.id}-${i}`}>

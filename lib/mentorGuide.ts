@@ -1,11 +1,12 @@
 import { BUDGET, EVIDENCE_LABEL, MEASURE_BY_ID, MODEL_COST, MODEL_MEASURES, PROBLEM_LABEL, explainBucket, modelScore } from "@/data/measures";
 import type { MeasureId } from "@/data/measures";
 import { KEY_L1, KEY_R2 } from "@/data/mentorKey";
-import { ARCH_BY_ID, COMP_BY_ID, MODEL_ARCH, MODEL_GREATEST, OWNERS, OWNER_ACCEPT, PRINCIPLES, R2_BUDGET } from "@/data/route2";
-import type { ArchId, PrincipleId } from "@/data/route2";
-import { ARCH_EXTRA, ASSUMPTION_KIT, MODEL_PICKUP, UNIT_VALUE } from "@/data/route2Extra";
+import { ARCH_BY_ID, ARCH_IDS, COMP_BY_ID, MODEL_GREATEST, PRINCIPLES, R2_BUDGET, R2_MONTHS } from "@/data/route2";
+import type { PrincipleId } from "@/data/route2";
+import { MODEL_TIER, PANEL, READY_BAR } from "@/data/route2Panel";
+import type { Tier } from "@/data/route2Panel";
 import { euro, tt } from "@/lib/lang";
-import { assumptionSign, modelStart, monthOf, paybackCount, pickupSentence, triggerNumber, triggerSentence, withUnit } from "@/lib/r2Numbers";
+import { inUseOf, monthsOf, planOf, rangeOf } from "@/lib/r2Panel";
 
 /**
  * Mentor-only worked answers for every task question the answer keys (lib/answerKey.ts) do not already cover: the numeric fields,
@@ -156,74 +157,97 @@ export function greatestGuide(): MentorGuide {
   };
 }
 
-export function triggerGuide(id: ArchId): MentorGuide {
-  const x = ARCH_EXTRA[id];
-  const start = modelStart(id);
-  const weeks = ARCH_BY_ID[id].weeks;
+const ids = (m: Record<string, Tier>, f: (t: Tier) => boolean) => ARCH_IDS.filter((id) => f(m[id] ?? "not"));
+
+export function architectureGuide(): MentorGuide {
+  const model = MODEL_TIER;
+  const funded = ids(model, (t) => t !== "not");
+  const mr2 = { tier: model };
+  const plan = planOf(mr2, 0);
+  const weak = planOf(mr2, 1);
+  const r = rangeOf(mr2);
+  const cost = funded.reduce((x, id) => x + ARCH_BY_ID[id].cost, 0);
+  const meas = (p: typeof plan) => funded.filter((id) => PANEL[id].measured && p.items[id].measOk && p.items[id].dataOk && !p.items[id].late && !PANEL[id].blackBox);
+  const sum = (list: (keyof typeof ARCH_BY_ID)[]) => list.reduce((x, id) => x + ARCH_BY_ID[id].cost, 0);
+  const measuredIds = meas(plan);
+  const measuredWeakIds = meas(weak);
+  const riskWeak = funded.filter((id) => PANEL[id].blackBox || !weak.items[id].dataOk || weak.items[id].late);
+  const plus = (list: string[]) => list.join(" + ");
+  const sp = planOf({ tier: { ...model, suite: "now" as const } }, 0);
+  const rl = planOf({ tier: { ...model, relaunch: "now" as const } }, 0);
+  const pn = planOf({ tier: { ...model, personal: "now" as const } }, 0);
   return {
-    title: `3.5 · ${ARCH_BY_ID[id].name}`,
-    answer: triggerSentence(id),
-    example: tt("Company A's callback standard: If the share of callbacks within 30 minutes is below 55% by month 3, then the Head of Sales adds a back-up caller to the rota. Write yours with the figure, the number and the month from your own item's card.", "Der Rückruf-Standard von Unternehmen A: Wenn der Anteil der Rückrufe innerhalb von 30 Minuten bis Monat 3 unter 55 % liegt, ergänzt die Vertriebsleitung einen Vertretungs-Anrufer im Dienstplan. Schreiben Sie Ihren mit der Zahl, dem Wert und dem Monat von der Karte Ihres eigenen Punkts."),
+    title: "Step A · The architecture and what the panel shows for it",
+    answer: `Now: ${ids(model, (t) => t === "now").map((id) => PANEL[id].short).join(", ")}. After data is ready: ${ids(model, (t) => t === "later").map((id) => PANEL[id].short).join(", ")}. Not now: ${ids(model, (t) => t === "not").map((id) => PANEL[id].short).join(", ")}.`,
     steps: [
-      { label: `Number: halfway between today and the ${x.aimWord} printed on the card`, calc: `${n(x.today)} + (${n(x.aim)} − ${n(x.today)}) ÷ 2`, result: withUnit(id, triggerNumber(id)) },
-      { label: "Month: the start month + the weeks until it is in use, in months, rounded up", calc: `${start} + ${weeks} ÷ 4 = ${start} + ${Math.ceil(weeks / 4)}`, result: String(monthOf(id, start)) },
+      { label: "Funded items (every Now and After data item)", calc: plus(funded.map((id) => n(ARCH_BY_ID[id].cost))), result: euro(cost) },
+      { label: "Budget left", calc: `${n(R2_BUDGET)} − ${n(cost)}`, result: euro(R2_BUDGET - cost) },
+      { label: `Month in use = start + weeks ÷ 4, rounded up (Now starts in month 1; After data starts when the tracking clean-up is in use, month ${1 + monthsOf("tracking")})`, calc: funded.map((id) => `${PANEL[id].short}: ${plan.items[id].start} + ${ARCH_BY_ID[id].weeks} ÷ 4 → ${inUseOf(mr2, id)}`).join(" · "), result: `all by month ${Math.max(...funded.map((id) => inUseOf(mr2, id)!))} of ${R2_MONTHS}` },
+      { label: "Measurable, brief's data: money on measured items with data ready and in use in time ÷ funded money", calc: `(${plus(measuredIds.map((id) => n(ARCH_BY_ID[id].cost)))}) ÷ ${n(cost)} = ${n(sum(measuredIds))} ÷ ${n(cost)}`, result: `${r.meas[0]}%` },
+      { label: `Measurable, data 15 points weaker (the chat drops to ${(PANEL.chat.data ?? 0) - 15}%)`, calc: `${n(sum(measuredWeakIds))} ÷ ${n(cost)}`, result: `${r.meas[1]}%` },
+      { label: "Risk: money on a black box, on data below 80% or in use after the months ÷ funded money", calc: `0 ÷ ${n(cost)} (brief) · ${n(sum(riskWeak))} ÷ ${n(cost)} (weaker)`, result: `${r.risk[0]}% · ${r.risk[1]}%` },
     ],
-    why: `Owner that defends: ${OWNER_ACCEPT[id].map((o) => OWNERS[o].name).join(" or ")}. The action is one the owner can take alone and it changes only this item. A different number or month is fine if the learner says why.`,
-    lookFor: ["A metric about the item's own effect (the figure on its card), not about activity.", "A number worse than today's figure and a month; the model uses halfway to the aim.", "An action the owner can take alone."],
-  };
-}
-
-export function postponedGuide(): MentorGuide {
-  const cost = MODEL_ARCH.reduce((s, id) => s + ARCH_BY_ID[id].cost, 0);
-  return {
-    title: "3.5 · What is left out",
-    answer: R2().postponed ?? "",
-    example: tt("Company A leaves out the voice assistant (€45,000): the funded items cost €120,000 of the €140,000, the assistant would push the plan to €165,000, and its data is only 30% ready. Name your own item, what it costs and why this one goes.", "Unternehmen A lässt den Sprachassistenten (45.000 €) weg: Die finanzierten Punkte kosten 120.000 € von 140.000 €, der Assistent brächte den Plan auf 165.000 €, und seine Daten sind erst zu 30 % bereit. Nennen Sie Ihren eigenen Punkt, was er kostet und warum gerade dieser wegfällt."),
-    steps: [
-      { label: "Model funded items", calc: MODEL_ARCH.map((id) => n(ARCH_BY_ID[id].cost)).join(" + "), result: euro(cost) },
-      { label: "Left", calc: `${n(R2_BUDGET)} − ${n(cost)}`, result: euro(R2_BUDGET - cost) },
-      { label: "With the AI suite added", calc: `${n(cost)} + ${n(ARCH_BY_ID.suite.cost)}`, result: euro(cost + ARCH_BY_ID.suite.cost) },
+    why: `The model set holds all four tests with the brief's data (${plan.holding} of ${plan.applicable}) and opens the data test when the data is 15 points weaker (${weak.holding} of ${weak.applicable}). That open test is the reason Step B asks what the learner watches. The numbers on screen are computed from one data file, so this table equals the panel.`,
+    lookFor: ["At least one item Now (the task asks for an architecture).", "The live view and KPI system are in place no later than any engine.", "Nothing the learner cannot explain or measure is funded without a reason, and nothing arrives after the four months without one."],
+    pitfalls: [
+      `Adding the all-in-one platform: ${euro(sp.bars.spent)} funded, ${euro(sp.bars.over)} over the budget, Risk ${sp.bars.risk}% (a black box, in use only in month ${sp.items.suite.inUse}), and ${sp.holding} of ${sp.applicable} tests hold.`,
+      `Adding the relaunch: ${euro(rl.bars.spent)} funded, ${euro(rl.bars.over)} over the budget; it names no KPI and is in use only in month ${rl.items.relaunch.inUse}, so ${rl.holding} of ${rl.applicable} tests hold.`,
+      `Setting personalisation to Now beside the model set: it starts in month 1 on data ${PANEL.personal.data}% tracked, below ${READY_BAR}%, so the data test opens (${pn.holding} of ${pn.applicable} hold); After data with the clean-up Now starts it in month ${1 + monthsOf("tracking")}.`,
+      "Leaving the live view out: every engine loses its link to measurement, so the Measurable bar falls to nothing.",
     ],
-    why: "Going over the budget is allowed in a decision part if the learner says why (CLAUDE.md #38); the budget is a hint, not a lock.",
-    lookFor: ["The item named, with its cost.", "Why this one (the budget, a black box, data not ready).", "Said as a decision, not as an omission."],
   };
 }
 
-export function pickupGuide(): MentorGuide {
-  const id = MODEL_PICKUP;
-  const a = ARCH_BY_ID[id];
+export function visionGuide(): MentorGuide {
   return {
-    title: `3.5 · The pickup point (${a.name})`,
-    answer: pickupSentence(id),
-    example: tt("Company A leaves out a redesign of its contact page (€36,000), and a closed quote request is worth €12,000, so 36,000 ÷ 12,000 = 3. If 3 or more quote requests are lost by month 4 because visitors could not find the form, then we redesign the page. Use your own item's cost and the value of a closed request.", "Unternehmen A lässt eine Neugestaltung seiner Kontaktseite (36.000 €) weg, und eine abgeschlossene Angebotsanfrage ist 12.000 € wert, also 36.000 ÷ 12.000 = 3. Gehen bis Monat 4 mindestens 3 Angebotsanfragen verloren, weil Besucher das Formular nicht fanden, gestalten wir die Seite neu. Nutzen Sie die Kosten Ihres eigenen Punkts und den Wert einer abgeschlossenen Anfrage."),
-    steps: [
-      { label: "Number: the cost of waiting = item cost ÷ what one customer kept is worth a year, rounded up", calc: `${n(a.cost)} ÷ ${n(UNIT_VALUE.value)} = ${n(a.cost / UNIT_VALUE.value)}`, result: String(paybackCount(id)) },
-    ],
-    why: "A pickup point turns “not now” into a plan: the count at which waiting has cost as much as the item, and the month by which you look again.",
-    lookFor: ["A number of customers and a month.", "A reason that only counts leavers the item would have kept.", "An action: fund the item."],
+    title: "Step A · The target vision",
+    answer: R2().vision ?? "",
+    example: tt(
+      "Company A will answer every customer request within an agreed time, from one screen that sales and service read together, and steer by two KPIs. Every new tool has to move one of them before it grows. Write your own target vision for LiveConnect.",
+      "Unternehmen A wird jede Kundenanfrage innerhalb einer vereinbarten Zeit beantworten, von einem Bildschirm aus, den Vertrieb und Service gemeinsam lesen, und nach zwei KPIs steuern. Jedes neue Werkzeug muss einen davon bewegen, bevor es wächst. Schreiben Sie Ihr eigenes Zielbild für LiveConnect.",
+    ),
+    why: "The plan asks for a target vision of a real-time retention system. It is the one place the learner says, in two sentences, what the whole architecture is for, before the items.",
+    lookFor: ["What the system does for the company and its customers (speed and quality together).", "Steering by a few KPIs, not by single tools.", "Two sentences, in the learner's own words."],
   };
 }
 
-export function assumptionGuide(i: number): MentorGuide {
-  const k = ASSUMPTION_KIT[i];
-  const s = assumptionSign(i);
+export function giveUpGuide(): MentorGuide {
   return {
-    title: `3.6 · Assumption ${i + 1}`,
-    answer: (R2().assumptions ?? [])[i] ?? "",
-    example: tt("Company A assumes its callback standard works for every request, not only for the pilot group. It is wrong if the closing rate is below 8% by month 3: today it is 6%, the aim is 10%, and halfway is 8%. Write yours about your own plan, with your own figures.", "Unternehmen A nimmt an, dass sein Rückruf-Standard für jede Anfrage wirkt, nicht nur für die Pilotgruppe. Das ist falsch, wenn die Abschlussquote bis Monat 3 unter 8 % liegt: Heute sind es 6 %, das Ziel ist 10 %, und die Hälfte des Weges ist 8 %. Schreiben Sie Ihre über Ihren eigenen Plan, mit Ihren eigenen Zahlen."),
-    steps: [{ label: `Number: halfway between today and the aim`, calc: s.steps, result: n(s.n) }, { label: "Month: start + weeks in use, in months, rounded up", calc: `${ARCH_BY_ID[k.item].name}`, result: String(s.month) }],
-    why: `Doubt: ${k.why} ${k.signWhy}`,
-    lookFor: ["One thing the plan bets on, tied to what the learner funded.", "A sign the learner can watch themselves, with a number and a month; never a market figure."],
+    title: "Step A · What the plan gives, and what the learner gives up",
+    answer: R2().giveUp ?? "",
+    example: tt(
+      "Company A's plan gives it one screen, a response standard for every central point and a chat that runs on data that is tracked well enough. It gives up a redesign of its site, which names no KPI and is in use only after the four months, and €10,000 stay unspent. If its data is worse than expected, the chat rests on data below 80%, so it is watched first. Write yours about your own plan: what it gives, what it leaves open, what you gave up.",
+      "Der Plan von Unternehmen A gibt ihm einen Bildschirm, einen Antwortstandard für jeden zentralen Punkt und einen Chat, der auf gut genug erfassten Daten läuft. Es verzichtet auf eine Neugestaltung seiner Website, die keinen KPI nennt und erst nach den vier Monaten im Einsatz ist, und 10.000 € bleiben ungenutzt. Sind seine Daten schlechter als erwartet, beruht der Chat auf Daten unter 80 %, also wird er zuerst beobachtet. Schreiben Sie Ihre über Ihren eigenen Plan: was er gibt, was er offen lässt, worauf Sie verzichtet haben.",
+    ),
+    why: "Every plan gives something and costs something. Writing it first, before the system's reading is opened, is what makes the learner think about the trade-off instead of reading it off.",
+    lookFor: ["One thing the plan gives (measured, ready, in budget, in time).", "One thing it costs or leaves open (an item not now, data below 80%, an item after the four months, budget unspent).", "A link to the two data scenarios if the learner saw them."],
   };
 }
 
-export function challengeGuide(): MentorGuide {
+export function decisionWhyGuide(): MentorGuide {
   return {
-    title: "3.6 · The board's challenge",
-    answer: R2().challenge ?? "",
-    example: tt("Month 2: Company A's chat answers within a minute against an aim of two, but only 5% more requests close, and 25% of chats are rated not helpful. I keep the chat and change one thing. I first check the 5% against a group without the chat, on enough requests to trust it, then I rewrite the worst answers and hand those questions to a person at once. Switching the chat off would bring back the wait, and a bigger platform would swap a measured tool for one nobody can measure. The tripwire I set at the start decides. Write your own answer to LiveConnect's numbers.", "Monat 2: Der Chat von Unternehmen A antwortet innerhalb einer Minute bei einem Ziel von zwei, aber nur 5 % mehr Anfragen werden abgeschlossen, und 25 % der Chats werden als nicht hilfreich bewertet. Ich behalte den Chat und ändere eine Sache. Zuerst vergleiche ich die 5 % mit einer Gruppe ohne Chat, bei genug Anfragen, um ihnen zu trauen, dann schreibe ich die schlechtesten Antworten neu und übergebe diese Fragen sofort an einen Menschen. Den Chat abzuschalten, brächte die Wartezeit zurück, und eine größere Plattform ersetzte ein gemessenes Werkzeug durch eines, das niemand messen kann. Der Tripwire, den ich am Anfang gesetzt habe, entscheidet. Schreiben Sie Ihre eigene Antwort auf die Zahlen von LiveConnect."),
-    why: "Speed is solved (4 hours to 2 minutes); what broke is quality: 20% “not helpful” is the chat's guardrail. Two months and 6.0% to 6.3% are too little to judge closings. Fix the answers; do not switch off the speed or buy a platform nobody can measure.",
-    lookFor: ["What is checked first (which chats are rated not helpful; whether 6.0 to 6.3% rests on enough requests).", "What is kept (the chat, the response standards, the tripwire date).", "One change: rewrite the worst answers and hand those questions to a person at once."],
-    pitfalls: ["Switching the chatbot off: the wait comes back, which is the problem the case started with.", "Buying the platform: fourteen weeks, a black box, and it cannot be measured."],
+    title: "Step B · Why this decision",
+    answer: R2().decisionWhy ?? "",
+    example: tt(
+      "Company A decides now but builds in stages: the screen and the response standards start first, so every tool is measured from its first week, and the redesign waits because nobody could say what it changes for customers. Write your reason for your own decision.",
+      "Unternehmen A entscheidet jetzt, baut aber in Stufen: Bildschirm und Antwortstandards starten zuerst, damit jedes Werkzeug ab seiner ersten Woche gemessen wird, und die Neugestaltung wartet, weil niemand sagen könnte, was sie für Kunden ändert. Schreiben Sie Ihre Begründung für Ihre eigene Entscheidung.",
+    ),
+    why: "A decision part has no single right answer (CLAUDE.md #38): what counts is a clear reason, and that it fits the learner's own Step A. If the decision and Step A disagree, the panel hints and the reason should explain it.",
+    lookFor: ["Names the decision and one rule from Materi B5 it rests on.", "Fits the learner's own Step A, or says why it does not.", "Says how the time pressure and the incomplete data are handled (act where the data is good enough, measure from week one)."],
+  };
+}
+
+export function watchGuide(): MentorGuide {
+  const chatMonth = inUseOf({ tier: MODEL_TIER }, "chat") ?? 0;
+  return {
+    title: "Step B · What the learner watches, and when they would stop",
+    answer: R2().watch ?? "",
+    example: tt(
+      "Company A watches the closing rate of its quote requests: today it is 5%, and if it is not clearly above that by month 3 on enough requests, it stops widening the chat and keeps the screen. It also watches the data behind the chat: if it stays below 80%, it pauses the chat. Write yours with the figure from your own plan.",
+      "Unternehmen A beobachtet die Abschlussquote seiner Angebotsanfragen: Heute liegt sie bei 5 %, und liegt sie bis Monat 3 bei genug Anfragen nicht deutlich darüber, hört es auf, den Chat auszuweiten, und behält den Bildschirm. Es beobachtet auch die Daten hinter dem Chat: Bleiben sie unter 80 %, pausiert es den Chat. Schreiben Sie Ihre mit der Zahl aus Ihrem eigenen Plan.",
+    ),
+    why: `A figure about customers (the closing rate or the interaction rate on decision pages), not the company's own speed or output, a month in which it can first be read (the chat is in use from month ${chatMonth} in the model, so month ${chatMonth + 1}), and an action. The numbers are the ones printed in “the numbers today”: closing rate 6% today with an aim of 12%; the data bar is ${READY_BAR}%.`,
+    lookFor: ["A customer figure, with today's value.", "A month by which it can be read.", "What the learner does if it falls short (stop, pause, change one thing)."],
+    pitfalls: ["First response time or posts as the figure: that counts the company's own speed or output.", "No month: a sign nobody can act on."],
   };
 }

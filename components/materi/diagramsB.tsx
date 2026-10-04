@@ -1,5 +1,6 @@
 "use client";
 
+import clsx from "clsx";
 import { useId, useState } from "react";
 import { Insight, Story, ThePoint, Toggles, useStory } from "@/components/materi/kit";
 import { CASES_MIN, LIFT_ACT, LIFT_WATCH } from "@/data/route2";
@@ -351,90 +352,93 @@ export function LiftCases() {
   );
 }
 
-/* ------------------------------------------------------------------ B5 · Elster's architecture over four months */
+/* ------------------------------------------------------------------ B5 · how an architecture is built: Elster's chat and its base */
 
-const I_ARCH = bi([
-  { id: "base", name: t("Live interaction view", "Live-Interaktionssicht"), start: 1, owner: t("Head of Data", "Leitung Data"), trigger: t("If the share of interactions on the live screen is below 60% by month 3, the chat widening waits. (Today 30%, aim 90%: halfway is 60%.)", "Liegt der Anteil der Interaktionen auf dem Live-Bildschirm bis Monat 3 unter 60 %, wartet die Ausweitung des Chats. (Heute 30 %, Ziel 90 %: die Hälfte des Weges ist 60 %.)"), why: t("Starts first: every other item is measured by it.", "Startet zuerst: Jeder andere Punkt wird daran gemessen.") },
-  { id: "score", name: t("Chat on the order page", "Chat auf der Bestellseite"), start: 1, owner: t("Head of Marketing", "Marketingleitung"), trigger: t("If the share of chats rated helpful is below 75% by month 2, the worst answers are rewritten before the chat is widened. (Today 65%, aim 85%: halfway is 75%.)", "Liegt der Anteil der als hilfreich bewerteten Chats bis Monat 2 unter 75 %, werden die schlechtesten Antworten neu geschrieben, bevor der Chat ausgeweitet wird. (Heute 65 %, Ziel 85 %: die Hälfte des Weges ist 75 %.)"), why: t("Starts in the same month: the order page is tracked well enough, and every week of waiting costs orders.", "Startet im selben Monat: Die Bestellseite wird gut genug erfasst, und jede Woche Warten kostet Bestellungen.") },
-  { id: "calls", name: t("Response standards and routing", "Antwortstandards und Weiterleitung"), start: 2, owner: t("Head of Sales", "Vertriebsleitung"), trigger: t("If the share of requests answered within the agreed time is below 60% by month 3, a second person moves onto the chat. (Today 40%, aim 80%: halfway is 60%.)", "Liegt der Anteil der innerhalb der vereinbarten Zeit beantworteten Anfragen bis Monat 3 unter 60 %, geht eine zweite Person auf den Chat. (Heute 40 %, Ziel 80 %: die Hälfte des Weges ist 60 %.)"), why: t("Starts once the live view shows where answers are slow.", "Startet, sobald die Live-Sicht zeigt, wo Antworten langsam sind.") },
-]);
+/**
+ * The worked example of Materi B5 on the example company Elster Digital (a Leipzig IT service provider, Case assumption): a small version of the Route 2
+ * panel. Two controls set the same two facts the panel reads: does measurement start before the chat, and is its data ready. The links in
+ * the picture break the way the panel's do, and "What this shows" says what the break means.
+ */
 export function ArchExample() {
-  const uid = useId().replace(/:/g, "");
-  const [sel, setSelRaw] = useState("base");
+  const [measFirst, setMeasFirstRaw] = useState(true);
+  const [ready, setReadyRaw] = useState(true);
   const story = useStory([
     {
-      title: tt("The one that starts first", "Der, der zuerst startet"),
-      say: tt(`Elster Digital is an example company, not your case. Its live interaction view starts in month 1, because every other item is read off it.`, `Elster Digital ist ein Beispielunternehmen, nicht Ihr Fall. Seine Live-Interaktionssicht startet in Monat 1, weil jeder andere Punkt daran abgelesen wird.`),
-      look: tt("the first row, month 1", "die erste Zeile, Monat 1"),
+      title: tt("The base first", "Die Basis zuerst"),
+      say: tt("Elster Digital is an example company, not your case. It builds its live view and KPI system first, so its chat is measured from its first week.", "Elster Digital ist ein Beispielunternehmen, nicht Ihr Fall. Es baut zuerst seine Live-Sicht und sein KPI-System, damit sein Chat ab der ersten Woche gemessen wird."),
+      look: tt("the solid teal link between the chat and the base", "die durchgezogene teal Verbindung zwischen Chat und Basis"),
       apply: () => {
-        setSelRaw("base");
+        setMeasFirstRaw(true);
+        setReadyRaw(true);
       },
     },
     {
-      title: tt("One owner, one trigger", "Ein Owner, ein Trigger"),
-      say: tt(`The response standards belong to the Head of Sales, who can change them alone. Their trigger watches the share of requests answered in time, a figure about customers, not calls made.`, `Die Antwortstandards gehören der Vertriebsleitung, die sie allein ändern kann. Ihr Trigger beobachtet den Anteil rechtzeitig beantworteter Anfragen, eine Zahl über Kunden, nicht getätigte Anrufe.`),
-      look: tt("the third row and the Trigger line below", "die dritte Zeile und die Trigger-Zeile darunter"),
+      title: tt("The tool before the base", "Das Werkzeug vor der Basis"),
+      say: tt("Now the chat starts first. Nothing measures it, so nobody can say whether it closes more requests. Its link is dashed.", "Jetzt startet der Chat zuerst. Nichts misst ihn, also kann niemand sagen, ob er mehr Anfragen abschließt. Seine Verbindung ist gestrichelt."),
+      look: tt("the dashed amber link and the note on the chat", "die gestrichelte amberfarbene Verbindung und der Vermerk am Chat"),
       apply: () => {
-        setSelRaw("calls");
+        setMeasFirstRaw(false);
+        setReadyRaw(true);
       },
     },
     {
       title: tt("The point", "Das Wichtigste"),
-      say: tt(`Each trigger names a figure, a number found from today and the aim, a month and one action the owner takes alone. Try the other items.`, `Jeder Trigger nennt eine Zahl, einen aus heute und Ziel gefundenen Wert, einen Monat und eine Aktion, die der Owner allein tut. Probieren Sie die anderen Punkte.`),
-      look: tt("the Owner and Trigger lines under the rows", "die Zeilen Owner und Trigger unter den Reihen"),
+      say: tt("Measured, but on data only 78% tracked, the chat would learn the gaps. Base first, then an engine on ready data. Try the two buttons.", "Gemessen, aber auf nur zu 78 % erfassten Daten würde der Chat die Lücken lernen. Zuerst die Basis, dann eine Engine auf bereiten Daten. Probieren Sie die beiden Schaltflächen."),
+      look: tt("the data note under the chat", "den Datenvermerk unter dem Chat"),
       apply: () => {
-        setSelRaw("score");
+        setMeasFirstRaw(true);
+        setReadyRaw(false);
       },
     },
   ]);
-  const setSel = (v: string) => {
+  const setMeasFirst = (v: boolean) => {
     story.leave();
-    setSelRaw(v);
+    setMeasFirstRaw(v);
   };
-  const r = I_ARCH.find((x) => x.id === sel)!;
-  const X = (m: number) => 250 + (m - 1) * 76;
+  const setReady = (v: boolean) => {
+    story.leave();
+    setReadyRaw(v);
+  };
+  const dataPct = ready ? 93 : 78;
+  const dataOk = dataPct >= 80;
   return (
     <div className="space-y-3">
-      <ThePoint>{tt("A plan is a few items in an order, each with one owner and a trigger. The live view starts first, because every other item is read off it.", "Ein Plan sind wenige Punkte in einer Reihenfolge, jeder mit einem Owner und einem Trigger. Die Live-Sicht startet zuerst, weil jeder andere Punkt daran abgelesen wird.")}</ThePoint>
+      <ThePoint>{tt("An architecture is built in order: the base first, then measurement, then the data, then the engines. Where a link in that chain is missing, the tool above it cannot be trusted.", "Eine Architektur wird der Reihe nach gebaut: zuerst die Basis, dann die Messung, dann die Daten, dann die Engines. Wo ein Glied dieser Kette fehlt, lässt sich dem Werkzeug darüber nicht trauen.")}</ThePoint>
       <Story steps={story.plan} step={story.step} onStep={story.go} />
-      <svg viewBox="0 0 560 170" className="mx-auto h-auto w-full max-w-[600px]" role="img" aria-labelledby={`${uid}-t ${uid}-d`}>
-        <title id={`${uid}-t`}>{tt("Elster's three funded items by start month", "Die drei finanzierten Punkte von Elster nach Startmonat")}</title>
-        <desc id={`${uid}-d`}>{I_ARCH.map((a) => `${a.name}: ${a.start}`).join(". ")}</desc>
-        {[1, 2, 3, 4].map((m) => (
-          <text key={m} x={X(m) + 37} y="14" textAnchor="middle" fontSize="11.5" fill={C.ash}>{`M${m}`}</text>
-        ))}
-        {I_ARCH.map((a, i) => {
-          const y = 24 + i * 44;
-          const on = a.id === sel;
-          return (
-            <g key={a.id} className="hit" role="button" tabIndex={0} aria-label={a.name} onClick={() => setSel(a.id)} onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && setSel(a.id)}>
-              {on && story.step !== null && <rect x="0" y={y + 2} width="556" height="32" rx="6" fill="none" stroke={C.amber} strokeWidth="2" strokeDasharray="5 4" className="anim-pulse" />}
-              <text x="4" y={y + 22} fontSize="12" fontWeight={on ? 800 : 600} fill={C.ink}>{a.name.length > 36 ? `${a.name.slice(0, 35)}…` : a.name}</text>
-              {[1, 2, 3, 4].map((m) => (
-                <rect key={m} className={m === a.start ? "hit-shape" : undefined} x={X(m) + 2} y={y + 6} width="72" height="24" rx="3" fill={m === a.start ? C.data : m > a.start ? C.tealSoft : C.paper} stroke={on && m === a.start ? C.amber : C.line} strokeWidth={on && m === a.start ? 2.5 : 1} />
-              ))}
-            </g>
-          );
-        })}
-      </svg>
-      <div className="space-y-1.5">
-        <p className="smallcaps">{tt("Read one item", "Einen Punkt lesen")}</p>
-        <Toggles<string> label={tt("Item", "Punkt")} value={sel} onChange={setSel} options={I_ARCH.map((a) => ({ id: a.id, label: a.name }))} />
+      <div role="group" aria-label={tt("Elster's chat and its base", "Der Chat von Elster und seine Basis")} className="mx-auto max-w-xl">
+        <div className="rounded-lg border border-dashed border-line bg-canvas px-3 py-1.5 text-center text-caption text-ash">{tt("What customers meet: the order page", "Was Kunden erleben: die Bestellseite")}</div>
+        <div className="my-1 flex h-7 items-center justify-center" aria-hidden />
+        <div className={clsx("rounded-lg border p-2 text-caption leading-snug", "border-signal bg-signalSoft")}>
+          <p className="font-semibold text-ink">{tt("Chat on the order page", "Chat auf der Bestellseite")}</p>
+          <p className="text-ash">{tt(measFirst ? "Starts in month 1" : "Starts in month 1, before the base", measFirst ? "Startet in Monat 1" : "Startet in Monat 1, vor der Basis")}</p>
+          {!measFirst && <p className="text-accent">{tt("nothing measures it yet", "noch misst es nichts")}</p>}
+          {!dataOk && <p className="text-accent">{tt(`its data is ${dataPct}% tracked, below 80%, when it starts`, `seine Daten sind zu ${dataPct} % erfasst, unter 80 %, wenn es startet`)}</p>}
+        </div>
+        <div className={clsx("flex h-7 items-center justify-center gap-2 text-micro normal-case tracking-normal", measFirst ? "text-ash" : "text-accent")}>
+          <span aria-hidden className={clsx("block h-full w-0 border-l-[3px]", measFirst ? "border-solid border-signal" : "border-dashed border-gold")} />
+          <span>{measFirst ? tt("measured", "gemessen") : tt("not measured", "nicht gemessen")}</span>
+        </div>
+        <div className={clsx("rounded-lg border p-2 text-caption leading-snug", measFirst ? "border-signal bg-signalSoft" : "border-signal bg-signalSoft")}>
+          <p className="font-semibold text-ink">{tt("Live view and KPI system", "Live-Sicht und KPI-System")}</p>
+          <p className="text-ash">{measFirst ? tt("Starts in month 1", "Startet in Monat 1") : tt("Starts in month 3, after the chat", "Startet in Monat 3, nach dem Chat")}</p>
+        </div>
+        <div className="flex h-7 items-center justify-center gap-2 text-micro normal-case tracking-normal text-ash">
+          <span aria-hidden className="block h-full w-0 border-l-[3px] border-solid border-signal" />
+          <span>{tt("raw data flows up", "Rohdaten fließen nach oben")}</span>
+        </div>
+        <div className="rounded-lg border border-dashed border-line bg-canvas px-3 py-1.5 text-center text-caption text-ash">{tt(`Where the data lives: CRM and website, ${dataPct}% of what the chat needs is tracked`, `Wo die Daten liegen: CRM und Website, ${dataPct} % dessen, was der Chat braucht, sind erfasst`)}</div>
       </div>
-      <div className="rounded-lg border border-line bg-paper p-3.5 text-caption" aria-live="polite">
-        <p className="smallcaps">{r.name}</p>
-        <p className="mt-1">
-          <span className="font-semibold text-ink">Owner. </span>
-          {r.owner}
-        </p>
-        <p className="mt-1">
-          <span className="font-semibold text-ink">Trigger. </span>
-          <Gloss>{r.trigger}</Gloss>
-        </p>
-        <p className="mt-1 text-ash">{r.why}</p>
+      <div className="space-y-1.5">
+        <p className="smallcaps">{tt("Two things to change", "Zwei Dinge zum Ändern")}</p>
+        <Toggles<string> label={tt("Measurement starts", "Die Messung startet")} value={measFirst ? "first" : "after"} onChange={(v) => setMeasFirst(v === "first")} options={[{ id: "first", label: tt("Before the chat", "Vor dem Chat") }, { id: "after", label: tt("After the chat", "Nach dem Chat") }]} />
+        <Toggles<string> label={tt("Data behind the chat", "Daten hinter dem Chat")} value={ready ? "ready" : "weak"} onChange={(v) => setReady(v === "ready")} options={[{ id: "ready", label: tt("93% tracked", "93 % erfasst") }, { id: "weak", label: tt("78% tracked", "78 % erfasst") }]} />
       </div>
       <Insight>{plain()}
-        {tt("The live view starts first, together with the chat on the well-tracked order page, because every other item is measured by it and every week of waiting costs orders. Each item has one owner who can change it alone and a trigger with a number, a date and an action. Elster left out an all-in-one experience platform on purpose: it would have taken fourteen weeks, and nobody at Elster could have explained or measured it.", "Die Live-Sicht startet zuerst, zusammen mit dem Chat auf der gut erfassten Bestellseite, weil jeder andere Punkt daran gemessen wird und jede Woche Warten Bestellungen kostet. Jeder Punkt hat einen Owner, der ihn allein ändern kann, und einen Trigger mit Zahl, Datum und Aktion. Elster hat eine All-in-one-Experience-Plattform bewusst weggelassen: Sie hätte vierzehn Wochen gebraucht, und niemand bei Elster hätte sie erklären oder messen können.")}
+        {measFirst && dataOk
+          ? tt("The base exists before the tool and the tool runs on data that is ready. Elster can say whether the chat closes more requests, and its data does not teach it gaps. This is what a plan that holds looks like.", "Die Basis steht vor dem Werkzeug, und das Werkzeug läuft auf bereiten Daten. Elster kann sagen, ob der Chat mehr Anfragen abschließt, und seine Daten lehren ihn keine Lücken. So sieht ein Plan aus, der hält.")
+          : !measFirst
+            ? tt("The chat starts before anything can measure it. Its link to the base is dashed: Elster would pay for a tool and never know whether it works. The fix is the order: the live view and KPI system first.", "Der Chat startet, bevor etwas ihn messen kann. Seine Verbindung zur Basis ist gestrichelt: Elster würde für ein Werkzeug zahlen und nie wissen, ob es wirkt. Die Lösung ist die Reihenfolge: zuerst Live-Sicht und KPI-System.")
+            : tt("It is measured, but its data is only 78% tracked, below the 80% an engine should start on. It would learn the gaps. The fix is to clean the data first, or to hold the engine back until it is ready.", "Er wird gemessen, aber seine Daten sind nur zu 78 % erfasst, unter den 80 %, auf denen eine Engine starten sollte. Er würde die Lücken lernen. Die Lösung ist, zuerst die Daten zu bereinigen oder die Engine zurückzuhalten, bis sie bereit sind.")}
       </Insight>
     </div>
   );

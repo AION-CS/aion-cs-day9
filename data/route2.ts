@@ -132,44 +132,13 @@ export const ARCH: ArchItem[] = bi([
   { id: "relaunch" as ArchId, name: t("Website relaunch", "Relaunch der Website"), what: t("A new design for every page.", "Ein neues Design für jede Seite."), cost: 80000, weeks: 16, blackBox: false },
 ]);
 export const ARCH_BY_ID = Object.fromEntries(ARCH.map((a) => [a.id, a])) as Record<ArchId, ArchItem>;
-export const BASELINE_ITEM: ArchId = "foundation";
-
-export type OwnerId = "cdo" | "datalead" | "cslead" | "saleslead" | "it";
-export const OWNER_IDS: OwnerId[] = ["cdo", "datalead", "cslead", "saleslead", "it"];
-export const OWNERS = bi({
-  cdo: { name: t("Chief Digital Officer (you)", "Chief Digital Officer (Sie)"), profile: t("Decides across teams and answers to the board. Should hold few items.", "Entscheidet über Teams hinweg und berichtet an den Vorstand. Sollte wenige Punkte halten.") },
-  datalead: { name: t("Head of Data & Analytics", "Leitung Data & Analytics"), profile: t("Owns the data, the KPIs and their definitions, the live screen and the test routine.", "Verantwortet die Daten, die KPIs und ihre Definitionen, den Live-Bildschirm und die Test-Routine.") },
-  cslead: { name: t("Head of Marketing", "Marketingleitung"), profile: t("Owns the website, the chat content, the campaigns and the social media pages.", "Verantwortet die Website, die Chat-Inhalte, die Kampagnen und die Social-Media-Seiten.") },
-  saleslead: { name: t("Head of Sales", "Vertriebsleitung"), profile: t("Leads the salespeople who take over chats, call back and close.", "Führt die Vertriebsleute, die Chats übernehmen, zurückrufen und abschließen.") },
-  it: { name: t("Head of IT", "IT-Leitung"), profile: t("Owns the systems, the interfaces between them, tracking and consent.", "Verantwortet die Systeme, die Schnittstellen dazwischen, Erfassung und Einwilligung.") },
-});
-export const OWNER_ACCEPT: Record<ArchId, OwnerId[]> = {
-  foundation: ["datalead", "it"],
-  chat: ["cslead", "saleslead"],
-  personal: ["cslead", "datalead"],
-  routing: ["saleslead", "cdo"],
-  training: ["saleslead"],
-  tracking: ["it", "datalead"],
-  suite: ["cdo", "cslead"],
-  relaunch: ["cslead"],
-};
-export const MODEL_ARCH: ArchId[] = ["foundation", "chat", "personal", "routing", "training", "tracking"];
-export const MODEL_START: Partial<Record<ArchId, number>> = { foundation: 1, chat: 1, routing: 1, tracking: 1, personal: 2, training: 2 };
-export const MODEL_TRIGGER = bi({
-  foundation: t("If the live screen does not show response time, interaction and closings for every channel by the end of month 1, the personalisation waits until it does.", "Zeigt der Live-Bildschirm bis Ende Monat 1 nicht Antwortzeit, Interaktion und Abschlüsse für jeden Kanal, wartet die Personalisierung, bis er es tut."),
-  chat: t("If more than 20% of chats are rated “not helpful” in any week, marketing rewrites the five worst answers before the chat is widened.", "Werden in einer Woche mehr als 20 % der Chats als „nicht hilfreich“ bewertet, schreibt das Marketing die fünf schlechtesten Antworten neu, bevor der Chat ausgeweitet wird."),
-  personal: t("If the interaction rate of personalised pages is not at least 1.2 times the standard pages' on 100 interactions per group by month 3, the rules are changed before any rollout.", "Liegt die Interaktionsrate personalisierter Seiten bis Monat 3 bei 100 Interaktionen pro Gruppe nicht bei mindestens dem 1,2-Fachen der Standardseiten, werden die Regeln vor jedem Rollout geändert."),
-  routing: t("If the first response time on decision pages is above 5 minutes in any week, the Head of Sales moves a second person onto the chat.", "Liegt die erste Antwortzeit auf Entscheidungsseiten in einer Woche über 5 Minuten, setzt die Vertriebsleitung eine zweite Person auf den Chat."),
-  training: t("If fewer than 80% of chat hand-overs are taken within two minutes by month 2, the training is repeated in the team.", "Werden bis Monat 2 weniger als 80 % der Chat-Übergaben innerhalb von zwei Minuten angenommen, wird das Training im Team wiederholt."),
-  tracking: t("If tracking on onboarding and renewal is still below 80% by month 3, those points stay out of the real-time system this half-year.", "Liegt die Erfassung bei Onboarding und Verlängerung bis Monat 3 noch unter 80 %, bleiben diese Punkte dieses Halbjahr außerhalb des Echtzeitsystems."),
-});
 
 /* ------------------------------------------------------------------ 3.6 · a decision under time pressure and uncertain data */
 
 export type DecisionId = "commit" | "stage" | "wait";
 export const DECISIONS = bi([
   { id: "commit" as DecisionId, label: t("Launch everything at once in month 1", "Alles auf einmal in Monat 1 starten"), detail: t("Buy the all-in-one platform, switch on chat, personalisation and offers everywhere, and relaunch the site in parallel.", "Die All-in-one-Plattform kaufen, Chat, Personalisierung und Angebote überall einschalten und parallel die Website neu starten."), why: t("Fast on paper, and it defends only if the platform works on LiveConnect's incomplete data from day one.", "Auf dem Papier schnell, und nur vertretbar, wenn die Plattform vom ersten Tag an mit den unvollständigen Daten von LiveConnect funktioniert."), rejected: t("The budget is spent before any KPI shows what works, and the relaunch and the platform take longer than the four months.", "Das Budget ist ausgegeben, bevor ein KPI zeigt, was wirkt, und Relaunch und Plattform brauchen länger als die vier Monate.") },
-  { id: "stage" as DecisionId, label: t("Decide now: fix the slowest decision points first, with a tripwire", "Jetzt entscheiden: zuerst die langsamsten Entscheidungspunkte beheben, mit Tripwire"), detail: t("Start in month 1 with the live view, the chat and response standards on the well-tracked decision pages; add personalisation in month 2; scale only if the tripwire is met.", "In Monat 1 mit Live-Sicht, Chat und Antwortstandards auf den gut erfassten Entscheidungsseiten starten; in Monat 2 die Personalisierung ergänzen; nur skalieren, wenn der Tripwire erreicht ist."), why: t("It acts within weeks where the data is good enough and the delay costs most, and it measures before it spends the rest.", "Es handelt innerhalb von Wochen dort, wo die Daten gut genug sind und die Verzögerung am meisten kostet, und misst, bevor es den Rest ausgibt."), rejected: t("", "") },
+  { id: "stage" as DecisionId, label: t("Decide now, build in stages, and watch one figure", "Jetzt entscheiden, stufenweise bauen, und eine Zahl beobachten"), detail: t("Start in month 1 with the live view, the chat and response standards on the well-tracked decision pages; add personalisation once the tracking is clean; scale only if the figure you watch moves.", "In Monat 1 mit Live-Sicht, Chat und Antwortstandards auf den gut erfassten Entscheidungsseiten starten; die Personalisierung ergänzen, sobald die Erfassung sauber ist; nur skalieren, wenn sich die Zahl bewegt, die Sie beobachten."), why: t("It acts within weeks where the data is good enough and the delay costs most, and it measures before it spends the rest.", "Es handelt innerhalb von Wochen dort, wo die Daten gut genug sind und die Verzögerung am meisten kostet, und misst, bevor es den Rest ausgibt."), rejected: t("", "") },
   { id: "wait" as DecisionId, label: t("Wait until the data is complete", "Warten, bis die Daten vollständig sind"), detail: t("Spend the four months on tracking every channel before any real-time measure starts.", "Die vier Monate damit verbringen, jeden Kanal zu erfassen, bevor irgendeine Echtzeit-Maßnahme startet."), why: t("", ""), rejected: t("The brief asks for a decision under time pressure. Waiting keeps every answer slow for four more months, while the decision pages are already tracked well enough.", "Der Auftrag verlangt eine Entscheidung unter Zeitdruck. Warten hält jede Antwort vier weitere Monate langsam, obwohl die Entscheidungsseiten schon gut genug erfasst sind.") },
 ]);
 export const MODEL_DECISION: DecisionId = "stage";
@@ -183,11 +152,3 @@ export const KPIS = bi([
   { id: "emails" as KpiId, label: t("Social media posts per month", "Social-Media-Posts pro Monat"), unit: t("posts", "Posts"), baseline: 40, better: "up" as const, behaviour: false },
 ]);
 export const KPI_BY_ID = Object.fromEntries(KPIS.map((k) => [k.id, k])) as Record<KpiId, (typeof KPIS)[number]>;
-export const MODEL_TRIPWIRE = { kpi: "conv" as KpiId, threshold: 9, month: 4 };
-export const R2_BASELINE_NOTE = bi({ v: t("Baselines are Case assumptions from LiveConnect's CRM, website and chat data of the last twelve months.", "Die Ausgangswerte sind Fallannahmen aus den CRM-, Website- und Chatdaten von LiveConnect der letzten zwölf Monate.") });
-export const BOARD_CHALLENGE = bi({
-  v: t(
-    "It is month 2. The chat is live: the first response time fell from 4 hours to 2 minutes, but the closing rate only rose from 6.0% to 6.3%, and 20% of chats are rated “not helpful”. The Head of Sales wants to switch the chatbot off and hire two more callers; marketing wants to buy the all-in-one AI platform. The board asks what you do.",
-    "Es ist Monat 2. Der Chat läuft: Die erste Antwortzeit fiel von 4 Stunden auf 2 Minuten, aber die Abschlussquote stieg nur von 6,0 % auf 6,3 %, und 20 % der Chats werden als „nicht hilfreich“ bewertet. Die Vertriebsleitung will den Chatbot abschalten und zwei weitere Anrufer einstellen; das Marketing will die All-in-one-KI-Plattform kaufen. Der Vorstand fragt, was Sie tun.",
-  ),
-});

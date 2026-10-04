@@ -5,19 +5,16 @@ import { BUDGET, EVIDENCE_LABEL, MEASURES, MODEL_COST, MODEL_MEASURES, PROBLEM_L
 import {
   ACTION_LABEL,
   ARCH_BY_ID,
+  ARCH_IDS,
   COMPS,
   COMP_BY_ID,
   CRIT_IDS,
   DECISIONS,
   KPIS,
   LOGIC_OWNER_LABEL,
-  MODEL_ARCH,
   MODEL_COMPS,
   MODEL_DECISION,
   MODEL_GREATEST,
-  MODEL_TRIPWIRE,
-  OWNERS,
-  OWNER_ACCEPT,
   OWNER_ACCEPT_LOGIC,
   PRINCIPLES,
   PRINCIPLE_IDS,
@@ -31,6 +28,8 @@ import {
   useOf,
 } from "@/data/route2";
 import type { ArchId } from "@/data/route2";
+import { MODEL_ARCH, MODEL_TIER, PANEL, TIER_LABEL } from "@/data/route2Panel";
+import { planOf, rangeOf } from "@/lib/r2Panel";
 import { MODEL_ORDER } from "@/data/mentorKey";
 import { euro } from "@/lib/lang";
 
@@ -236,42 +235,32 @@ export function logicKey(): AnswerKeyBlock {
   };
 }
 
-export function ownerKey(funded: ArchId[]): AnswerKeyBlock {
-  const ids = funded.length ? funded : MODEL_ARCH;
+export function architectureKey(): AnswerKeyBlock {
+  const spent = MODEL_ARCH.reduce((x, id) => x + ARCH_BY_ID[id].cost, 0);
+  const alt = { ...MODEL_TIER, personal: "now" as const };
+  const why: Record<ArchId, string> = {
+    foundation: "Now. Every other item is read off it; it starts in month 1, no later than the first engine (the test “measurement comes first”).",
+    routing: "Now. €15,000 for 3 weeks: who answers each central point within how long, and when a person takes over. It makes speed a standard, not a matter of chance.",
+    tracking: "Now. It closes the tracking gaps personalisation needs (onboarding, renewal, social media), within consent. It is also what lets “After data is ready” start.",
+    training: "Now. €20,000 for 3 weeks so the sales team can take over a chat within minutes. A defensible cut if the learner needs the room, and then the reading says so.",
+    chat: "Now. Its data is 85% tracked (70% if the data is weaker: it then rests on data below 80%, which is why Step B asks what the learner watches).",
+    personal: "After data is ready. Its data is only 50% tracked; with the tracking clean-up Now it starts in month 2 and is in use in month 4, inside the four months. Now is possible too, but it starts in month 1 on data below 80% and the data test opens.",
+    suite: "Not now. A black box: no KPI it moves, its results are not shown, €90,000 takes the plan over the budget, and at 14 weeks it is in use only in month 5. Two tests open (purpose, budget and months).",
+    relaunch: "Not now. A new design for every page names no KPI, takes 16 weeks (in use in month 5, after the four months) and €80,000 would push the plan over the budget.",
+  };
   return {
-    title: "Block 3.5 · Owners, sequence and funding",
-    expected: `Model: ${MODEL_ARCH.map((id) => `${ARCH_BY_ID[id].name} (${OWNERS[OWNER_ACCEPT[id][0]].name})`).join(", ")} · ${euro(MODEL_ARCH.reduce((s, id) => s + ARCH_BY_ID[id].cost, 0))}`,
-    options: ids.map((id) => ({
-      label: `${ARCH_BY_ID[id].name} → ${OWNER_ACCEPT[id].map((o) => OWNERS[o].name).join(" or ")}`,
-      expected: true,
-      why:
-        id === "foundation"
-          ? "Head of Data (or IT, who owns the interfaces). It starts first: every other item is measured by it."
-          : id === "suite"
-            ? "A black box: nobody at LiveConnect can explain or measure it, and it takes fourteen weeks. Funding it breaks the third rule; the check flags it."
-            : id === "relaunch"
-              ? "Sixteen weeks: too slow for four months, and €80,000 would push the plan over."
-              : `The owner who can change it without asking anyone: ${OWNERS[OWNER_ACCEPT[id][0]].profile}`,
-    })),
-    teachingNote: `The check tests three rules: the live view starts no later than the first other item, total within ${euro(R2_BUDGET)}, nothing funded is a black box. Owners are not checked by the app; use this key. Leaving out the training instead of the tracking clean-up defends if the learner argues that the salespeople already answer fast once routed.`,
+    title: "Step A · The architecture: when does each item happen?",
+    expected: `Model: Now ${MODEL_ARCH.filter((id) => MODEL_TIER[id] === "now").map((id) => PANEL[id].short).join(", ")} · After data ${MODEL_ARCH.filter((id) => MODEL_TIER[id] === "later").map((id) => PANEL[id].short).join(", ")} (${euro(spent)} of ${euro(R2_BUDGET)}) · Not now ${ARCH_IDS.filter((id) => MODEL_TIER[id] === "not").map((id) => PANEL[id].short).join(", ")}`,
+    options: ARCH_IDS.map((id) => ({ label: `${PANEL[id].short} → ${TIER_LABEL[MODEL_TIER[id]]}`, expected: MODEL_TIER[id] !== "not", why: why[id] })),
+    teachingNote: `The panel shows four tests as facts, none a verdict, and the learner decides. A different, well-reasoned set is acceptable (CLAUDE.md #38): for example personalisation Now (the data test opens, ${planOf({ tier: alt }, 0).holding} of ${planOf({ tier: alt }, 0).applicable} tests hold), the training cut to make room, or going over the budget with a reason. Doing nothing (no item Now) is incomplete, not wrong: the missing list asks for at least one. The model set holds all four tests in the brief's data and opens the data test when the data is 15 points weaker (the chat, ${rangeOf({ tier: MODEL_TIER }).risk[1]}% of the money at risk).`,
   };
 }
 
 export function decisionKey(): AnswerKeyBlock {
   return {
-    title: "Block 3.6 · The decision under time pressure",
+    title: "Step B · The decision under time pressure",
     expected: DECISIONS.find((d) => d.id === MODEL_DECISION)!.label,
     options: DECISIONS.map((d) => ({ label: d.label, expected: d.id !== "wait", why: d.id === MODEL_DECISION ? d.why : d.id === "commit" ? `${d.why} ${d.rejected}` : d.rejected })),
-    teachingNote: "“Launch everything” and “Stage it” are both decisions, with different reasoning; the check outlines only “Wait”, because the brief asks for a decision under time pressure. Push a learner who launches everything on how the relaunch fits into four months.",
-  };
-}
-
-export function tripKey(): AnswerKeyBlock {
-  const k = KPIS.find((x) => x.id === MODEL_TRIPWIRE.kpi)!;
-  return {
-    title: "Block 3.6 · The tripwire",
-    expected: `${k.label} ≥ ${MODEL_TRIPWIRE.threshold}% by month ${MODEL_TRIPWIRE.month}, else adjust one rule`,
-    options: KPIS.map((x) => ({ label: `${x.label} (baseline ${x.baseline}${x.unit === "%" ? "%" : ` ${x.unit}`})`, expected: x.behaviour, why: x.behaviour ? "How customers behave: the result the system is meant to move." : "Counts LiveConnect's own output, not how customers responded." })),
-    teachingNote: "Any customer metric with a threshold better than its baseline defends. First response time is the tempting one: it is our speed, a good trigger for the routing item in 3.5, and the wrong tripwire for whether customers buy.",
+    teachingNote: "“Launch everything” and “Stage it” are both decisions, with different reasoning; the plan rejects only “Wait”, because the brief asks for a decision under time pressure: the decision pages are tracked well enough to act on, and every answer stays slow meanwhile. All three stay selectable. The panel shows one plain hint when the decision and Step A disagree (wait while Step A builds; launch everything while Step A leaves the platform or the relaunch out) and the learner explains the contradiction in their reason. Push a learner who launches everything on how the relaunch and the platform fit into four months.",
   };
 }

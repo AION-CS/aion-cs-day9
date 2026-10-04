@@ -107,11 +107,13 @@ eq("interaction point decisions by the rule", r2.SOURCES.map((s) => r2.useOf(s))
 eq("test decisions by the rule", r2.SITUATIONS.map((s) => r2.actionOf(s)), ["intervene", "watch", "none", "watch", "none", "intervene"]);
 for (const c of r2.COMPS) for (const k of r2.CRIT_IDS) ok(`model rating within the printed limit (${c.id}.${k})`, c.model[k] <= r2.maxRating(c.id, k));
 ok("model KPIs all show a change early", checks.earlyCount(r2.MODEL_COMPS) === r2.MODEL_COMPS.length);
-const archCost = r2.MODEL_ARCH.reduce((s, id) => s + r2.ARCH_BY_ID[id].cost, 0);
-eq("model architecture cost", archCost, 180000);
-ok("model architecture inside the budget", archCost <= r2.R2_BUDGET);
-ok("adding the experience suite breaks the budget", archCost + r2.ARCH_BY_ID.suite.cost > r2.R2_BUDGET);
-ok("the tripwire is better than today's baseline", r2.MODEL_TRIPWIRE.threshold > r2.KPI_BY_ID[r2.MODEL_TRIPWIRE.kpi].baseline);
+const pnl = require("@/data/route2Panel");
+const rpl = require("@/lib/r2Panel");
+const modelCost = pnl.MODEL_ARCH.reduce((x, id) => x + r2.ARCH_BY_ID[id].cost, 0);
+eq("model architecture cost", modelCost, 180000);
+ok("model architecture inside the budget", modelCost <= r2.R2_BUDGET);
+ok("adding the all-in-one platform breaks the budget", modelCost + r2.ARCH_BY_ID.suite.cost > r2.R2_BUDGET);
+eq("the model plan keeps the platform and the relaunch out", r2.ARCH_IDS.filter((id) => pnl.MODEL_TIER[id] === "not"), ["suite", "relaunch"]);
 
 // --- Measures: category, scene, who (CLAUDE.md #45, #46) ---------------------------------------
 const AREAS = Object.keys(meas.MEASURE_AREA_LABEL);
@@ -180,65 +182,140 @@ for (const id of meas.MODEL_MEASURES) {
 ok("the KPI guide carries a worked example on another company", mg.misreadGuide().example.length > 100);
 ok("the why guide carries a worked example on another company", mg.whyGuide().example.length > 100);
 
-// --- Route 2: the shown numbers, Core independence, Core-only fill (CLAUDE.md #44, #40, #35, #38) ----------------
+// --- Route 2 (CLAUDE.md #47): the panel's figures, the tests, the categories, Core independence, Core-only fill ----------------
 {
-  const rn = require("@/lib/r2Numbers");
-  const ex = require("@/data/route2Extra");
+  const T = (tier) => ({ tier });
+  const MODEL = pnl.MODEL_TIER;
+  const testOf = (plan, id) => plan.tests.find((x) => x.id === id);
+
+  // what Step A prints in Core equals what Block 3.2 prints (CLAUDE.md #40)
+  eq("tracked share of the chat printed in Core equals Block 3.2's live chat", pnl.PANEL.chat.data, r2.SOURCES.find((x) => x.id === "chat").complete);
+  eq("tracked share of personalisation printed in Core equals Block 3.2's renewal notice", pnl.PANEL.personal.data, r2.SOURCES.find((x) => x.id === "renewal").complete);
+
+  // the model plan, recomputed by hand: 40+40+45+15+20+20 = 180,000; measured items 40+40+45 = 125,000 (69%); weaker data: the chat drops to 70%, so 40+45 = 85,000 (47%) and the chat's 40,000 is at risk (22%)
+  const m0 = rpl.planOf(T(MODEL), 0);
+  const m1 = rpl.planOf(T(MODEL), 1);
+  eq("model plan: every test holds with the brief's data", [m0.holding, m0.applicable], [4, 4]);
+  eq("model plan: only the data test opens when the data is 15 points weaker", m1.tests.map((x) => x.holds), [true, true, false, true]);
+  eq("model bars: money, Measurable and Risk (brief, then weaker data)", [m0.bars.spent, m0.bars.meas, m0.bars.risk, m1.bars.meas, m1.bars.risk], [180000, 69, 0, 47, 22]);
+  eq("model plan: months in use (start + weeks ÷ 4, rounded up)", pnl.MODEL_ARCH.map((id) => rpl.inUseOf(T(MODEL), id)), [3, 2, 4, 2, 2, 2]);
+  eq("the Measurable and Risk ranges", [rpl.rangeOf(T(MODEL)).meas, rpl.rangeOf(T(MODEL)).risk], [[69, 47], [0, 22]]);
+
+  // time and data rules
+  const base = { foundation: "now", tracking: "now" };
+  ok("personalisation Now starts in month 1 on data 50% tracked: the data test opens", !testOf(rpl.planOf(T({ ...base, personal: "now" }), 0), "data").holds);
+  eq("personalisation After data starts when the clean-up is in use and is in use by month 4", [rpl.startOf(T({ ...base, personal: "later" }), "personal"), rpl.inUseOf(T({ ...base, personal: "later" }), "personal")], [2, 4]);
+  ok("personalisation After data: the data and budget tests hold", testOf(rpl.planOf(T({ ...base, personal: "later" }), 0), "data").holds && testOf(rpl.planOf(T({ ...base, personal: "later" }), 0), "budget").holds);
+  ok("After data without a tracking clean-up never starts", rpl.planOf(T({ foundation: "now", personal: "later" }), 0).items.personal.never);
+  ok("measurement after an engine opens the measurement test", !testOf(rpl.planOf(T({ foundation: "later", tracking: "now", chat: "now" }), 0), "measure").holds);
+  ok("an engine without the live view opens the measurement test", !testOf(rpl.planOf(T({ chat: "now" }), 0), "measure").holds);
+  ok("the all-in-one platform opens the purpose test", !testOf(rpl.planOf(T({ ...base, suite: "now" }), 0), "purpose").holds);
+  ok("the relaunch opens the purpose test", !testOf(rpl.planOf(T({ ...base, relaunch: "now" }), 0), "purpose").holds);
+  eq("the platform (14 weeks) and the relaunch (16 weeks) are in use only in month 5 and open the budget test", [rpl.inUseOf(T({ suite: "now" }), "suite"), rpl.inUseOf(T({ relaunch: "now" }), "relaunch"), !testOf(rpl.planOf(T({ ...base, relaunch: "now" }), 0), "budget").holds], [5, 5, true]);
+  ok("going over the budget opens the budget test and is never a missing item", !testOf(rpl.planOf(T(Object.fromEntries(r2.ARCH_IDS.map((id) => [id, "now"]))), 0), "budget").holds);
+  eq("with everything Now only the platform and the relaunch are late", Object.values(rpl.planOf(T(Object.fromEntries(r2.ARCH_IDS.map((id) => [id, "now"]))), 0).items).filter((v) => v.late).map((v) => v.id), ["suite", "relaunch"]);
+
+  // the three internal categories (never shown to the learner)
+  eq("category of the model plan", rpl.categoryOf(T(MODEL), 0).cat, 1);
+  eq("category: nothing built", rpl.categoryOf(T({}), 0).cat, 3);
+  eq("category: tools without the base", rpl.categoryOf(T({ chat: "now", suite: "now" }), 0).cat, 3);
+  eq("category: a base, but measurement after the engine", rpl.categoryOf(T({ foundation: "later", tracking: "now", chat: "now" }), 0).cat, 2);
+  eq("category: the base alone is safe", rpl.categoryOf(T({ foundation: "now" }), 0).cat, 1);
+  eq("category: enablers only, no base", rpl.categoryOf(T({ training: "now" }), 0).cat, 2);
+  eq("category: model plus the platform is fair", rpl.categoryOf(T({ ...MODEL, suite: "now" }), 0).cat, 2);
+
+  // the changes the reading names
+  eq("the model plan needs no change", rpl.changesFor(T(MODEL), 0).changes.length, 0);
+  const sOnly = rpl.changesFor(T({ suite: "now" }), 0);
+  eq("a platform-only plan: build the base, drop the platform", sOnly.changes.map((c) => `${c.id}:${c.to}`), ["foundation:now", "suite:not"]);
+  ok("after those changes every test holds and the category is 1", sOnly.after.holding === sOnly.after.applicable && rpl.categoryOf(T({ foundation: "now" }), 0).cat === 1);
+  const nothing = rpl.changesFor(T({}), 0);
+  eq("an empty plan: the base and one engine on ready data", nothing.changes.map((c) => `${c.id}:${c.to}`), ["foundation:now", "chat:now"]);
+  const everything = rpl.changesFor(T(Object.fromEntries(r2.ARCH_IDS.map((id) => [id, "now"]))), 0);
+  eq("everything Now: drop the platform and the relaunch, personalisation After data", everything.changes.map((c) => `${c.id}:${c.to}`), ["suite:not", "relaunch:not", "personal:later"]);
+  ok("a plan with everything Now is brought inside the budget, each item changed once", everything.after.bars.over === 0 && new Set(everything.changes.map((c) => c.id)).size === everything.changes.length);
+  const tiersOf = (ch, start) => { const o = { ...start }; for (const c of ch.changes) o[c.id] = c.to; return o; };
+  eq("applying the changes of an empty plan gives category 1", rpl.categoryOf(T(tiersOf(nothing, {})), 0).cat, 1);
+  eq("applying the changes of the everything-Now plan gives category 1", rpl.categoryOf(T(tiersOf(everything, Object.fromEntries(r2.ARCH_IDS.map((id) => [id, "now"])))), 0).cat, 1);
+
+  // Step B: categories (mentor only) and the plain hint when Step B and Step A disagree
+  const dr = (decision, tier) => rpl.decisionReading({ tier, decision }, 0);
+  eq("decision categories: stage, wait, launch everything (with and without a base)", [dr("stage", MODEL).cat, dr("wait", MODEL).cat, dr("commit", MODEL).cat, dr("commit", {}).cat], [1, 2, 2, 3]);
+  ok("no decision, no reading", rpl.decisionReading({ tier: MODEL, decision: null }, 0) === null);
+  ok("waiting while Step A builds gets a plain hint", !!rpl.decisionHint({ tier: MODEL, decision: "wait" }));
+  ok("launching everything while Step A leaves the platform and the relaunch out gets a plain hint", !!rpl.decisionHint({ tier: MODEL, decision: "commit" }));
+  ok("staging with the model plan gets no hint", rpl.decisionHint({ tier: MODEL, decision: "stage" }) === null);
+
+  // texts in both languages, and the learner never reads the category
   for (const l of ["en", "de"]) {
     lang.setCurrentLang(l);
-    for (const id of r2.ARCH_IDS) {
-      const x = ex.ARCH_EXTRA[id];
-      ok(`[${l}] item ${id} prints a scene, a metric, a reason and two actions`, x.scene.length > 60 && x.metric.length > 15 && x.reason.length > 10 && x.actions.length >= 2 && x.actions.every((a) => a.text.length > 10 && a.why.length > 30));
-      const n = rn.triggerNumber(id);
-      ok(`[${l}] trigger number of ${id} lies between today and the aim`, n > Math.min(x.today, x.aim) && n < Math.max(x.today, x.aim), `today ${x.today}, aim ${x.aim}, halfway ${n}`);
-      const s0 = rn.triggerSentence(id);
-      ok(`[${l}] model trigger of ${id} names a number and a month no later than month ${r2.R2_MONTHS}`, checks.hasNumber(s0) && rn.monthOf(id, rn.modelStart(id)) <= r2.R2_MONTHS, s0);
+    for (const tier of [MODEL, {}, { chat: "now", suite: "now" }, { ...base, personal: "now" }, Object.fromEntries(r2.ARCH_IDS.map((id) => [id, "now"]))]) {
+      const plan = rpl.planOf(T(tier), 1);
+      const rd = rpl.readingOf(T(tier), 1);
+      const fix = rpl.changesFor(T(tier), 1);
+      const learnerText = [rpl.standingOf(T(tier), 1), ...rd.gives, ...rd.costs, ...fix.changes.map((c) => c.text), ...plan.tests.flatMap((x) => [x.name, x.rule, ...x.open.flatMap((o) => [o.fact, o.rule, ...o.ways])]), ...Object.values(plan.items).flatMap((v) => v.notes)].join(" | ");
+      ok(`[${l}] the reading, the changes and the tests are written`, rd.gives.length > 0 && rpl.standingOf(T(tier), 1).length > 40 && plan.tests.every((x) => x.name.length > 8 && x.rule.length > 30));
+      ok(`[${l}] the learner text never names a category`, !/categor|Kategorie|clearly wrong|eindeutig falsch/i.test(learnerText));
     }
-    for (let i = 0; i < ex.ASSUMPTION_KIT.length; i++) {
-      const a = rn.assumptionSign(i);
-      ok(`[${l}] assumption ${i + 1} has a sign with a number and a month within the plan`, checks.hasNumber(a.text) && a.month >= 1 && a.month <= r2.R2_MONTHS, a.text);
-      ok(`[${l}] assumption ${i + 1} sign rests on a behaviour figure, not a market figure`, ex.ASSUMPTION_KIT[i].kind === "item" || r2.KPI_BY_ID[ex.ASSUMPTION_KIT[i].ref].behaviour);
+    for (const id of ["stage", "wait", "commit"]) {
+      const d = dr(id, MODEL);
+      ok(`[${l}] the reading of the decision “${id}” is written and ends in a change`, d.text.length > 40 && d.change.length > 30 && !/categor|Kategorie/i.test(d.text + d.change));
     }
-    const pick = rn.pickupSentence(ex.MODEL_PICKUP);
-    ok(`[${l}] the model pickup point names a count and a month`, checks.hasNumber(pick) && rn.paybackCount(ex.MODEL_PICKUP) >= 1, pick);
-    ok(`[${l}] the pickup item is one the model plan leaves out`, !r2.MODEL_ARCH.includes(ex.MODEL_PICKUP));
   }
   lang.setCurrentLang("en");
-  const mk = r2.MODEL_TRIPWIRE;
-  eq("the model tripwire threshold is halfway between today and the aim", [mk.threshold, mk.month <= r2.R2_MONTHS], [rn.tripNumber(mk.kpi), true]);
 
   // Core never reads Optional (3.1 to 3.4, cards B1 to B4)
   const OPT2 = /Block 3\.[1-4]\b|Materi B[1-4]\b/;
-  for (const fn of ["Block35", "Block36"]) ok(`${fn} (Core) names no Optional block or card`, !OPT2.test(fnText("components/task2/Blocks.tsx", fn)));
+  for (const f of ["components/task2/StepA.tsx", "components/task2/StepB.tsx", "components/task2/Panel.tsx", "components/task2/Kits.tsx", "components/task2/MentorCategory.tsx", "lib/r2Panel.ts", "data/route2Panel.ts"]) ok(`${f} (Core) names no Optional block or card`, !OPT2.test(read(f)));
   const t2 = read("components/task2/Task2.tsx");
   ok("the Route 2 case brief names no Optional block", !OPT2.test(t2.slice(t2.indexOf("function CaseBrief"), t2.indexOf("export function Task2"))));
-  ok("the trigger and pickup kits name no Optional block or card", !OPT2.test(read("components/task2/Kits.tsx")));
   ok("Route 2 Optional blocks are 3.1 to 3.4", ["b31", "b32", "b33", "b34"].every((b) => progress.OPTIONAL_BLOCKS.includes(b)) && !progress.OPTIONAL_BLOCKS.includes("b35") && !progress.OPTIONAL_BLOCKS.includes("b36"));
   eq("Optional material cards of Materi B", require("@/data/materialIndex").MATERIALS.filter((m) => m.optional && m.block === "B").map((m) => m.id), ["B1", "B2", "B3", "B4"]);
 
-  // The learner's worked examples differ from the model text (CLAUDE.md #23)
-  const guides = [mg.greatestGuide(), mg.postponedGuide(), mg.pickupGuide(), mg.challengeGuide(), ...r2.MODEL_ARCH.map((id) => mg.triggerGuide(id)), ...[0, 1, 2].map((i) => mg.assumptionGuide(i))];
-  for (const g of guides) ok(`example of "${g.title}" exists and differs from the answer`, !!g.example && g.example.length > 60 && g.example !== g.answer);
+  // every item card prints its scene, and the panel facts exist in both languages
+  for (const l of ["en", "de"]) {
+    lang.setCurrentLang(l);
+    for (const id of r2.ARCH_IDS) {
+      ok(`[${l}] item ${id} prints a scene and its panel facts`, require("@/data/route2Extra").ARCH_EXTRA[id].scene.length > 60 && pnl.PANEL[id].short.length > 3 && pnl.PANEL[id].moves.length > 15);
+    }
+  }
+  lang.setCurrentLang("en");
+
+  // worked examples differ from the model text (CLAUDE.md #23)
+  for (const g of [mg.greatestGuide(), mg.visionGuide(), mg.giveUpGuide(), mg.decisionWhyGuide(), mg.watchGuide()]) ok(`example of "${g.title}" exists and differs from the answer`, !!g.example && g.example.length > 60 && g.example !== g.answer);
+  const ag = mg.architectureGuide();
+  ok("the mentor's worked answer for Step A ends in the panel's own numbers", ag.steps.some((x) => x.result === "69%") && ag.steps.some((x) => x.result === "47%") && ag.steps.some((x) => x.result === "0% · 22%") && ag.steps[0].result === lang.euro(180000));
+  eq("the answer key of Step A has one option per item", require("@/lib/answerKey").architectureKey().options.length, r2.ARCH_IDS.length);
 
   for (const l of ["en", "de"]) {
     lang.setCurrentLang(l);
     const k = key.KEY_R2();
-    // Core-only: the plan and the decision alone make a complete memo; the Optional blocks 3.1 to 3.4 stay empty
-    const coreR2 = { ...store.emptyR2(), alloc: k.alloc, start: k.start, owner: k.owner, trigger: k.trigger, postponed: k.postponed, pickup: k.pickup, decision: k.decision, assumptions: k.assumptions, tripKpi: k.tripKpi, tripThreshold: k.tripThreshold, tripMonth: k.tripMonth, tripAction: k.tripAction, challenge: k.challenge };
+    // Core-only: Step A and Step B alone make a complete memo; the Optional blocks 3.1 to 3.4 stay empty
+    const coreR2 = { ...store.emptyR2(), tier: k.tier, vision: k.vision, giveUp: k.giveUp, decision: k.decision, decisionWhy: k.decisionWhy, watch: k.watch };
     const pc = { participant: { name: "Core Only" }, ui: { bannerDismissed: {}, sectionsRead: {}, lang: l }, l1: store.emptyL1(), r2: coreR2 };
     eq(`[${l}] Core-only fill leaves the Route 2 missing list empty`, missing.r2Missing(pc).map((m) => m.label), []);
-    // a decision that differs from the model, over the budget, with its reasons, still exports (CLAUDE.md #38)
-    const everything = Object.fromEntries(r2.ARCH_IDS.map((id) => [id, true]));
-    const startAll = Object.fromEntries(r2.ARCH_IDS.map((id) => [id, 1]));
-    const ownerAll = Object.fromEntries(r2.ARCH_IDS.map((id) => [id, r2.OWNER_IDS[0]]));
-    const trigAll = Object.fromEntries(r2.ARCH_IDS.map((id) => [id, rn.triggerSentence(id)]));
-    const over = { ...coreR2, alloc: everything, start: startAll, owner: ownerAll, trigger: trigAll, decision: "commit" };
-    ok(`[${l}] funding everything, over the budget, with the fields filled leaves nothing missing`, missing.r2Missing({ ...pc, r2: over }).length === 0);
-    ok(`[${l}] the memo prints the amount over the budget as a fact`, require("@/lib/exportDoc").memoBody({ ...pc, r2: over }).includes(lang.euro(checks.archOver(over))));
+    ok(`[${l}] doing nothing is a named missing item, not a wrong answer`, missing.r2Missing({ ...pc, r2: { ...coreR2, tier: {} } }).some((m) => m.label.startsWith(lang.tt("Step A", "Schritt A")) && /Now|Jetzt/.test(m.label)));
+    ok(`[${l}] without a vision, a reason or a watch sentence they are named missing items`, ["vision", "giveUp", "decisionWhy", "watch"].every((f) => missing.r2Missing({ ...pc, r2: { ...coreR2, [f]: "" } }).length === 1));
+    // a plan and a decision that differ from the model, over the budget, with the reasons, still exports (CLAUDE.md #38)
+    const allNow = Object.fromEntries(r2.ARCH_IDS.map((id) => [id, "now"]));
+    const over = { ...coreR2, tier: allNow, decision: "commit" };
+    ok(`[${l}] everything Now, over the budget, with the fields filled leaves nothing missing`, missing.r2Missing({ ...pc, r2: over }).length === 0);
+    const memoOver = require("@/lib/exportDoc").memoBody({ ...pc, r2: over });
+    ok(`[${l}] the memo prints the amount over the budget as a fact`, memoOver.includes(lang.euro(rpl.planOf(T(allNow), 0).bars.over)));
+    ok(`[${l}] the memo never prints a category or a verdict`, !/categor|Kategorie|clearly wrong/i.test(memoOver) && !/✓|✗|✔|✘/.test(memoOver));
     ok(`[${l}] an unanswered Optional block is marked in the memo`, require("@/lib/exportDoc").memoBody(pc).includes(lang.tt("Optional block, not answered.", "Optionaler Block, nicht beantwortet.")));
-    ok(`[${l}] without a trigger a funded item is a named missing item`, missing.r2Missing({ ...pc, r2: { ...coreR2, trigger: {} } }).some((m) => m.label.startsWith("Block 3.5:") && /trigger/i.test(m.label)));
   }
   lang.setCurrentLang("en");
+
+  // an old-shape blob (version 2: alloc, start, owner, trigger, assumptions, tripwire) loads into the new shape (CLAUDE.md #9)
+  {
+    const oldR2 = { ...store.emptyR2(), alloc: { foundation: true, chat: true, suite: false }, start: { foundation: 1 }, owner: { foundation: "datalead" }, trigger: { foundation: "x" }, postponed: "p", pickup: "q", assumptions: ["a", "b", "c"], tripKpi: "conv", tripThreshold: "9", tripMonth: 4, tripAction: "adjust", challenge: "c", decision: "stage" };
+    delete oldR2.tier; delete oldR2.vision; delete oldR2.giveUp; delete oldR2.decisionWhy; delete oldR2.watch;
+    const migrated = store.migratePersisted({ participant: { name: "Old" }, ui: {}, l1: store.emptyL1(), r2: oldR2 }, 2);
+    eq("an old blob: funded items become Now, the removed fields are gone", [migrated.r2.tier, "alloc" in migrated.r2, "tripKpi" in migrated.r2, migrated.r2.decision], [{ foundation: "now", chat: "now" }, false, false, "stage"]);
+    const merged = store.mergeDefaults({ r2: store.emptyR2() }, migrated);
+    eq("an old blob gets the new fields from the defaults", [merged.r2.vision, merged.r2.giveUp, merged.r2.decisionWhy, merged.r2.watch, merged.r2.decision], ["", "", "", "", "stage"]);
+  }
 }
 
 // --- the mentor fill, in both languages --------------------------------------------
@@ -266,8 +343,6 @@ for (const l of ["en", "de"]) {
   eq(`[${l}] model sources hold`, checks.sourceHolds(rr), { holds: 8, total: 8 });
   eq(`[${l}] model ratings flag nothing`, checks.ratingFlags(rr), []);
   eq(`[${l}] model decision logic holds`, checks.logicHolds(rr), { holds: 12, total: 12 });
-  eq(`[${l}] model architecture holds all rules`, checks.seqRules(rr), { baseline: true, budget: true, explainable: true, hasBaseline: true });
-  eq(`[${l}] model tripwire flags nothing`, checks.tripFlagsOf(rr), []);
 }
 lang.setCurrentLang("en");
 

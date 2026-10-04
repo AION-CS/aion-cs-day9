@@ -4,7 +4,7 @@
 *Customer retention in real time: personalisation, automation and optimisation.*
 A self-study companion: study material with twelve live instruments, two tasks and two working documents, in **English and German**
 (EN | DE in the top bar, `../CLAUDE.md` #32). It carries the shared standards `../CLAUDE.md` #1 to #28, the two-route form of #30
-and the German version of #32 and, since the retrofit of 2026-10-03, #33 to #46 (see “Retrofit” below).
+and the German version of #32 and, since the retrofit of 2026-10-03, #33 to #46 (see “Retrofit” below). Route 2 follows #47 since 2026-10-04 (see “Route 2 redesign” below).
 
 The case company is **LiveConnect IT Services GmbH** (the plan's case study): *high bounce rates, low interaction, measures not
 coordinated*, €170,000 and four months. Route 2 puts the learner in the Chief Digital Officer's chair: interaction not coordinated,
@@ -24,7 +24,7 @@ hold now.
 | Route | Content | Export |
 |---|---|---|
 | `/route-1/` **Levels 1 + 2** | **Materi A**: seven cards, 60 min (A1 why real time matters: what a delay costs, A2 personalisation in the moment: value or intrusion, A3 where to respond at once: chatbots, callbacks, social media and adaptive content, A4 what speed is worth: closing rate, lift and extra revenue, A5 KPIs in real time: outcome, driver, guardrail, vanity, A6 A/B testing in digital channels and feedback loops, A7 effect × speed × scalability). **Task 1, Real-Time Retention**: *Part 1 · Understand the real-time effect:* 1.1 tag nine ideas as respond, personalise or learn and name one real-time opportunity, 1.2 what speed is worth (F1–F3 and a sentence), 1.3 two moments to respond at once, two to personalise, three concrete improvements, 1.4 coaching reflection. *Part 2 · Make it measurable and choose:* 2.1 tag twelve real-time metrics by kind, 2.2 link to value, meaning and use per kind, uncertainties, your three KPIs, 2.3 design a fair A/B test of a chat on the pricing page, 2.4 choose, score and order three measures. | `1-{name}-day9-l1l2-real-time-file.html` |
-| `/route-2/` **Level 3** | **Materi B**: five cards, 60 min (B1 the target vision of a real-time retention system, B2 central interaction points: the decision first, then the tracking, B3 a KPI and optimisation system: four tests, B4 the optimisation loop: roll out, keep testing, stop, B5 deciding under time pressure, and the architecture). **Task 2, Real-Time Management Memo**, assembling beside the questions: 3.1 three principles, 3.2 real-time now / fix the tracking first / not central for eight interaction points, 3.3 three KPIs rated on four tests and the greatest lever, 3.4 roll out / keep testing / stop and who acts for six test results, 3.5 the prioritised implementation architecture, 3.6 the decision under time pressure, three assumptions, the tripwire and the board's challenge. | `2-{name}-day9-l3-real-time-memo.html` |
+| `/route-2/` **Level 3** | **Materi B**: five cards, 60 min (B1 the target vision of a real-time retention system, B2 central interaction points: the decision first, then the tracking, B3 a KPI and optimisation system: four tests, B4 the optimisation loop: roll out, keep testing, stop, B5 deciding under time pressure, and the architecture). **Task 2, Real-Time Management Memo**, one decision frame (#47): a live control panel, **Step A** (Block 3.5, the architecture: each of eight items Now / After data is ready / Not now, a two-sentence vision, what the plan gives and what it costs) and **Step B** (Block 3.6, the decision under time pressure, why, what you will watch and when you would stop), then four folded Optional blocks, “Go deeper”: 3.1 three principles, 3.2 real-time now / fix the tracking first / not central for eight interaction points, 3.3 three KPIs rated on four tests and the greatest lever, 3.4 roll out / keep testing / stop and who acts for six test results. The memo assembles below the answers. | `2-{name}-day9-l3-real-time-memo.html` |
 
 Minutes: Materi A 60 + Task 1 65, Materi B 60 + Task 2 50. All in `lib/routes.ts`.
 
@@ -115,8 +115,8 @@ step tables with pitfalls, every free text with what to look for). Client-side c
 | 3.2 Interaction points | B2 (decision first, 80% tracking rule) | Show the test questions · Check (count) + clue |
 | 3.3 KPI system | B3 (four tests, limits from printed facts) | Show the test questions · Check (limits, early count) |
 | 3.4 Roll out, keep testing, stop | B4 (uplift and conversions rule, owners) | Show the test questions · Check (count) + clue |
-| 3.5 Architecture | B5 (live view first, budget, no black box; owner and trigger tests) | Show the owner test · budget bar · plan sentences · Check (three rules) |
-| 3.6 Decision under time pressure | B5 (decision rules, tripwire, premortem) | Baselines printed · Check (wait, activity metric, threshold) |
+| 3.5 Step A · Architecture | B5 (the order: base, people, data, engines; four tests; the time test) | The live panel (diagram, three bars, four tests on request, “what to change” reading) · numbers today printed in the brief |
+| 3.6 Step B · Decision under time pressure | B5 (decide now, in stages, watch one figure, say when you stop) | The decision's reading and plain hint · the watch sentence's clue kit |
 
 ## Retrofit of 2026-10-03 (the user's request: bring Days 8 to 12 up to the current rules, Route 1 first, decide without asking)
 
@@ -132,16 +132,10 @@ Block 2.4 names a category for every measure, asks for a reason for each judged 
 contact situation prints a scene and who does what (#46). Every interactive picture opens with “The point” and a three-step story (#36); long text sits behind
 “＋ Show …” (#37); every free-text field has a clue kit and an example answer (#42, #23); two live rust notices (#34); the page map shows Core / Optional (#28).
 
-**What changed in Route 2.** The task has no side column: the live memo sits full width below Block 3.6 with “Hide the memo” (#39). Blocks 3.1 to 3.4 are folded Optional.
-Block 3.5 prints, on every item card, a scene, the one figure the item is meant to move (today and aim), what it needs first and what it must win or keep to pay back.
-**Numbers are shown, not calculated (#44):** the trigger kit, the pickup kit, the assumption kit and the tripwire hint give every number with the reason it is that number
-and a button to each printed input. Three plain methods produce them (Materi B5, with a worked example on another company): *halfway* between today and the aim,
-*month* = start month + weeks in use ÷ 4 rounded up, *cost of waiting* = item cost ÷ the value of one unit, rounded up. They live in `lib/r2Numbers.ts` and are read from
-`data/route2Extra.ts`, so the kits, the model answers and the mentor's worked answers cannot drift apart. “The numbers today” is printed once in the case brief so Core never
-reads an Optional table. Going over the budget is a hint with a stated reason, never a missing item (#38).
+**What changed in Route 2 (superseded on 2026-10-04 by the redesign below).** The live memo moved to the bottom with “Hide the memo” (#39); Blocks 3.1 to 3.4 became folded Optional blocks; the trigger, pickup, assumption and tripwire kits of this first pass were replaced by the panel.
 
-**Shared mechanics.** `cs-d9-v1` persists at version 2 with a migration and a deep merge (#9); `npm run verify:calc` runs 295 checks (figures and rules, the mentor fill and a
-Core-only fill in both languages, the shown numbers, #40 scans of the Core blocks, old-shape blob).
+**Shared mechanics.** `cs-d9-v1` persists at version 3 with a pure `migratePersisted` and a deep merge (#9); `npm run verify:calc` runs 310 checks (figures and rules, the panel's bars, tests and categories, the mentor fill and a
+Core-only fill in both languages, #40 scans of the Core blocks, old version-2 blob).
 
 ### Notes on deviations (retrofit)
 
@@ -149,8 +143,7 @@ R1. **No video was embedded (#33).** None was searched and verified in this pass
 R2. **No calculators (#44).** The plan names no calculation beyond the printed rates, the budget and the score formula, so the former F1–F3 calculators and “Show the formula” helps
     of Block 1.2 were removed; wherever older text above mentions them, it is superseded.
 R3. **Route 1 has at most four Core blocks and Route 2 two** (user decision, #35); everything else is folded, not removed.
-R4. **Model answers use only printed numbers.** The mentor's KPI answer uses aims such as “up” or “stay under a limit”; the model triggers, the pickup point and the assumptions are generated by
-    the methods above from the item cards and “the numbers today”, so each number can be found on the screen.
+R4. **Model answers use only printed numbers.** The mentor's KPI answer uses aims such as “up” or “stay under a limit”; the panel's bars and the memo's figures are computed from the printed costs, weeks, data shares and the budget, so each number can be found on the screen.
 R5. **The Word documents (#31) were not rebuilt** in this pass and are out of date for Day 9: Core / Optional marks, “The point”, the shown numbers and the new case-brief table are missing. Rebuild them from the reviewed Markdown in `../materi-task-docx/_source/` when wanted.
 R6. **German and English** are written by hand next to each other for every new text (#32); the glossary got “cost of waiting” and “halfway between today and the aim”.
 R7. **Plan mapping (#44).** The plan's numbered task items and the Level 3 requirements are mapped in note 1 above; Core is drawn from them: Route 1's Core blocks answer the Task 1 items (the first tagging and the situations or opportunities) and the case study's KPI and measures items; Route 2's Core blocks are the implementation requirement (3.5) and the additional decision requirement (3.6).
@@ -172,12 +165,61 @@ R7. **Plan mapping (#44).** The plan's numbered task items and the Level 3 requi
 | 2.4 Choose three measures, score them, put them in order | **Core** | the brief, the block's own printed items, cards A7 | ✓ |
 | **Route 2** | | | |
 | Case brief and “Where Route 1 left off” | — | Route 1 Core Block 2.4 (measures chosen), “the numbers today” | ✓ |
+| Control panel (diagram, bars, tests) | Core | printed item facts, “the numbers today”, card B5 | ✓ |
 | 3.1 The target vision of a real-time retention system | Optional | its own printed items, cards B1 | self-contained |
 | 3.2 Definition of central interaction points | Optional | its own printed items, cards B2 | self-contained |
 | 3.3 A KPI and optimisation system | Optional | its own printed items, cards B3 | self-contained |
 | 3.4 Automation and personalisation measures, tested: roll out, keep testing or stop | Optional | its own printed items, cards B4 | self-contained |
-| 3.5 Prioritised implementation architecture: fund, sequence, own | **Core** | printed item cards, “the numbers today”, cards B5 | ✓ |
-| 3.6 A decision under time pressure and uncertain data | **Core** | own plan quoted from Block 3.5, “the numbers today”, the board's challenge, cards B5 | ✓ |
+| 3.5 Step A: the prioritised implementation architecture | **Core** | the panel, printed item cards, “the numbers today”, card B5 | ✓ |
+| 3.6 Step B: a decision under time pressure and uncertain data | **Core** | own plan from Step A (quoted in the block), the panel's readings, “the numbers today”, card B5 | ✓ |
 | **Cards** | | | |
 | A1, A2, A3, A5, A7, B5 | Core | each other and the case | ✓ |
 | A4, A6, B1, B2, B3, B4 | Optional | — | no Core block cites them |
+
+## Route 2 redesign (CLAUDE.md #47, applied 2026-10-04; reference: `../day8/ROUTE2-REDESIGN.md`)
+
+The user added rule #47 (from Day 8) and asked for Day 9 to follow it. Route 2 is one decision frame with a live control panel; nothing of Day 8's AI content is reused, only the form.
+
+```
+Materi B (five cards, 60 min; B5 rewritten: how an architecture is built)
+Case brief + “the numbers today” (cost, weeks, data ready, the KPI each item moves)
+Control panel · eight item cards · diagram with links that can break · three bars · four tests on request · a reading in plain words
+Step A  (Core, 3.5)   each item Now / After data is ready / Not now · vision (two sentences) · what my plan gives and what I give up
+Step B  (Core, 3.6)   decide now, in stages / wait / launch everything · why · what I will watch and when I would stop
+Go deeper (Optional, folded): 3.1 · 3.2 · 3.3 · 3.4   (self-contained, never read by the frame)
+Memo (bottom, full width, Hide) → Export
+```
+
+**Plan mapping (#44).** Day 9's Level 3 transfer project asks for: the target vision (Step A's vision box), the central interaction points (the panel's top band
+and the item cards; the full exercise is Optional 3.2), measures (the three tiers), a KPI and optimisation system (the live view and KPI system as the base,
+the **Measurable** bar, and Step B's watch sentence), a prioritised implementation architecture (Step A) and the additional requirement, a decision under high
+time pressure with incomplete data (Step B and the data switch “15 points weaker”). The optimisation process is Optional 3.4 and the stop condition in Step B's
+watch sentence. The plan asks for no calculation beyond the printed budget, so the learner derives no number: the bars are computed and shown.
+
+**The panel.** Eight items: the live view and KPI system (the base), the chatbot and live chat, real-time personalisation (the engines), response standards and routing,
+real-time selling training (the people), the tracking and consent clean-up (the data), the all-in-one AI platform and the website relaunch (no KPI named, built last).
+A solid teal link works; a dashed amber link says in words why it does not (an engine not measured, measured only after it starts, tracking used as it is). Three bars:
+**Budget** (€190,000, four months), **Measurable** (money on items that are measured, whose data is ready and that are in use within four months) and **Risk** (money on a
+black box, on data below 80% when the item starts, or on an item in use only after the four months). Measurable and Risk are shown as ranges across the two data
+scenarios (the brief's data, and 15 points weaker). **Time** is derived: month in use = start month + weeks ÷ 4, rounded up; After data starts when the clean-up is in use.
+Four tests, hidden until asked: measurement comes first; every funded item has a purpose; data is ready when an engine starts; it fits the budget and the four months.
+Each open test gives the fact, the rule and two ways to act, never a question.
+
+**Categories (mentor only).** The reading's wording follows three internal categories (1 safe, 2 fair, 3 clearly wrong). Only the unlocked mentor sees them
+(`MentorCategory`); they are never exported, never printed and never block (#38). A learner who builds the model set (live view and KPI system, chat, response standards,
+training, clean-up all Now; personalisation After data; platform and relaunch Not now) reads that every test holds; anything else reads what to change to get there.
+
+**What was removed from the first pass.** Start months, owners, triggers, the pickup point, three assumptions, the tripwire and the board's challenge (the plan names none of them),
+the three-method numbers kit (`lib/r2Numbers.ts`) and `SentenceKit`. B5's worked example is now a small panel on another company (Elster Digital).
+
+**Missing (#34, #38).** Only an empty field, a too-short reason, or no item Now. Labels start “Step A:” / “Step B:”. Going over the budget, an engine on thin data or a decision that
+disagrees with Step A is a reading and a plain hint, never a missing item; the memo prints the choice, the amount over the budget and the reasons as plain facts.
+
+### Notes on deviations (redesign)
+
+P1. **The panel is AI-free.** Day 8's panel has an A/B routine and a pricing engine; Day 9 has neither. Measurement means the live view and KPI system only, and the tracking clean-up
+    is the “after data” prerequisite of personalisation. The chat's data (85%) is above the 80% bar; personalisation's (50%) is below it, so it is the item the clean-up gates.
+P2. **Time pressure sits inside the two bars** through the `late` flag (an item in use after month 4 counts as Risk and not as Measurable), not as a fourth bar.
+P3. **Persist version 3.** The funded items of a version-2 blob become “now”; the removed fields are dropped; a deep merge fills the new ones. Tested in `verify:calc` and in the browser from an old-shape blob.
+P4. **Word documents** (#31) for Route 2 are stale (they describe the old 3.5 and 3.6) and were not rebuilt.
+P5. **Verified:** `tsc`, `verify:calc` (310 checks), a production build in a scratch copy served as a static export: clean `localStorage`, the panel with the model set (180,000 €; 69% / 47% Measurable; 0% / 22% Risk; 4 of 4 tests, 3 of 4 with weaker data), mentor fill, memo, DE, 390 px (no horizontal scroll), old blob, no console errors. A page-by-page screenshot review was not possible (the preview pane stopped painting); layout was checked through the DOM.
