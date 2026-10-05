@@ -40,7 +40,7 @@ export const MATERIAL_PLAIN: Record<MaterialId, PlainExplain> = bi({
   },
   A7: {
     idea: t("When time is short, how soon a measure works matters as much as how well. Score each option: how much it moves the result, how quickly it works, and whether it reaches every visitor without extra cost. Multiply the three.", "Wenn die Zeit knapp ist, zählt, wie bald eine Maßnahme wirkt, so viel wie wie gut. Bewerten Sie jede Option: wie stark sie das Ergebnis bewegt, wie schnell sie wirkt und ob sie jeden Besucher ohne Zusatzkosten erreicht. Multiplizieren Sie die drei."),
-    why: t("Block 2.4 asks you to choose three of nine measures for LiveConnect, score them this way, fit them into €170,000 and four months, and put them in order.", "Block 2.4 bittet Sie, drei von neun Maßnahmen für LiveConnect zu wählen, sie so zu bewerten, in 170.000 € und vier Monate unterzubringen und in eine Reihenfolge zu bringen."),
+    why: t("Block 2.4 asks you to choose three of six measures for LiveConnect, score them this way, fit them into €170,000 and four months, and put them in order.", "Block 2.4 bittet Sie, drei von sechs Maßnahmen für LiveConnect zu wählen, sie so zu bewerten, in 170.000 € und vier Monate unterzubringen und in eine Reihenfolge zu bringen."),
     picture: t("The bars are the scores of three Neckar measures. Choose a bar or a button; the box “What this shows” breaks the score into its three parts and explains where speed comes from.", "Die Balken sind die Werte dreier Maßnahmen von Neckar. Wählen Sie einen Balken oder eine Schaltfläche; das Feld „Was das zeigt“ zerlegt den Wert in seine drei Teile und erklärt, woher das Tempo kommt."),
   },
   B1: {

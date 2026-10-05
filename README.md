@@ -61,8 +61,9 @@ npm run build        # writes the static site to out/  (stop `npm run dev` first
 - `patterns.ts`: four kinds of metric with tests and pair tests; twelve real-time metrics (3 each; moved with value: outcome 3, driver 2,
   guardrail 1, vanity 0); the link rule; meaning and use per kind; seven uncertainties (four real); the A/B test card (four parts, one
   fair option each, plus hypothesis and decision rule).
-- `measures.ts`: nine measures with cost and weeks until they take effect. Speed follows from the weeks (≤ 4 → 3, 5–10 → 2, > 10 → 1).
-  Chatbot and live chat (27), real-time personalisation (18), KPI dashboard and weekly test routine (18): €115,000.
+- `measures.ts`: six measures (2026-10-05, was nine). Each price is the sum of printed parts (tool set-up, a licence for four months, staff hours × €80); weeks until it works. Speed follows from the weeks (≤ 4 → 3, 5–10 → 2, > 10 → 1).
+  Chatbot and live chat (€44,000, 27), real-time personalisation (€56,000, 18), KPI dashboard and weekly test routine (€32,000, 18): €132,000 of €170,000. Traps: discount pop-up (€40,000, fast, answers no problem), callback (€65,000, grows only with people), relaunch (€110,000, 16 weeks, no time to work; with the chat and dashboard €16,000 over).
+  Block 2.4 no longer asks which problems each measure answers: `PlanPicture` shows it (a problem is lit only if a chosen measure answers it and has working time left inside the 16 weeks) plus a 16-week bar per measure. Persist version 4 drops the removed measures from old blobs.
 - `route2.ts`: six principles, eight interaction points (rule: does the customer decide there? is ≥ 80% tracked?), eight KPI candidates
   with printed facts and limits, six test results (rule: uplift ≥ 10% and ≥ 100 conversions → roll out; uplift ≥ 3% → keep testing;
   else stop), eight architecture items (model €180,000 of €190,000; the all-in-one experience platform is a black box, the relaunch

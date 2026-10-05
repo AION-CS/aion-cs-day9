@@ -107,7 +107,6 @@ export function l1Missing(p: Persisted): MissingEntry[] {
   if (l1.chosen.length !== CHOOSE) e(IDS.measurePick, tt(`Block 2.4: choose exactly ${CHOOSE} measures (you have ${l1.chosen.length}).`, `Block 2.4: Wählen Sie genau ${CHOOSE} Maßnahmen (Sie haben ${l1.chosen.length}).`));
   for (const id of l1.chosen) {
     const name = MEASURE_BY_ID[id].name;
-    if (l1.aims[id] === undefined) e(IDS.measure(id), tt(`Block 2.4: “${name}” names no problem it answers (or “none”).`, `Block 2.4: „${name}“ nennt kein Problem, das sie beantwortet (oder „keines“).`));
     if (!l1.exp[id] || !l1.fea[id] || !l1.eff[id]) e(IDS.measure(id), tt(`Block 2.4: “${name}” is not fully scored (effect, speed, scalability).`, `Block 2.4: „${name}“ ist nicht vollständig bewertet (Wirkung, Tempo, Skalierbarkeit).`));
     if ((l1.reasons[id] ?? "").trim().length < MIN_LINE) e(IDS.reason(id), tt(`Block 2.4: say why “${name}” gets its effect and scalability scores (at least ${MIN_LINE} characters).`, `Block 2.4: Begründen Sie, warum „${name}“ seine Werte für Wirkung und Skalierbarkeit bekommt (mindestens ${MIN_LINE} Zeichen).`));
   }

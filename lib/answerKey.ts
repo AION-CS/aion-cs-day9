@@ -1,7 +1,7 @@
 import { LEVEL_LABEL, LINES } from "@/data/ladder";
 import { CHURN_TRUTH, CUSTOMERS, CUST_BY_ID, KNOWN_LABEL, PICK_WHY, VALUABLE_TRUTH } from "@/data/forecast";
 import { AB, AB_PARTS, MEANINGS, MEANING_TRUTH, MEASURE_TRUTH, PATTERNS, PATTERN_IDS, PMEASURES, RECORDS, RISK_LABEL, TRUTH_COUNTS, TRUTH_LEFT, UNCERTAINTIES, riskOf } from "@/data/patterns";
-import { BUDGET, EVIDENCE_LABEL, MEASURES, MODEL_COST, MODEL_MEASURES, PROBLEM_LABEL, explainBucket, modelScore } from "@/data/measures";
+import { BUDGET, EVIDENCE_LABEL, MEASURES, MEASURE_BY_ID, MODEL_COST, MODEL_MEASURES, PROBLEM_LABEL, explainBucket, modelScore } from "@/data/measures";
 import {
   ACTION_LABEL,
   ARCH_BY_ID,
@@ -146,7 +146,7 @@ export function measureKey(): AnswerKeyBlock {
       expected: MODEL_MEASURES.includes(m.id),
       why: `${m.verdict} ${m.model.note}`,
     })),
-    teachingNote: `Score = Effect × Speed × Scalability. The checks look only at the problems named (a subset of the real ones, or “none” for dynamic pricing and the avatar) and at speed, which follows from the printed weeks. Effect and scalability are judged; the model values are here. The model three cost ${euro(MODEL_COST)}. The callback scores 6: fast and personal, but it grows only with people. The exit pop-up scores 9: fast and cheap, but it answers the bounce with a discount, and a guardrail (pop-up complaints) would soon stop it.`,
+    teachingNote: `Score = Effect × Speed × Scalability. The check looks only at speed, which follows from the printed weeks. Which problems a choice answers, and when it starts working, is shown by the picture under the cards, not by a verdict. Effect and scalability are judged; the model values are here. The model three cost ${euro(MODEL_COST)} (${euro(BUDGET - MODEL_COST)} left). The callback scores 6: fast and personal, but its ${euro(MEASURE_BY_ID.callback.cost)} buys two extra salespeople, so it grows only with people. The exit pop-up scores 9: ${euro(MEASURE_BY_ID.popup.cost)} looks cheap, but ${euro(MEASURE_BY_ID.popup.costParts[1].amount)} of it is discount given to everyone, and it answers no problem; a guardrail (pop-up complaints) would soon stop it. The relaunch scores 6: at ${euro(MEASURE_BY_ID.relaunch.cost)} and 16 weeks it has no time left to work, and with the chat and the dashboard it would be ${euro(MEASURE_BY_ID.relaunch.cost + MEASURE_BY_ID.chat.cost + MEASURE_BY_ID.kpi.cost - BUDGET)} over the budget. A different, well-reasoned choice is acceptable (CLAUDE.md #38).`,
   };
 }
 

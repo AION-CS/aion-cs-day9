@@ -5,7 +5,7 @@ import type { Basis } from "@/data/forecast";
 import { AB_MODEL, MEANING_TRUTH, MEASURE_TRUTH, PATTERN_IDS, RECORDS, TRUTH_COUNTS, TRUTH_LEFT, riskOf } from "@/data/patterns";
 import type { PatternId, PatternRow, RecId, UncId } from "@/data/patterns";
 import { MEASURE_BY_ID, MODEL_MEASURES, explainBucket } from "@/data/measures";
-import type { MeasureId, ProblemId } from "@/data/measures";
+import type { MeasureId } from "@/data/measures";
 import { ARCH_BY_ID, COMP_BY_ID, MODEL_COMPS, MODEL_GREATEST, OWNER_ACCEPT_LOGIC, R2_BUDGET, SITUATIONS, SOURCES, actionOf, useOf } from "@/data/route2";
 import { MODEL_ARCH, MODEL_TIER } from "@/data/route2Panel";
 import type { Criterion, LogicRow, Use } from "@/data/route2";
@@ -75,15 +75,14 @@ export function KEY_L1(): Partial<L1State> {
       rule: tt("Roll out if quote requests per visitor are at least 10% higher than the control group with 100 requests per group and “not helpful” ratings stay below 20%; keep testing if 3 to 10% higher; stop if less than 3% higher.", "Ausrollen, wenn die Angebotsanfragen pro Besucher bei 100 Anfragen pro Gruppe mindestens 10 % über der Kontrollgruppe liegen und „nicht hilfreich“-Bewertungen unter 20 % bleiben; weiter testen bei 3 bis 10 % darüber; stoppen bei weniger als 3 % darüber."),
     },
     chosen: [...MODEL_MEASURES],
-    aims: Object.fromEntries(MODEL_MEASURES.map((id) => [id, [...MEASURE_BY_ID[id].targets]])) as Record<string, ProblemId[]>,
     exp: Object.fromEntries(MODEL_MEASURES.map((id) => [id, explainBucket(MEASURE_BY_ID[id].evidence)])) as Record<string, Score>,
     fea: Object.fromEntries(MODEL_MEASURES.map((id) => [id, MEASURE_BY_ID[id].model.feasibility])) as Record<string, Score>,
     eff: Object.fromEntries(MODEL_MEASURES.map((id) => [id, MEASURE_BY_ID[id].model.effect])) as Record<string, Score>,
     reasons: Object.fromEntries(MODEL_MEASURES.map((id) => [id, MEASURE_REASON[id]()])) as Record<string, string>,
     order: [...MODEL_ORDER],
     why: tt(
-      "The chat goes first: it scores 27, works within four weeks and answers visitors on the pages where they decide, where fast answers closed three times as often. The KPI dashboard and weekly test routine come second and start with it, so the chat is measured from its first week. Real-time personalisation comes third because it needs eight weeks. The three cost €115,000 of the €170,000; the website relaunch and the avatar are too slow for four months.",
-      "Der Chat kommt zuerst: Er erzielt 27, wirkt innerhalb von vier Wochen und beantwortet Besucher auf den Seiten, auf denen sie entscheiden, wo schnelle Antworten dreimal so oft abschlossen. KPI-Dashboard und wöchentliche Test-Routine kommen als Zweites und starten mit ihm, damit der Chat ab seiner ersten Woche gemessen wird. Echtzeit-Personalisierung kommt als Drittes, weil sie acht Wochen braucht. Die drei kosten 115.000 € von 170.000 €; Website-Relaunch und Avatar sind für vier Monate zu langsam.",
+      "The chat goes first: it scores 27, works within four weeks and answers visitors on the pages where they decide, where fast answers closed three times as often. The KPI dashboard and weekly test routine come second and start with it, so the chat is measured from its first week. Real-time personalisation comes third because it needs eight weeks. The three cost €132,000 of the €170,000; the website relaunch (€110,000, 16 weeks) has no time left to work, and the callback and the discount pop-up each answer less.",
+      "Der Chat kommt zuerst: Er erzielt 27, wirkt innerhalb von vier Wochen und beantwortet Besucher auf den Seiten, auf denen sie entscheiden, wo schnelle Antworten dreimal so oft abschlossen. KPI-Dashboard und wöchentliche Test-Routine kommen als Zweites und starten mit ihm, damit der Chat ab seiner ersten Woche gemessen wird. Echtzeit-Personalisierung kommt als Drittes, weil sie acht Wochen braucht. Die drei kosten 132.000 € von 170.000 €; der Website-Relaunch (110.000 €, 16 Wochen) hat keine Zeit mehr zu wirken, und Rückruf und Rabatt-Pop-up beantworten weniger.",
     ),
   };
 }

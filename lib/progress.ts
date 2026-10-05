@@ -17,7 +17,7 @@ export type TaskBlockId = "b11" | "b12" | "b13" | "b14" | "b21" | "b22" | "b23" 
  * dossier ring (#35).
  * Route 1 ("understand real-time interaction, then make the measures measurable and choose which to fund"): Core 1.1 (the first
  * tagging and the own opportunity: plan Task 1 questions 1 to 3), 1.3 (where to act and three improvements: Task 1 question 4), 2.1
- * (tag the twelve metrics by kind and name your three KPIs: case task 3) and 2.4 (choose, score and order three of nine measures: case
+ * (tag the twelve metrics by kind and name your three KPIs: case task 3) and 2.4 (choose, score and order three of six measures: case
  * tasks 2 and 5): four blocks at most. Optional 1.2, 1.4, 2.2 and 2.3 (the A/B test concept: case task 4).
  * Route 2 ("decide a real-time management system under time pressure and with incomplete data", CLAUDE.md #47): one frame with two Core
  * steps. Step A (block 3.5: the target vision, the selection of measures and the prioritised implementation architecture, plan items 1, 3
@@ -43,7 +43,7 @@ export function taskBlocks(p: Persisted): Record<TaskBlockId, boolean> {
     b23: abComplete(l1.ab) && /\d/.test(l1.ab.rule),
     b24:
       l1.chosen.length === CHOOSE &&
-      l1.chosen.every((id) => l1.aims[id] !== undefined && !!l1.exp[id] && !!l1.fea[id] && !!l1.eff[id] && len(l1.reasons[id] ?? "") >= MIN_LINE) &&
+      l1.chosen.every((id) => !!l1.exp[id] && !!l1.fea[id] && !!l1.eff[id] && len(l1.reasons[id] ?? "") >= MIN_LINE) &&
       l1.order.length === CHOOSE &&
       l1.chosen.every((id) => l1.order.includes(id)) &&
       len(l1.why) >= 60,

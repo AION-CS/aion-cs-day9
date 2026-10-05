@@ -43,7 +43,7 @@ function CaseBrief() {
           <ul className="mt-1 list-disc space-y-1 pl-4 text-ink">
             <li>{tt("Nine real-time ideas from LiveConnect's teams (Block 1.1).", "Neun Echtzeit-Ideen aus den Teams von LiveConnect (Block 1.1).")}</li>
             <li>{tt("Eight moments on the website (Block 1.3); last quarter's speed figures (optional Block 1.2).", "Acht Momente auf der Website (Block 1.3); die Tempo-Werte des letzten Quartals (optionaler Block 1.2).")}</li>
-            <li>{tt("Twelve metrics LiveConnect reports today (Block 2.1) and nine measures it could fund (Block 2.4).", "Zwölf Kennzahlen, die LiveConnect heute berichtet (Block 2.1), und neun Maßnahmen, die es finanzieren könnte (Block 2.4).")}</li>
+            <li>{tt("Twelve metrics LiveConnect reports today (Block 2.1) and six measures it could fund (Block 2.4).", "Zwölf Kennzahlen, die LiveConnect heute berichtet (Block 2.1), und sechs Maßnahmen, die es finanzieren könnte (Block 2.4).")}</li>
           </ul>
         </div>
         <div className="rounded-lg border border-line bg-canvas p-3 text-caption">

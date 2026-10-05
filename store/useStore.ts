@@ -7,6 +7,7 @@ import { LINE_IDS } from "@/data/ladder";
 import type { LevelTag, LineId } from "@/data/ladder";
 import { INSIGHT_COUNT } from "@/data/forecast";
 import type { Basis, CustId } from "@/data/forecast";
+import { MEASURE_IDS } from "@/data/measures";
 import { PATTERN_IDS, REC_IDS } from "@/data/patterns";
 import { emptyAb } from "@/data/patterns";
 import type { AbState, PatternId, PatternRow, RecId, UncId } from "@/data/patterns";
@@ -265,6 +266,17 @@ export function migratePersisted(persisted: unknown, from: number): Persisted {
     r2.tier = Object.fromEntries(Object.entries(alloc).filter(([, on]) => on).map(([id]) => [id, "now"]));
     for (const k of ["alloc", "start", "owner", "trigger", "postponed", "pickup", "seqResult", "seqClue", "decisionFlagged", "assumptions", "tripKpi", "tripThreshold", "tripMonth", "tripAction", "tripFlags", "challenge"]) delete r2[k];
   }
+  if (from < 4 && p.l1) {
+    // Block 2.4 went from nine measures to six: drop the three that were removed from every list and map that is keyed by measure.
+    const l1 = p.l1 as unknown as Record<string, unknown>;
+    const keep = (id: unknown) => typeof id === "string" && (MEASURE_IDS as string[]).includes(id);
+    for (const k of ["chosen", "order"]) if (Array.isArray(l1[k])) l1[k] = (l1[k] as unknown[]).filter(keep);
+    for (const k of ["aims", "exp", "fea", "eff", "reasons"]) {
+      const m = l1[k];
+      if (m && typeof m === "object") l1[k] = Object.fromEntries(Object.entries(m as Record<string, unknown>).filter(([id]) => keep(id)));
+    }
+    l1.measureFlags = [];
+  }
   return p;
 }
 
@@ -350,12 +362,14 @@ export const useStore = create<Persisted & Session & Actions>()(
     }),
     {
       name: STORAGE_KEY,
-      version: 3,
+      version: 4,
       skipHydration: true,
       storage: createJSONStorage(() => localStorage),
       partialize: (s) => ({ participant: s.participant, ui: s.ui, l1: s.l1, r2: s.r2 }),
       // Version 2 (the retrofit of 2026-10-02): the pilot block no longer asks for figures (CLAUDE.md #44), so `fig`, `figFlagged`,
       // `figClue`, `parts` and `partFlags` are dropped from Route 1; each chosen measure gets a `reasons` entry (#45).
+      // Version 4 (2026-10-05): Block 2.4 has six measures instead of nine and no longer asks which problems each answers; the three removed
+      // measures are dropped from `chosen`, `order` and the score maps, and the old per-measure `aims` stay in the blob unused.
       // Version 3 (the redesign of Route 2, CLAUDE.md #47): Step A keeps one tier per item (a funded item becomes "now") and gains the
       // vision and "what I give up"; Step B keeps the decision and gains its reason and what to watch. The per-item start month, owner and
       // trigger, the left-out text, the pickup point, the three assumptions, the tripwire and the board's challenge are dropped.

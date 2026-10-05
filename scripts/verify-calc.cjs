@@ -95,12 +95,28 @@ eq("A/B card flags a rule without a number", checks.abFlagsOf({ ...pt.AB_MODEL, 
 
 // --- Block 2.4 --------------------------------------------------------------------
 const scores = Object.fromEntries(meas.MEASURES.map((m) => [m.id, meas.modelScore(m.id)]));
-eq("model scores", scores, { chat: 27, personal: 18, kpi: 18, callback: 6, pricing: 6, popup: 9, relaunch: 6, social: 3, avatar: 3 });
-eq("model three cost", meas.MODEL_COST, 115000);
+eq("model scores", scores, { chat: 27, personal: 18, kpi: 18, callback: 6, popup: 9, relaunch: 6 });
+eq("model three cost", meas.MODEL_COST, 132000);
+eq("six measures", meas.MEASURE_IDS, ["chat", "personal", "kpi", "callback", "popup", "relaunch"]);
+eq("measure prices", Object.fromEntries(meas.MEASURES.map((m) => [m.id, m.cost])), { chat: 44000, personal: 56000, kpi: 32000, callback: 65000, popup: 40000, relaunch: 110000 });
+for (const m of meas.MEASURES) ok(`price of ${m.id} is the sum of its printed parts`, m.costParts.length >= 2 && m.costParts.reduce((x, c) => x + c.amount, 0) === m.cost);
+ok("the budget bites: the relaunch with the chat and the dashboard is over", meas.MEASURE_BY_ID.relaunch.cost + meas.MEASURE_BY_ID.chat.cost + meas.MEASURE_BY_ID.kpi.cost > meas.BUDGET);
+ok("the relaunch has no working time inside the four months", meas.workingWeeks("relaunch") === 0 && meas.workingWeeks("chat") === 12);
+{
+  const cv = (chosen) => checks.coverage({ chosen }).map((c) => (c.covered ? "on" : c.tooLate ? "late" : "open"));
+  eq("coverage of the model three", cv(["chat", "personal", "kpi"]), ["on", "on", "on"]);
+  eq("coverage of pop-up, callback and relaunch", cv(["popup", "callback", "relaunch"]), ["late", "on", "open"]);
+  eq("the relaunch alone answers its problems too late", cv(["relaunch"]), ["late", "late", "open"]);
+}
+{
+  const blob = { l1: { ...store.emptyL1(), chosen: ["chat", "avatar", "pricing"], order: ["avatar", "chat"], exp: { chat: 3, avatar: 1 }, aims: { avatar: [] }, measureFlags: ["avatar.exp"] } };
+  const mig = store.migratePersisted(blob, 3);
+  eq("an old nine-measure blob keeps the three that remain", [mig.l1.chosen, mig.l1.order, Object.keys(mig.l1.exp), mig.l1.measureFlags], [["chat"], ["chat"], ["chat"], []]);
+}
 ok("model three fit the budget", meas.MODEL_COST <= meas.BUDGET);
 eq("model three are the three highest scores", [...meas.MEASURES].sort((a, b) => meas.modelScore(b.id) - meas.modelScore(a.id)).slice(0, 3).map((m) => m.id).sort(), [...meas.MODEL_MEASURES].sort());
 ok("the model three answer all three problems", meas.PROBLEM_IDS.every((p) => meas.MODEL_MEASURES.some((id) => meas.MEASURE_BY_ID[id].targets.includes(p))));
-ok("the avatar answers no problem of the brief", meas.MEASURE_BY_ID.avatar.targets.length === 0);
+ok("the discount pop-up answers no problem of the brief", meas.MEASURE_BY_ID.popup.targets.length === 0);
 
 // --- Route 2 --------------------------------------------------------------------
 eq("interaction point decisions by the rule", r2.SOURCES.map((s) => r2.useOf(s)), ["core", "core", "core", "later", "later", "later", "leave", "leave"]);
@@ -337,7 +353,7 @@ for (const l of ["en", "de"]) {
   eq(`[${l}] model A/B card flags nothing`, checks.abFlagsOf(l1.ab), []);
   const rc = checks.rowChecks(l1);
   eq(`[${l}] model kind rows hold`, [rc.holds, rc.total, rc.flags], [12, 12, []]);
-  for (const id of l1.chosen) ok(`[${l}] model problems and measurability hold (${id})`, checks.aimsHold(id, l1.aims[id]) && checks.expHolds(id, l1.exp[id]));
+  for (const id of l1.chosen) ok(`[${l}] model speed scores follow the printed weeks (${id})`, checks.expHolds(id, l1.exp[id]));
   eq(`[${l}] model order has no inversion`, checks.orderInversions(l1), []);
   eq(`[${l}] model principles hold`, checks.principlesHold(rr), { defs: true, rules: true });
   eq(`[${l}] model sources hold`, checks.sourceHolds(rr), { holds: 8, total: 8 });

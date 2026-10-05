@@ -158,8 +158,7 @@ export function analysisBody(p: Persisted): string {
   const measureRows = chosen
     .map((id) => {
       const m = MEASURE_BY_ID[id];
-      const aims = l1.aims[id];
-      return `<tr><td class="id">${esc(m.name)}<br><span class="muted">${esc(MEASURE_AREA_LABEL[m.area])}</span></td><td>${aims === undefined ? "—" : aims.length ? esc(aims.map((a) => PROBLEM_LABEL[a]).join(", ")) : esc(tt("none of the three", "keines der drei"))}</td><td class="num">${l1.eff[id] || "—"} × ${l1.exp[id] || "—"} × ${l1.fea[id] || "—"} = ${measureScore(l1, id) || "—"}</td><td class="num">${esc(euro(m.cost))}</td></tr>`;
+      return `<tr><td class="id">${esc(m.name)}<br><span class="muted">${esc(MEASURE_AREA_LABEL[m.area])}</span></td><td>${m.targets.length ? esc(m.targets.map((a) => PROBLEM_LABEL[a]).join(", ")) : esc(tt("none of the three", "keines der drei"))}</td><td class="num">${l1.eff[id] || "—"} × ${l1.exp[id] || "—"} × ${l1.fea[id] || "—"} = ${measureScore(l1, id) || "—"}</td><td class="num">${esc(euro(m.cost))}</td></tr>`;
     })
     .join("");
   const cov = coverage(l1);

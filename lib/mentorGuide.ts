@@ -96,17 +96,18 @@ export function scoreGuide(id: MeasureId): MentorGuide {
     title: `2.4 · ${m.name}`,
     answer: `${m.model.effect} × ${e} × ${m.model.feasibility} = ${modelScore(id)}`,
     steps: [
+      { label: "Price from its parts (printed on the card)", calc: m.costParts.map((c) => n(c.amount)).join(" + "), result: euro(m.cost) },
       { label: "Speed from the weeks until it works (A7)", calc: `${m.weeks} weeks → within 4: 3 · 5 to 10: 2 · more than 10: 1`, result: String(e) },
       { label: "Score = Effect × Speed × Scalability", calc: `${m.model.effect} × ${e} × ${m.model.feasibility}`, result: String(modelScore(id)) },
     ],
     why: `${m.model.note} Answers: ${m.targets.length ? m.targets.map((t) => PROBLEM_LABEL[t]).join(", ") : "none of the three problems"}. A different, well-reasoned effect or scalability score is acceptable: only the score that follows a printed rule is checked.`,
     pitfalls:
       id === "relaunch"
-        ? ["Speed 2 or 3 “because it fixes everything”: 16 weeks is more than 10: 1. It has almost no time to work in four months."]
+        ? ["Speed 2 or 3 “because it fixes everything”: 16 weeks is more than 10: 1. It has no time to work in four months, and the picture shows no bar of working time.", `Adding it to the chat and the dashboard: ${euro(m.cost + MEASURE_BY_ID.chat.cost + MEASURE_BY_ID.kpi.cost)}, over the ${euro(BUDGET)} budget.`]
         : id === "callback"
           ? ["Scalability 3: every call takes a person's time, so it grows only with people: 1."]
           : id === "popup"
-            ? ["Answering “low interaction”: a discount pop-up keeps some visitors, it does not start a conversation."]
+            ? ["Scoring effect 2 or 3 because it “catches leavers”: it pays everyone, also those who would order anyway, and starts no conversation; the picture leaves every problem open."]
             : undefined,
   };
 }

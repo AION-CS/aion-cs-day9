@@ -2,7 +2,7 @@ import { LINES } from "@/data/ladder";
 import { CHURN_TRUTH, FORECAST, INSIGHT_MIN, PILOT, VALUABLE_TRUTH, hasSoWhat } from "@/data/forecast";
 import { AB, AB_PARTS, MEASURE_TRUTH, MEANING_TRUTH, PATTERN_IDS, RECORDS, REC_BY_ID, REC_IDS, UNC_BY_ID, hasHypothesis, hasRuleNumber, riskOf } from "@/data/patterns";
 import type { AbState, PatternId, Risk, UncId } from "@/data/patterns";
-import { MEASURE_BY_ID, PROBLEM_IDS, explainBucket } from "@/data/measures";
+import { MEASURE_BY_ID, PROBLEM_IDS, explainBucket, workingWeeks } from "@/data/measures";
 import type { MeasureId, ProblemId } from "@/data/measures";
 import {
   COMP_CHOOSE,
@@ -139,18 +139,17 @@ export const abComplete = (ab: AbState) => AB_PARTS.every((p) => !!ab[p]) && ab.
 /* ------------------------------------------------------------------ Block 2.4 */
 
 
-/** True when the problems named are a subset of the problems the measure really answers; "none" holds only for a measure that answers none. */
-export function aimsHold(id: MeasureId, aims: ProblemId[]): boolean {
-  const real = MEASURE_BY_ID[id].targets;
-  if (aims.length === 0) return real.length === 0;
-  return aims.every((a) => real.includes(a));
-}
 export const expHolds = (id: MeasureId, v: number) => v === explainBucket(MEASURE_BY_ID[id].evidence);
 export const measureScore = (l1: L1State, id: MeasureId) => (l1.exp[id] || 0) * (l1.fea[id] || 0) * (l1.eff[id] || 0);
 export const measureScored = (l1: L1State, id: MeasureId) => !!l1.exp[id] && !!l1.fea[id] && !!l1.eff[id];
 export const totalCost = (ids: MeasureId[]) => ids.reduce((s, id) => s + MEASURE_BY_ID[id].cost, 0);
-export function coverage(l1: L1State): { pattern: ProblemId; covered: boolean }[] {
-  return PROBLEM_IDS.map((p) => ({ pattern: p, covered: l1.chosen.some((id) => MEASURE_BY_ID[id].targets.includes(p)) }));
+/** A problem is answered when a chosen measure answers it AND has time left to work inside the four months (a 16-week measure has none). */
+export function coverage(l1: L1State): { pattern: ProblemId; covered: boolean; tooLate: boolean }[] {
+  return PROBLEM_IDS.map((p) => {
+    const answering = l1.chosen.filter((id) => MEASURE_BY_ID[id].targets.includes(p));
+    const covered = answering.some((id) => workingWeeks(id) > 0);
+    return { pattern: p, covered, tooLate: !covered && answering.length > 0 };
+  });
 }
 export function orderInversions(l1: L1State): { high: MeasureId; low: MeasureId }[] {
   const out: { high: MeasureId; low: MeasureId }[] = [];
