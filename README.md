@@ -123,10 +123,12 @@ step tables with pitfalls, every free text with what to look for). Client-side c
 
 Applied from `../CLAUDE.md`: #33 to #46. Route 1 was done first, Route 2 second. Nothing was committed or pushed.
 
-**Core and Optional (#35, #40, #44).** Route 1 has **four Core blocks** (1.1, 1.3, 2.1, 2.4; 40 min of the 64) and four Optional blocks, folded and never removed
-(1.2, 1.4, 2.2, 2.3). Route 2 has **two Core blocks** (3.5, 3.6; 19 min of the 50) and
-four Optional blocks (3.1, 3.2, 3.3, 3.4). Optional cards: A4, A6, B1, B2, B3, B4; every other card is Core because a Core block cites it. The ring, the page map
+**Core and Optional (#35, #40, #44).** Route 1 has **two Core blocks, one per level** (1.1 for Level 1 and 2.4 for Level 2; 20 min of the 64) and six Optional blocks, folded and never removed
+(1.2, 1.3, 1.4, 2.1, 2.2, 2.3). Route 2 has **two Core blocks** (3.5, 3.6; 19 min of the 50) and
+four Optional blocks (3.1, 3.2, 3.3, 3.4). Core cards: A2 (the tests of block 1.1), A7 (block 2.4) and B5 (Route 2); Optional cards: A1, A3, A4, A5, A6, B1, B2, B3, B4. The ring, the page map
 and both missing lists count Core only; an unanswered Optional block is marked as such in the exported file.
+
+**Update 2026-10-10 (Route 1 narrowed to one Core block and one Core card per level).** Core is now Block 1.1 with card A2 (Level 1) and Block 2.4 with card A7 (Level 2); Blocks 1.3 and 2.1 and cards A1, A3 and A5 are folded Optional items (one click opens them, nothing is removed or gated). Block 1.1 now cites card A2 only, which carries the test questions it needs, so no Core block reads an Optional card (#40). The ring, the page map and the missing lists count the two Core blocks and two Core cards; `npm run verify:calc` checks it, including a Core-only fill that leaves the missing list empty. Route 2 is unchanged.
 
 **What changed in Route 1.** Block 1.2 is read-only (the two close rates are printed, nothing is calculated, #44) and Optional; the three KPIs moved into Block 2.1;
 Block 2.4 names a category for every measure, asks for a reason for each judged score, and shows the budget as a hint (#45, #38). Every measure and every
@@ -143,7 +145,7 @@ Core-only fill in both languages, #40 scans of the Core blocks, old version-2 bl
 R1. **No video was embedded (#33).** None was searched and verified in this pass; a card without a video is not a defect (#33). The video slot stays empty (`data/videos.ts`).
 R2. **No calculators (#44).** The plan names no calculation beyond the printed rates, the budget and the score formula, so the former F1–F3 calculators and “Show the formula” helps
     of Block 1.2 were removed; wherever older text above mentions them, it is superseded.
-R3. **Route 1 has at most four Core blocks and Route 2 two** (user decision, #35); everything else is folded, not removed.
+R3. **Route 1 has two Core blocks (one per level) and two Core cards (A2, A7); Route 2 keeps its two Core blocks (Step A, Step B) and one Core card (B5)** (user decision of 2026-10-10: the one-per-level idea of #48 applied to Route 1 only, so learners have time for other tasks; Route 2 stays as built). Nothing is removed: Blocks 1.3 and 2.1 and cards A1, A3 and A5 are now folded Optional items, and the exported file marks an unanswered Optional block as such.
 R4. **Model answers use only printed numbers.** The mentor's KPI answer uses aims such as “up” or “stay under a limit”; the panel's bars and the memo's figures are computed from the printed costs, weeks, data shares and the budget, so each number can be found on the screen.
 R5. **The Word documents (#31) were not rebuilt** in this pass and are out of date for Day 9: Core / Optional marks, “The point”, the shown numbers and the new case-brief table are missing. Rebuild them from the reviewed Markdown in `../materi-task-docx/_source/` when wanted.
 R6. **German and English** are written by hand next to each other for every new text (#32); the glossary got “cost of waiting” and “halfway between today and the aim”.
@@ -174,8 +176,8 @@ R7. **Plan mapping (#44).** The plan's numbered task items and the Level 3 requi
 | 3.5 Step A: the prioritised implementation architecture | **Core** | the panel, printed item cards, “the numbers today”, card B5 | ✓ |
 | 3.6 Step B: a decision under time pressure and uncertain data | **Core** | own plan from Step A (quoted in the block), the panel's readings, “the numbers today”, card B5 | ✓ |
 | **Cards** | | | |
-| A1, A2, A3, A5, A7, B5 | Core | each other and the case | ✓ |
-| A4, A6, B1, B2, B3, B4 | Optional | — | no Core block cites them |
+| A2, A7, B5 | Core | the case (A2 carries the tests of block 1.1; A7 the rules of block 2.4) | ✓ |
+| A1, A3, A4, A5, A6, B1, B2, B3, B4 | Optional | — | no Core block cites them |
 
 ## Route 2 redesign (CLAUDE.md #47, applied 2026-10-04; reference: `../day8/ROUTE2-REDESIGN.md`)
 

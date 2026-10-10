@@ -15,16 +15,16 @@ export type TaskBlockId = "b11" | "b12" | "b13" | "b14" | "b21" | "b22" | "b23" 
  * Blocks that deepen or repeat a skill a Core block already teaches, rather than sit on the shortest path to their route's own
  * objective. Collapsed by default via OptionalSection, never removed (CLAUDE.md #6), never required by the missing list or the
  * dossier ring (#35).
- * Route 1 ("understand real-time interaction, then make the measures measurable and choose which to fund"): Core 1.1 (the first
- * tagging and the own opportunity: plan Task 1 questions 1 to 3), 1.3 (where to act and three improvements: Task 1 question 4), 2.1
- * (tag the twelve metrics by kind and name your three KPIs: case task 3) and 2.4 (choose, score and order three of six measures: case
- * tasks 2 and 5): four blocks at most. Optional 1.2, 1.4, 2.2 and 2.3 (the A/B test concept: case task 4).
+ * Route 1 ("understand real-time interaction, then make the measures measurable and choose which to fund"): two Core blocks, one per level:
+ * 1.1 for Level 1 (the first tagging and the own opportunity: plan Task 1 questions 1 to 3, card A2) and 2.4 for Level 2 (choose, score and order
+ * three of six measures: case tasks 2 and 5, card A7). Optional 1.2, 1.3 (where to act and three improvements), 1.4, 2.1 (tag the twelve metrics
+ * by kind and name your three KPIs: case task 3), 2.2 and 2.3 (the A/B test concept: case task 4).
  * Route 2 ("decide a real-time management system under time pressure and with incomplete data", CLAUDE.md #47): one frame with two Core
  * steps. Step A (block 3.5: the target vision, the selection of measures and the prioritised implementation architecture, plan items 1, 3
  * and 5, with the live view and KPI system seen in the Measurable bar) and Step B (block 3.6: the decision under time pressure and
  * uncertain data, with its reason and what to watch). Optional 3.1 to 3.4 ("Go deeper"): self-contained, never read by the frame.
  */
-export const OPTIONAL_BLOCKS: TaskBlockId[] = ["b12", "b14", "b22", "b23", "b31", "b32", "b33", "b34"];
+export const OPTIONAL_BLOCKS: TaskBlockId[] = ["b12", "b13", "b14", "b21", "b22", "b23", "b31", "b32", "b33", "b34"];
 export const isOptionalBlock = (b: TaskBlockId) => (OPTIONAL_BLOCKS as string[]).includes(b);
 const len = (t: string) => t.trim().length;
 export const MIN_SENTENCE = 40;

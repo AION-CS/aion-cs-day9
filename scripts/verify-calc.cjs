@@ -149,14 +149,14 @@ for (const l of ["en", "de"]) {
 lang.setCurrentLang("en");
 
 // --- Core never reads Optional (CLAUDE.md #40) -------------------------------------------
-const OPT = /Block (1\.2|1\.4|2\.2|2\.3)\b/;
-for (const [file, fn] of [["components/task1/Part1.tsx", "Block11"], ["components/task1/Part1.tsx", "Block13"], ["components/task1/Part2.tsx", "Block21"], ["components/task1/Part2.tsx", "Block24"]])
+const OPT = /Block (1\.2|1\.3|1\.4|2\.1|2\.2|2\.3)\b/;
+for (const [file, fn] of [["components/task1/Part1.tsx", "Block11"], ["components/task1/Part2.tsx", "Block24"]])
   ok(`${fn} (Core) names no Optional block`, !OPT.test(fnText(file, fn)));
-for (const c of ["CardA1", "CardA2", "CardA3", "CardA5", "CardA7"]) ok(`${c} (Core) names no Optional block`, !OPT.test(fnText("components/materi/CardsA.tsx", c)));
+for (const c of ["CardA2", "CardA7"]) ok(`${c} (Core) names no Optional block`, !OPT.test(fnText("components/materi/CardsA.tsx", c)));
 ok("Block 2.4 does not read the pilot figures", !/fig\.|FORECAST|PILOT/.test(fnText("components/task1/Part2.tsx", "Block24")));
-const optIds = ["b12", "b14", "b22", "b23", "b31", "b32", "b33", "b34"];
+const optIds = ["b12", "b13", "b14", "b21", "b22", "b23", "b31", "b32", "b33", "b34"];
 eq("Optional blocks", [...progress.OPTIONAL_BLOCKS].sort(), [...optIds].sort());
-eq("Optional material cards", require("@/data/materialIndex").MATERIALS.filter((m) => m.optional && m.block === "A").map((m) => m.id), ["A4", "A6"]);
+eq("Optional material cards", require("@/data/materialIndex").MATERIALS.filter((m) => m.optional && m.block === "A").map((m) => m.id), ["A1", "A3", "A4", "A5", "A6"]);
 
 // --- Old-shape blob (CLAUDE.md #9): version 1 fields are dropped, new ones filled ----------
 {
@@ -167,20 +167,24 @@ eq("Optional material cards", require("@/data/materialIndex").MATERIALS.filter((
   ok("an old blob keeps what it had", merged.chosen.length === 1 && merged.chosen[0] === "reco");
 }
 
-// --- Core-only fill: the four Core blocks alone make a complete, exportable file -----------
+// --- Core-only fill: the two Core blocks alone make a complete, exportable file -----------
 {
   lang.setCurrentLang("en");
   const full = { ...store.emptyL1(), ...key.KEY_L1() };
-  const coreOnly = { ...full, meaning: "", reflect: { interpret: "", causation: "", decider: "" }, unc: [], rows: store.emptyL1().rows, ab: pt.emptyAb() };
+  const e0 = store.emptyL1();
+  const coreOnly = { ...full, meaning: "", reflect: { interpret: "", causation: "", decider: "" }, unc: [], rows: e0.rows, ab: pt.emptyAb(), valuable: e0.valuable, churners: e0.churners, insights: e0.insights, tags: e0.tags, misread: e0.misread };
   const p = { participant: { name: "Core Only" }, ui: { bannerDismissed: {}, sectionsRead: {}, lang: "en" }, l1: coreOnly, r2: { ...store.emptyR2() } };
   eq("Core-only fill leaves the Route 1 missing list empty", missing.l1Missing(p).map((m) => m.label), []);
   const tb = progress.taskBlocks(p);
-  eq("Core blocks complete after a Core-only fill", [tb.b11, tb.b13, tb.b21, tb.b24], [true, true, true, true]);
-  eq("Optional blocks are not complete after a Core-only fill", [tb.b12, tb.b14, tb.b22, tb.b23], [false, false, false, false]);
+  eq("Core blocks complete after a Core-only fill", [tb.b11, tb.b24], [true, true]);
+  eq("Optional blocks are not complete after a Core-only fill", [tb.b12, tb.b13, tb.b14, tb.b21, tb.b22, tb.b23], [false, false, false, false, false, false]);
   const cards = require("@/data/materialIndex").MATERIALS.filter((m) => m.block === "A" && !m.optional);
   const readAll = Object.fromEntries(cards.map((m) => [m.id, true]));
   const done = progress.dossierProgress({ ...p, ui: { ...p.ui, sectionsRead: readAll } }, 1);
-  eq("Route 1 ring: Core cards + four Core blocks", [done.done, done.total], [cards.length + 4, cards.length + 4]);
+  eq("Route 1 ring: two Core cards + two Core blocks", [done.done, done.total], [cards.length + 2, cards.length + 2]);
+  eq("two Core cards in Route 1 (A2, A7)", cards.map((m) => m.id), ["A2", "A7"]);
+  const doc0 = require("@/lib/exportDoc").analysisBody(p);
+  eq("a Core-only file marks six Optional blocks as not filled in", doc0.split(lang.tt("Optional block · not filled in.", "Optionaler Block · nicht ausgefüllt.")).length - 1, 6);
   // a Core answer that differs from the model still exports (CLAUDE.md #38): the three dearest measures, over budget, with a reason each
   const dear = [...meas.MEASURES].sort((a, b) => b.cost - a.cost).slice(0, 3).map((m) => m.id);
   ok("the three dearest measures are over the budget", checks.totalCost(dear) > meas.BUDGET);

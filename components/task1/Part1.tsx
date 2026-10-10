@@ -44,7 +44,7 @@ export function Block11() {
       minutes={BLOCK_MINUTES["1.1"]}
       findIt={tt("Route 1 → Task 1 → the nine real-time ideas on the sort board below, from LiveConnect's service, sales, marketing and product teams. Answer on the sort board.", "Route 1 → Task 1 → die neun Echtzeit-Ideen auf der Sortiertafel unten, aus Service, Vertrieb, Marketing und Produkt von LiveConnect. Antworten Sie auf der Sortiertafel.")}
     >
-      <MaterialRefs refs={["A1", "A2", "A3"]} />
+      <MaterialRefs refs={["A2"]} />
       <PlacementBoard<LevelTag>
         items={LINES.map((r) => ({ id: r.id, meta: r.source, text: r.text }))}
         bins={LEVEL_TAGS.map((t) => ({ id: t.id, label: t.label, hint: t.hint }))}
@@ -68,9 +68,9 @@ export function Block11() {
         noun={tt("idea", "Idee")}
         intro={tt("Drag an idea onto a lever, or select it and then select a lever. Select a placed one to move it again. One lever per idea: the one the idea mainly pulls.", "Ziehen Sie eine Idee auf einen Hebel, oder wählen Sie sie aus und dann einen Hebel. Wählen Sie eine platzierte Idee, um sie zu verschieben. Ein Hebel pro Idee: der, an dem die Idee vor allem zieht.")}
         tests={
-          <RevealHint id="sort-tests" label={tt("Show the test questions", "Testfragen zeigen")} title={tt("Test questions · taught in Materi A1 to A3", "Testfragen · aus Materi A1 bis A3")}>
+          <RevealHint id="sort-tests" label={tt("Show the test questions", "Testfragen zeigen")} title={tt("Test questions · taught in Materi A2", "Testfragen · aus Materi A2")}>
             <div className="space-y-2 text-caption text-ink">
-              <p>{tt("Ask these of every idea. They repeat the tests from Materi A1 to A3; they never say which idea goes where.", "Stellen Sie diese Fragen zu jeder Idee. Sie wiederholen die Tests aus Materi A1 bis A3; sie sagen nie, welche Idee wohin gehört.")}</p>
+              <p>{tt("Ask these of every idea. They repeat the tests from Materi A2; they never say which idea goes where.", "Stellen Sie diese Fragen zu jeder Idee. Sie wiederholen die Tests aus Materi A2; sie sagen nie, welche Idee wohin gehört.")}</p>
               <ul className="space-y-1.5">
                 {LEVEL_TESTS.map((c) => (
                   <li key={c.name}>
@@ -79,7 +79,7 @@ export function Block11() {
                   </li>
                 ))}
               </ul>
-              <MaterialRefs refs={["A2", "A3"]} lead={tt("Taught in", "Gelehrt in")} />
+              <MaterialRefs refs={["A2"]} lead={tt("Taught in", "Gelehrt in")} />
             </div>
           </RevealHint>
         }
@@ -97,7 +97,7 @@ export function Block11() {
           id="extra-insight-kit"
           refs={[
             { label: tt("Where visitors struggle today (the case)", "Wo Besucher heute Probleme haben (der Fall)"), value: tt("high bounce rates, low interaction, measures not coordinated", "hohe Absprungraten, geringe Interaktion, nicht abgestimmte Maßnahmen"), target: "case-brief" },
-            { label: tt("The three levers (Materi A1 to A3)", "Die drei Hebel (Materi A1 bis A3)"), value: tt("respond faster · personalise the moment · learn and adjust", "schneller reagieren · den Moment personalisieren · lernen und anpassen"), target: "mat-A2" },
+            { label: tt("The three levers (Materi A2)", "Die drei Hebel (Materi A2)"), value: tt("respond faster · personalise the moment · learn and adjust", "schneller reagieren · den Moment personalisieren · lernen und anpassen"), target: "mat-A2" },
             { label: tt("The nine ideas above", "Die neun Ideen oben"), value: tt("see which moments the teams already name", "sehen Sie, welche Momente die Teams schon nennen"), target: IDS.line(LINES[0].id) },
           ]}
           steps={[
@@ -234,7 +234,7 @@ export function Block13() {
       id="block-1-3"
       title={tt("Block 1.3 · Where to respond at once, where to personalise, and three improvements", "Block 1.3 · Wo sofort reagieren, wo personalisieren, und drei Verbesserungen")}
       kind="OBJECTIVE + JUDGED"
-      core
+      core={false}
       minutes={BLOCK_MINUTES["1.3"]}
       findIt={tt("Route 1 → Task 1 → the table “Eight moments on the website” below: visitors a month, the share who leave there, whether a decision happens there, and what LiveConnect knows about the visitor. Answer in the two lists and the three fields under it.", "Route 1 → Task 1 → die Tabelle „Acht Momente auf der Website“ unten: Besucher pro Monat, der Anteil, der dort geht, ob dort eine Entscheidung fällt, und was LiveConnect über den Besucher weiß. Antworten Sie in den zwei Listen und den drei Feldern darunter.")}
     >

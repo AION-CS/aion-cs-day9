@@ -15,7 +15,7 @@ import { usePersisted } from "@/store/usePersisted";
 import { Gloss } from "@/lib/glossify";
 import { BLOCK_MINUTES, TASK1_MINUTES } from "@/lib/routes";
 
-const CORE_MIN = BLOCK_MINUTES["1.1"] + BLOCK_MINUTES["1.3"] + BLOCK_MINUTES["2.1"] + BLOCK_MINUTES["2.4"];
+const CORE_MIN = BLOCK_MINUTES["1.1"] + BLOCK_MINUTES["2.4"];
 
 function CaseBrief() {
   return (
@@ -61,14 +61,12 @@ function CaseBrief() {
           </ul>
         </div>
         <div className="rounded-lg border border-line bg-canvas p-3 text-caption">
-          <p className="smallcaps">{tt(`How the task runs · four core blocks, about ${CORE_MIN} min`, `So läuft die Aufgabe · vier Kernblöcke, ca. ${CORE_MIN} Min.`)}</p>
+          <p className="smallcaps">{tt(`How the task runs · two core blocks, about ${CORE_MIN} min`, `So läuft die Aufgabe · zwei Kernblöcke, ca. ${CORE_MIN} Min.`)}</p>
           <ol className="mt-1 list-decimal space-y-1 pl-4 text-ink">
-            <li>{tt("Block 1.1: sort nine real-time ideas into respond, personalise or learn, and name an opportunity of your own (Level 1).", "Block 1.1: neun Echtzeit-Ideen in reagieren, personalisieren oder lernen sortieren und eine eigene Chance nennen (Level 1).")}</li>
-            <li>{tt("Block 1.3: choose where to respond at once and where to personalise, and write three concrete improvements (Level 1).", "Block 1.3: wählen, wo sofort reagiert und wo personalisiert wird, und drei konkrete Verbesserungen schreiben (Level 1).")}</li>
-            <li>{tt("Block 2.1: tag twelve metrics by kind and name your three KPIs (Level 2).", "Block 2.1: zwölf Kennzahlen nach Art zuordnen und Ihre drei KPIs nennen (Level 2).")}</li>
-            <li>{tt("Block 2.4: choose three measures, score them and defend the order (Level 2).", "Block 2.4: drei Maßnahmen wählen, bewerten und die Reihenfolge begründen (Level 2).")}</li>
+            <li>{tt("Block 1.1: sort nine real-time ideas into respond, personalise or learn, and name an opportunity of your own (Level 1, material A2).", "Block 1.1: neun Echtzeit-Ideen in reagieren, personalisieren oder lernen sortieren und eine eigene Chance nennen (Level 1, Materi A2).")}</li>
+            <li>{tt("Block 2.4: choose three measures, score them and defend the order (Level 2, material A7).", "Block 2.4: drei Maßnahmen wählen, bewerten und die Reihenfolge begründen (Level 2, Materi A7).")}</li>
           </ol>
-          <p className="mt-1 text-ash">{tt(`Four more blocks (about ${TASK1_MINUTES - CORE_MIN} min) are optional and folded.`, `Vier weitere Blöcke (ca. ${TASK1_MINUTES - CORE_MIN} Min.) sind optional und eingeklappt.`)}</p>
+          <p className="mt-1 text-ash">{tt(`Six more blocks (about ${TASK1_MINUTES - CORE_MIN} min) are optional and folded.`, `Sechs weitere Blöcke (ca. ${TASK1_MINUTES - CORE_MIN} Min.) sind optional und eingeklappt.`)}</p>
         </div>
       </div>
       <Callout label={tt("Case assumption", "Fallannahme")} tone="amber">
@@ -97,7 +95,7 @@ export function Task1() {
   return (
     <section id="task-1" aria-labelledby="task1-h" className="space-y-6">
       <header className="space-y-1">
-        <p className="smallcaps text-accent">{tt(`Task 1 · four core blocks, optional blocks folded`, `Task 1 · vier Kernblöcke, optionale Blöcke eingeklappt`)}</p>
+        <p className="smallcaps text-accent">{tt(`Task 1 · two core blocks, one per level; optional blocks folded`, `Task 1 · zwei Kernblöcke, einer pro Level; optionale Blöcke eingeklappt`)}</p>
         <h2 id="task1-h">{tt("Real-Time Retention: respond, personalise, measure", "Real-Time Retention: reagieren, personalisieren, messen")}</h2>
       </header>
       <CaseBrief />
@@ -111,7 +109,14 @@ export function Task1() {
       >
         <Block12 />
       </OptionalSection>
-      <Block13 />
+      <OptionalSection
+        id="block-1-3"
+        title={tt("Block 1.3 · Where to respond at once, where to personalise, and three improvements", "Block 1.3 · Wo sofort reagieren, wo personalisieren, und drei Verbesserungen")}
+        minutes={BLOCK_MINUTES["1.3"]}
+        reason={tt("Develops three simple approaches from the customers and moments of the case; Block 1.1 and the measures of Block 2.4 are answered without it.", "Entwickelt drei einfache Ansätze aus den Kunden und Momenten des Falls; Block 1.1 und die Maßnahmen in Block 2.4 lassen sich ohne ihn beantworten.")}
+      >
+        <Block13 />
+      </OptionalSection>
       <OptionalSection
         id="block-1-4"
         title={tt("Block 1.4 · Coaching reflection: from Level 1 to Level 2", "Block 1.4 · Coaching-Reflexion: von Level 1 zu Level 2")}
@@ -121,7 +126,14 @@ export function Task1() {
         <Block14 />
       </OptionalSection>
       <PartHeading id="part-2" n={2} title={tt("Make it measurable and choose", "Messbar machen und auswählen")} level={tt("Level 2 · Application", "Level 2 · Anwendung")} />
-      <Block21 />
+      <OptionalSection
+        id="block-2-1"
+        title={tt("Block 2.1 · Tag LiveConnect's twelve metrics by kind, and name your three KPIs", "Block 2.1 · Die zwölf Kennzahlen von LiveConnect nach Art zuordnen, und Ihre drei KPIs nennen")}
+        minutes={BLOCK_MINUTES["2.1"]}
+        reason={tt("Practises telling an outcome, a driver, a guardrail and a vanity metric apart; the choices of Block 2.4 are made and scored without it.", "Übt, Outcome, Treiber, Guardrail und Vanity Metric zu unterscheiden; die Entscheidungen in Block 2.4 werden ohne ihn getroffen und bewertet.")}
+      >
+        <Block21 />
+      </OptionalSection>
       <OptionalSection
         id="block-2-2"
         title={tt("Block 2.2 · What each kind of metric is worth, and the uncertainties", "Block 2.2 · Was jede Art von Kennzahl wert ist, und die Unsicherheiten")}
